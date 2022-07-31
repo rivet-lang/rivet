@@ -628,6 +628,7 @@ class AST2RIR:
 		self.cur_fn = None
 		self.cur_fn_qualname = ""
 		self.cur_fn_is_main = False
+		self.cur_concrete_types = []
 
 		self.loop_entry_label = ""
 		self.loop_exit_label = ""
@@ -771,7 +772,37 @@ class AST2RIR:
 		elif isinstance(d, ast.ExtendDecl):
 			self.convert_decls(d.decls)
 		elif isinstance(d, ast.FnDecl):
-			if d.is_extern and not d.has_body:
+			if d.is_generic:
+				for g in d.sym.syms:
+					if not g.is_generic_instance:
+						continue
+					self.cur_concrete_types = g.type_arguments
+					self.cur_fn_qualname = g.qualname()
+					args = g.args.copy()
+					if d.is_method:
+						args.insert(
+						    0,
+						    sym.Arg("self", d.self_typ, None, None, d.name_pos)
+						)
+					self.cur_fn = FnDecl(
+					    d.vis.is_pub(), mangle_symbol(g), g.ret_typ, args
+					)
+					self.convert_stmts(d.stmts)
+					if len(d.stmts) == 0 or (
+					    isinstance(d.stmts[-1], ast.ExprStmt)
+					    and not isinstance(
+					        d.stmts[-1].expr, (ast.ReturnExpr, ast.RaiseExpr)
+					    )
+					):
+						if isinstance(
+						    g.ret_typ, type.Result
+						) and g.ret_typ.typ == self.comp.void_t:
+							self.cur_fn.add_ret(self.result_void_ok(g.ret_typ))
+						elif g.ret_typ not in self.void_types:
+							self.cur_fn.add_ret(self.default_value(g.ret_typ))
+					self.decls.append(self.cur_fn)
+					self.cur_concrete_types = list()
+			elif d.is_extern and not d.has_body:
 				self.externs.append(
 				    ExternFn(d.name, d.ret_typ, d.args, d.is_variadic, d.attrs)
 				)
@@ -987,28 +1018,34 @@ class AST2RIR:
 		elif isinstance(stmt, ast.LetStmt):
 			if len(stmt.lefts) == 1:
 				left = stmt.lefts[0]
+				unwrapped_left_typ = self.unwrap_generic(left.typ)
 				ident = Ident(
-				    left.typ,
+				    unwrapped_left_typ,
 				    self.cur_fn.local_name() if left.name == "_" else left.name
 				)
 				self.cur_fn.alloca_var(ident)
-				value = self.convert_expr_with_cast(left.typ, stmt.right)
+				value = self.convert_expr_with_cast(
+				    unwrapped_left_typ, stmt.right
+				)
 				self.cur_fn.store(ident, value)
-				if isinstance(value, IntLiteral) and self.comp.is_int(left.typ):
+				if isinstance(value, IntLiteral
+				              ) and self.comp.is_int(unwrapped_left_typ):
 					self.check_number_limit(
-					    left.typ, value.value(), stmt.right.pos
+					    unwrapped_left_typ, value.value(), stmt.right.pos
 					)
 			else:
+				unwrapped_left_typ = self.unwrap_generic(left.typ)
 				right = self.convert_expr(stmt.right)
 				for i, left in enumerate(stmt.lefts):
 					ident = Ident(
-					    left.typ,
+					    unwrapped_left_typ,
 					    self.cur_fn.local_name()
 					    if left.name == "_" else left.name
 					)
 					self.cur_fn.alloca_var(ident)
 					self.cur_fn.store(
-					    ident, Selector(left.typ, right, Name(f"f{i}"))
+					    ident,
+					    Selector(unwrapped_left_typ, right, Name(f"f{i}"))
 					)
 		elif isinstance(stmt, ast.AssignStmt):
 			left = None
@@ -1026,12 +1063,13 @@ class AST2RIR:
 				else:
 					left = self.convert_expr(stmt.left)
 			elif isinstance(stmt.left, ast.IndexExpr):
-				left_sym = stmt.left.left_typ.get_sym()
+				unwrapped_left_typ = self.unwrap_generic(stmt.left.left_typ)
+				left_sym = unwrapped_left_typ.get_sym()
 				if left_sym.kind == TypeKind.Slice and stmt.op == Kind.Assign:
 					rec = self.convert_expr_with_cast(
-					    stmt.left.left_typ, stmt.left.left
+					    unwrapped_left_typ, stmt.left.left
 					)
-					if not isinstance(stmt.left.left_typ, type.Ref):
+					if not isinstance(unwrapped_left_typ, type.Ref):
 						rec = Inst(InstKind.GetRef, [rec])
 					self.cur_fn.add_call(
 					    "_R4core6_slice3setM", [
@@ -1049,16 +1087,21 @@ class AST2RIR:
 					return
 				left = Inst(InstKind.LoadPtr, [self.convert_expr(stmt.left)])
 			if left == None: return
+			unwrapped_left_typ = self.unwrap_generic(stmt.left.typ)
 			if stmt.op == Kind.Assign:
-				value = self.convert_expr_with_cast(stmt.left.typ, stmt.right)
-				if isinstance(value,
-				              IntLiteral) and self.comp.is_int(stmt.left.typ):
+				value = self.convert_expr_with_cast(
+				    unwrapped_left_typ, stmt.right
+				)
+				if isinstance(value, IntLiteral
+				              ) and self.comp.is_int(unwrapped_left_typ):
 					self.check_number_limit(
-					    stmt.left.typ, value.value(), stmt.right.pos
+					    unwrapped_left_typ, value.value(), stmt.right.pos
 					)
 				self.cur_fn.store(left, value)
 			else:
-				right = self.convert_expr_with_cast(stmt.left.typ, stmt.right)
+				right = self.convert_expr_with_cast(
+				    unwrapped_left_typ, stmt.right
+				)
 				if stmt.op == Kind.PlusAssign:
 					op_kind = InstKind.Add
 				elif stmt.op == Kind.MinusAssign:
@@ -1079,7 +1122,8 @@ class AST2RIR:
 		elif isinstance(stmt, ast.ExprStmt):
 			_ = self.convert_expr(stmt.expr)
 
-	def convert_expr_with_cast(self, expected_typ, expr):
+	def convert_expr_with_cast(self, expected_typ_, expr):
+		expected_typ = self.unwrap_generic(expected_typ_)
 		res_expr = self.convert_expr(expr)
 
 		if isinstance(res_expr, IntLiteral) and self.comp.is_int(expected_typ):
@@ -1209,7 +1253,9 @@ class AST2RIR:
 				    self.comp.str_t, mangled_name, len(mangled_name)
 				)
 			elif expr.name in ("size_of", "align_of"):
-				size, align = self.comp.type_size(expr.args[0].typ)
+				size, align = self.comp.type_size(
+				    self.unwrap_generic(expr.args[0].typ)
+				)
 				if expr.name == "size_of":
 					return IntLiteral(self.comp.usize_t, str(size))
 				else:
@@ -1231,14 +1277,19 @@ class AST2RIR:
 				if self.comp.prefs.build_mode != prefs.BuildMode.Release:
 					self.cur_fn.breakpoint()
 		elif isinstance(expr, ast.CastExpr):
-			res = self.convert_expr_with_cast(expr.typ, expr.expr)
+			unwrapped_typ = self.unwrap_generic(expr.typ)
+			res = self.convert_expr_with_cast(unwrapped_typ, expr.expr)
 			if isinstance(res, IntLiteral):
-				if self.comp.is_int(expr.typ) or expr.typ == self.comp.bool_t:
-					self.check_number_limit(expr.typ, res.value(), expr.pos)
-					res.typ = expr.typ
+				if self.comp.is_int(
+				    unwrapped_typ
+				) or unwrapped_typ == self.comp.bool_t:
+					self.check_number_limit(
+					    unwrapped_typ, res.value(), expr.pos
+					)
+					res.typ = unwrapped_typ
 					return res
 			typ_sym = expr.expr.typ.get_sym()
-			expr_typ_sym = expr.typ.get_sym()
+			expr_typ_sym = unwrapped_typ.get_sym()
 			if typ_sym.kind == sym.TypeKind.Union:
 				if not typ_sym.info.is_c_union:
 					msg = utils.smart_quote(
@@ -1263,13 +1314,14 @@ class AST2RIR:
 					    ]
 					)
 				return Selector(
-				    expr.typ, res, Name(mangle_symbol(expr_typ_sym))
+				    unwrapped_typ, res, Name(mangle_symbol(expr_typ_sym))
 				)
 			tmp = self.cur_fn.local_name()
 			self.cur_fn.alloca(
-			    expr.typ, tmp, Inst(InstKind.Cast, [res, Type(expr.typ)])
+			    unwrapped_typ, tmp,
+			    Inst(InstKind.Cast, [res, Type(unwrapped_typ)])
 			)
-			return Ident(expr.typ, tmp)
+			return Ident(unwrapped_typ, tmp)
 		elif isinstance(expr, ast.StructLiteral):
 			typ_sym = expr.typ.get_sym()
 			tmp = Ident(expr.typ, self.cur_fn.local_name())
@@ -1350,6 +1402,7 @@ class AST2RIR:
 				return tmp
 			args = []
 			is_trait_call = False
+			if not expr.info: raise Exception(f"{expr.info} <{expr.pos}>")
 			if expr.info.is_method:
 				left_sym = expr.left.left_typ.get_sym()
 				if left_sym.kind == TypeKind.Trait:
@@ -1451,13 +1504,17 @@ class AST2RIR:
 			else:
 				is_void_value = expr.typ in self.void_types
 				tmp = self.cur_fn.local_name()
-				self.cur_fn.alloca(expr.info.ret_typ, tmp, inst)
+				self.cur_fn.alloca(
+				    self.unwrap_generic(expr.info.ret_typ), tmp, inst
+				)
 
 				if expr.has_err_handler():
 					err_handler_is_void = (
 					    not expr.err_handler.is_propagate
 					) and expr.err_handler.expr.typ in self.void_types
-					res_value = Ident(expr.info.ret_typ, tmp)
+					res_value = Ident(
+					    self.unwrap_generic(expr.info.ret_typ), tmp
+					)
 					panic_l = self.cur_fn.local_name()
 					else_value = "" if err_handler_is_void else self.cur_fn.local_name(
 					)
@@ -1493,7 +1550,8 @@ class AST2RIR:
 							self.cur_fn.unreachable()
 						else:
 							tmp2 = Ident(
-							    self.cur_fn.ret_typ, self.cur_fn.local_name()
+							    self.unwrap_generic(self.cur_fn.ret_typ),
+							    self.cur_fn.local_name()
 							)
 							self.cur_fn.alloca_var(tmp2)
 							self.cur_fn.store(
@@ -1512,7 +1570,8 @@ class AST2RIR:
 						if is_void_value:
 							return Skip()
 						return Selector(
-						    expr.info.ret_typ.typ, res_value, Name("value")
+						    self.unwrap_generic(expr.info.ret_typ.typ),
+						    res_value, Name("value")
 						)
 					else: # `catch`
 						if expr.err_handler.has_varname():
@@ -1527,15 +1586,20 @@ class AST2RIR:
 							    expr.info.ret_typ.typ, expr.err_handler.expr
 							)
 							self.cur_fn.add_label(exit_l)
-							return Selector(expr.typ, res_value, Name("value"))
+							return Selector(
+							    self.unwrap_generic(expr.typ), res_value,
+							    Name("value")
+							)
 						tmp2 = Ident(
-						    expr.info.ret_typ.typ, self.cur_fn.local_name()
+						    self.unwrap_generic(expr.info.ret_typ.typ),
+						    self.cur_fn.local_name()
 						)
 						self.cur_fn.alloca_var(tmp2)
 						self.cur_fn.store(
 						    tmp2,
 						    self.convert_expr_with_cast(
-						        expr.info.ret_typ.typ, expr.err_handler.expr
+						        self.unwrap_generic(expr.info.ret_typ.typ),
+						        expr.err_handler.expr
 						    )
 						)
 						self.cur_fn.add_br(exit_l)
@@ -2503,19 +2567,22 @@ class AST2RIR:
 		return const_sym.ir_expr
 
 	def result_ok(self, typ, value):
-		tmp = Ident(typ, self.cur_fn.local_name())
+		tmp = Ident(self.unwrap_generic(typ), self.cur_fn.local_name())
 		self.cur_fn.alloca_var(tmp)
 		self.cur_fn.store(
 		    Selector(self.comp.bool_t, tmp, Name("is_err")),
 		    IntLiteral(self.comp.bool_t, "0")
 		)
 		self.cur_fn.store(
-		    Selector(self.cur_fn.ret_typ.typ, tmp, Name("value")), value
+		    Selector(
+		        self.unwrap_generic(self.cur_fn.ret_typ.typ), tmp,
+		        Name("value")
+		    ), value
 		)
 		return tmp
 
 	def result_void_ok(self, typ):
-		tmp = Ident(typ, self.cur_fn.local_name())
+		tmp = Ident(self.unwrap_generic(typ), self.cur_fn.local_name())
 		self.cur_fn.alloca_var(tmp)
 		self.cur_fn.store(
 		    Selector(self.comp.bool_t, tmp, Name("is_err")),
@@ -2523,8 +2590,11 @@ class AST2RIR:
 		)
 		return tmp
 
-	def result_err(self, typ, msg, tag, args):
-		tmp = Ident(self.cur_fn.ret_typ, self.cur_fn.local_name())
+	def result_err(self, typ_, msg, tag, args):
+		typ = self.unwrap_generic(typ_)
+		tmp = Ident(
+		    self.unwrap_generic(self.cur_fn.ret_typ), self.cur_fn.local_name()
+		)
 		self.cur_fn.alloca_var(tmp)
 		self.cur_fn.store(
 		    Selector(self.comp.bool_t, tmp, Name("is_err")),
@@ -2548,7 +2618,8 @@ class AST2RIR:
 		)
 		return tmp
 
-	def optional_ok(self, typ, value):
+	def optional_ok(self, typ_, value):
+		typ = self.unwrap_generic(typ_)
 		tmp = Ident(typ, self.cur_fn.local_name())
 		self.cur_fn.alloca_var(tmp)
 		self.cur_fn.store(
@@ -2558,7 +2629,8 @@ class AST2RIR:
 		self.cur_fn.store(Selector(typ.typ, tmp, Name("value")), value)
 		return tmp
 
-	def optional_none(self, typ):
+	def optional_none(self, typ_):
+		typ = self.unwrap_generic(typ_)
 		tmp = Ident(typ, self.cur_fn.local_name())
 		self.cur_fn.alloca_var(tmp)
 		self.cur_fn.store(
@@ -2567,7 +2639,8 @@ class AST2RIR:
 		)
 		return tmp
 
-	def trait_value(self, value, value_typ, trait_typ):
+	def trait_value(self, value, value_typ_, trait_typ):
+		value_typ = self.unwrap_generic(value_typ_)
 		value_sym = self.comp.untyped_to_type(value_typ).get_sym()
 		typ_sym = trait_typ.get_sym()
 		tmp = Ident(trait_typ, self.cur_fn.local_name())
@@ -2593,7 +2666,8 @@ class AST2RIR:
 		    ]
 		)
 
-	def variadic_args(self, vargs, var_arg_typ):
+	def variadic_args(self, vargs, var_arg_typ_):
+		var_arg_typ = self.unwrap_generic(var_arg_typ_)
 		if len(vargs) == 0:
 			return Name("_R4core11empty_slice")
 		elem_size, _ = self.comp.type_size(var_arg_typ)
@@ -2606,7 +2680,8 @@ class AST2RIR:
 		    ]
 		)
 
-	def default_value(self, typ):
+	def default_value(self, typ_):
+		typ = self.unwrap_generic(typ_)
 		if isinstance(typ, type.Ptr) or isinstance(typ, type.Ref):
 			return NoneLiteral(self.comp.none_t)
 		if typ == self.comp.rune_t:
@@ -2810,3 +2885,31 @@ class AST2RIR:
 				if ts.mangled_name == node.name:
 					types_sorted.append(ts)
 		return types_sorted
+
+	def unwrap_generic(self, typ):
+		if len(self.cur_concrete_types) > 0:
+			if isinstance(typ, type.Type):
+				if typ.sym.kind == TypeKind.TypeArg and typ.expr.type_arg_idx >= 0:
+					return self.cur_concrete_types[typ.expr.type_arg_idx]
+				return typ
+			elif isinstance(
+			    typ, (
+			        type.Result, type.Optional, type.Array, type.Slice,
+			        type.Ptr, type.Ref
+			    )
+			):
+				return type.resolve_generic(
+				    typ, typ.typ, self.unwrap_generic(typ.typ)
+				)
+			elif isinstance(typ, type.Tuple):
+				types = []
+				for tt in typ.types:
+					types.append(
+					    type.resolve_generic(tt, self.unwrap_generic(t))
+					)
+				return Tuple(types)
+			#elif isinstance(typ, type.Fn):
+			#	for i in range(len(self.args)):
+			#		self.args[i].typ=self.unwrap_generic(self.args[i].typ)
+			#	self.ret_typ=self.unwrap_generic(ret_typ)
+		return typ

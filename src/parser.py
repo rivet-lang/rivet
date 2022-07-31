@@ -538,6 +538,22 @@ class Parser:
 		self_is_ref = False
 		self_is_mut = False
 		has_named_args = False
+
+		# parse type-arguments
+		g_idx = 0
+		type_arguments = []
+		if self.accept(Kind.Lt):
+			while True:
+				generic_pos = self.tok.pos
+				generic_name = self.parse_name()
+				type_arguments.append(
+				    type.Generic(generic_name, g_idx, generic_pos)
+				)
+				g_idx += 1
+				if not self.accept(Kind.Comma):
+					break
+			self.expect(Kind.Gt)
+
 		self.open_scope()
 		sc = self.scope
 		self.expect(Kind.Lparen)
@@ -601,7 +617,7 @@ class Parser:
 		    doc_comment, attrs, vis, self.inside_extern, is_unsafe, name, pos,
 		    args, ret_typ, stmts, sc, has_body, is_method, self_is_ref,
 		    self_is_mut, has_named_args, self.is_pkg_level and name == "main",
-		    is_variadic, abi
+		    is_variadic, abi, type_arguments
 		)
 
 	# ---- statements --------------------------
@@ -1004,6 +1020,7 @@ class Parser:
 				varname = ""
 				varname_pos = self.tok.pos
 				err_expr = None
+				has_err_expr = False
 				if self.tok.kind == Kind.Dot and self.peek_tok.kind == Kind.Bang:
 					# check result value, if error propagate
 					err_handler_pos = self.peek_tok.pos
@@ -1015,11 +1032,12 @@ class Parser:
 						varname = self.parse_name()
 						self.expect(Kind.Pipe)
 					err_expr = self.parse_expr()
+					has_err_expr = True
 				expr = ast.CallExpr(
 				    expr, args,
 				    ast.CallErrorHandler(
-				        is_propagate, varname, err_expr, varname_pos,
-				        self.scope, err_handler_pos
+				        is_propagate, varname, err_expr, has_err_expr,
+				        varname_pos, self.scope, err_handler_pos
 				    ), expr.pos
 				)
 			elif self.accept(Kind.Lbracket):
@@ -1261,10 +1279,18 @@ class Parser:
 	def parse_ident(self, is_comptime = False):
 		pos = self.tok.pos
 		name = self.parse_name()
+		type_args = list()
+		if self.tok.kind == Kind.DoubleColon and self.peek_tok.kind == Kind.Lt:
+			self.advance(2)
+			while True:
+				type_args.append(self.parse_type())
+				if not self.accept(Kind.Comma):
+					break
+			self.expect(Kind.Gt)
 		sc = self.scope
 		if sc == None:
 			sc = sym.Scope(sc)
-		return ast.Ident(name, pos, sc, is_comptime)
+		return ast.Ident(name, pos, sc, is_comptime, type_args)
 
 	def parse_pkg_expr(self):
 		pos = self.tok.pos

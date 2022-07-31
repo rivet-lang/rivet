@@ -601,7 +601,11 @@ void _R9drop_argsZ(void) {
 	def gen_type_str(self, typ):
 		res = utils.Builder()
 		if isinstance(typ, type.Result):
-			res.write(typ.sym.mangled_name)
+			if typ.sym == None:
+				name = f"Result_{mangle_type(typ.typ)}"
+				res.write(f"_R{len(name)}{name}")
+			else:
+				res.write(typ.sym.mangled_name)
 		elif isinstance(typ, type.Optional):
 			if isinstance(typ.typ, (type.Ptr, type.Ref)):
 				res.write(self.gen_type_str(typ.typ))

@@ -930,6 +930,7 @@ class Checker:
 		elif isinstance(expr, ast.CallExpr):
 			expr.typ = self.comp.void_t
 			expr_left = expr.left
+
 			inside_parens = False
 			if isinstance(expr_left, ast.ParExpr
 			              ) and isinstance(expr_left.expr, ast.SelectorExpr):
@@ -1193,6 +1194,8 @@ class Checker:
 				for p in b.pats:
 					pat_t = self.check_expr(p)
 					if expr.is_typematch:
+						if b.var_is_mut:
+							self.check_expr_is_mut(expr.expr)
 						pat_t = self.comp.untyped_to_type(pat_t)
 						pat_t_sym = pat_t.get_sym()
 						if expr_sym.kind == TypeKind.Union:

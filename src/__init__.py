@@ -280,7 +280,7 @@ class Compiler:
 		size, align = 0, 0
 		if sy.kind in (
 		    sym.TypeKind.Placeholder, sym.TypeKind.Void, sym.TypeKind.None_,
-		    sym.TypeKind.NoReturn
+		    sym.TypeKind.NoReturn, sym.TypeKind.TypeArg
 		):
 			pass
 		elif sy.kind == sym.TypeKind.Alias:
@@ -338,7 +338,7 @@ class Compiler:
 			size = self.round_up(total_size, max_alignment)
 			align = max_alignment
 		else:
-			raise Exception(f"type_size(): unsupported type `{typ}`")
+			raise Exception(f"type_size(): unsupported type `{sy.qualname()}`")
 		sy.size = size
 		sy.align = align
 		return size, align

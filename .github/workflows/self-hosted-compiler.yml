@@ -3,12 +3,10 @@ name: Self-hosted compiler
 on:
   push:
     paths: ['src-self-hosted/**.ri', 'lib/**.ri', 'src/**.py']
-    paths-ignore: ["**.md"]
     branches: [main]
   pull_request:
     paths: ['src-self-hosted/**.ri', 'lib/**.ri', 'src/**.py']
     types: [opened, synchronize]
-    paths-ignore: ["**.md"]
 
 jobs:
   ubuntu-clang:

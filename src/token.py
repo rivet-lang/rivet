@@ -117,7 +117,8 @@ class Kind(Enum):
 	def is_start_of_type(self):
 		return self in (
 		    Kind.Bang, Kind.Name, Kind.Lparen, Kind.Amp, Kind.Mult,
-		    Kind.Lbracket, Kind.Question
+		    Kind.Lbracket, Kind.Question, Kind.KeySelf, Kind.KeySuper,
+		    Kind.KeySelfTy
 		)
 
 	def is_assign(self):

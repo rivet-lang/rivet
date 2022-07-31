@@ -7,7 +7,6 @@ on:
   pull_request:
     paths: ['examples/**.ri', 'lib/**.ri', 'src-self-hosted/**.ri', 'src/**.py']
     types: [opened, synchronize]
-    paths-ignore: ["**.md"]
 
 jobs:
   ubuntu-clang:

@@ -236,7 +236,7 @@ class Register:
 				sym_fn = sym.Fn(
 				    sym.ABI.Rivet, ast.Visibility.Public, False, False, True,
 				    False, "_dtor", [], self.comp.void_t, False, True, decl.pos,
-				    True, True
+				    True, True, []
 				)
 				sym_fn.rec_typ = self_typ
 				self.add_sym(sym_fn, decl.pos)
@@ -245,8 +245,20 @@ class Register:
 				    decl.abi, decl.vis, decl.is_extern, decl.is_unsafe,
 				    decl.is_method, decl.is_variadic, decl.name, decl.args,
 				    decl.ret_typ, decl.has_named_args, decl.has_body,
-				    decl.name_pos, decl.self_is_mut, decl.self_is_ref
+				    decl.name_pos, decl.self_is_mut, decl.self_is_ref,
+				    decl.type_arguments
 				)
+				if decl.is_generic:
+					for type_arg in decl.type_arguments:
+						try:
+							decl.sym.add(
+							    sym.Type(
+							        ast.Visibility.Private, type_arg.name,
+							        sym.TypeKind.TypeArg
+							    )
+							)
+						except utils.CompilerError as e:
+							report.error(e.args[0], type_arg.pos)
 				decl.sym.is_main = decl.is_main
 				if decl.is_method:
 					self_typ = type.Type(self.cur_sym)

@@ -3,12 +3,10 @@ name: Tests
 on:
   push:
     paths: ['examples/**.ri', 'lib/**.ri', 'src-self-hosted/**.ri', 'src/**.py', 'tests/**']
-    paths-ignore: ["**.md"]
     branches: [main]
   pull_request:
     paths: ['examples/**.ri', 'lib/**.ri', 'src-self-hosted/**.ri', 'src/**.py', 'tests/**']
     types: [opened, synchronize]
-    paths-ignore: ["**.md"]
 
 jobs:
   ubuntu-clang:

@@ -13,6 +13,7 @@ class Resolver:
 		self.sf = None
 		self.cur_sym = None
 		self.core_prelude = []
+		self.cur_fn = None
 		self.cur_fn_scope = None
 
 		self.inside_is_comparation = False
@@ -205,12 +206,14 @@ class Resolver:
 			self.resolve_stmts(decl.stmts)
 			self.cur_fn_scope = None
 		elif isinstance(decl, ast.FnDecl):
+			self.cur_fn = decl.sym
 			self.cur_fn_scope = decl.scope
 			for arg in decl.args:
 				self.resolve_type(arg.typ)
 				if arg.has_def_expr: self.resolve_expr(arg.def_expr)
 			self.resolve_type(decl.ret_typ)
 			self.resolve_stmts(decl.stmts)
+			self.cur_fn = None
 			self.cur_fn_scope = None
 		elif isinstance(decl, ast.DestructorDecl):
 			self.resolve_stmts(decl.stmts)
@@ -293,8 +296,8 @@ class Resolver:
 		elif isinstance(expr, ast.PostfixExpr):
 			self.resolve_expr(expr.left)
 		elif isinstance(expr, ast.CastExpr):
-			self.resolve_expr(expr.expr)
 			self.resolve_type(expr.typ)
+			self.resolve_expr(expr.expr)
 		elif isinstance(expr, ast.IndexExpr):
 			self.resolve_expr(expr.left)
 			self.resolve_expr(expr.index)
@@ -409,7 +412,14 @@ class Resolver:
 				report.error(
 				    f"unknown comptime constant `{ident.name}`", ident.pos
 				)
-		elif obj := ident.scope.lookup(ident.name):
+			return
+		elif self.cur_fn and self.cur_fn.is_generic:
+			if tup := self.cur_fn.find_type_arg(ident.name):
+				ident.sym = tup[0]
+				ident.type_arg_idx = tup[1]
+				return
+
+		if obj := ident.scope.lookup(ident.name):
 			if isinstance(obj, sym.Label):
 				report.error("expected value, found label", ident.pos)
 			else:
@@ -424,6 +434,45 @@ class Resolver:
 			ident.sym = s
 		else:
 			report.error(f"cannot find `{ident.name}` in this scope", ident.pos)
+
+		# resolve generic
+		if ident.sym:
+			if ident.has_type_args:
+				if ident.is_obj:
+					report.error(
+					    "objects cannot have type arguments", ident.pos
+					)
+				elif ident.sym.is_generic:
+					len_i_ta = len(ident.type_args)
+					len_sym_ta = len(ident.sym.type_arguments)
+					errs = 0
+					for i in range(len_i_ta):
+						if not self.resolve_type(ident.type_args[i]):
+							errs += 1
+					if len_i_ta != len_sym_ta:
+						kw = "few" if len_i_ta < len_sym_ta else "many"
+						report.error(
+						    f"too {kw} type arguments to {ident.sym.sym_kind()} `{ident.name}`",
+						    ident.pos
+						)
+						report.note(
+						    f"expected {len_sym_ta} type argument(s) found {len_i_ta}"
+						)
+					elif errs == 0:
+						ident.sym = ident.sym.inst_generic(ident.type_args)
+				else:
+					report.error(
+					    f"{ident.sym.sym_kind()} `{ident.name}` is not generic",
+					    ident.pos
+					)
+			elif ident.sym.is_generic:
+				report.error(
+				    f"too few type arguments to {ident.sym.sym_kind()} `{ident.name}`",
+				    ident.pos
+				)
+				report.note(
+				    f"expected {len(ident.sym.type_arguments)} type argument(s), found 0"
+				)
 
 	def resolve_path_expr(self, path):
 		if path.is_global:

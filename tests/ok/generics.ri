@@ -1,0 +1,33 @@
+fn size_of<T>() usize { return size_of!(T); }
+
+unsafe fn new<T>() *mut T {
+    return unsafe {
+        as(*mut T, mem::alloc(size_of::<T>()) catch none)
+    };
+}
+
+unsafe fn delete<T>(obj: *mut T) {
+    unsafe {
+        if (obj != none) {
+            mem::dealloc(obj);
+        }
+    }
+}
+
+fn main() {
+    assert!(size_of::<i8>() == 1);
+    assert!(size_of::<i32>() == 4);
+    assert!(size_of::<rune>() == 4);
+
+    unsafe {
+        // --- i32 ---
+        let u = new::<i32>();
+        assert!(u != none);
+        delete::<i32>(u);
+
+        // --- str ---
+        let v = new::<str>();
+        assert!(v != none);
+        delete::<str>(v);
+    }
+}

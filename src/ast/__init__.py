@@ -307,7 +307,8 @@ class FnDecl:
 	    self, doc_comment, attrs, vis, is_extern, is_unsafe, name, name_pos,
 	    args, ret_typ, stmts, scope, has_body = False, is_method = False,
 	    self_is_ref = False, self_is_mut = False, has_named_args = False,
-	    is_main = False, is_variadic = False, abi = None
+	    is_main = False, is_variadic = False, abi = None,
+	    type_arguments = list()
 	):
 		self.doc_comment = doc_comment
 		self.attrs = attrs
@@ -319,11 +320,13 @@ class FnDecl:
 		self.self_is_ref = self_is_ref
 		self.self_is_mut = self_is_mut
 		self.self_typ = None
+		self.is_main = is_main
 		self.is_extern = is_extern
 		self.is_unsafe = is_unsafe
 		self.is_method = is_method
 		self.is_variadic = is_variadic
-		self.is_main = is_main
+		self.is_generic = len(type_arguments) > 0
+		self.type_arguments = type_arguments
 		self.ret_typ = ret_typ
 		self.has_named_args = has_named_args
 		self.has_body = has_body
@@ -429,12 +432,15 @@ class PkgExpr:
 		return self.__repr__()
 
 class Ident:
-	def __init__(self, name, pos, scope, is_comptime):
+	def __init__(self, name, pos, scope, is_comptime, type_args = list()):
 		self.name = name
 		self.obj = None
 		self.sym = None
 		self.is_obj = False
 		self.is_comptime = is_comptime
+		self.type_arg_idx = -1
+		self.type_args = type_args
+		self.has_type_args = len(type_args) > 0
 		self.scope = scope
 		self.pos = pos
 		self.typ = None
@@ -442,6 +448,8 @@ class Ident:
 	def __repr__(self):
 		if self.is_comptime:
 			return f"${self.name}"
+		elif self.has_type_args:
+			return f"{self.name}::<{', '.join([str(t) for t in self.type_args])}>"
 		return self.name
 
 	def __str__(self):
@@ -631,7 +639,7 @@ class CastExpr:
 		self.typ = typ
 
 	def __repr__(self):
-		return f"cast({self.expr}, {self.typ})"
+		return f"as({self.typ}, {self.expr})"
 
 	def __str__(self):
 		return self.__repr__()
@@ -755,7 +763,7 @@ class CallExpr:
 		return l
 
 	def has_err_handler(self):
-		return self.err_handler.expr != None or self.err_handler.is_propagate
+		return self.err_handler.has_expr or self.err_handler.is_propagate
 
 	def __repr__(self):
 		res = f"{self.left}({', '.join([str(a) for a in self.args])})"
@@ -783,11 +791,14 @@ class CallArg:
 		return self.__repr__()
 
 class CallErrorHandler:
-	def __init__(self, is_propagate, varname, expr, varname_pos, scope, pos):
+	def __init__(
+	    self, is_propagate, varname, expr, has_expr, varname_pos, scope, pos
+	):
 		self.is_propagate = is_propagate
 		self.varname = varname
 		self.varname_pos = varname_pos
 		self.expr = expr
+		self.has_expr = has_expr
 		self.scope = scope
 		self.pos = pos
 
