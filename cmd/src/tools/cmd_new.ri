@@ -1,13 +1,13 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import std/{ 
+import std/{
     flag, semver, strings, console, process, fs.{self, Path, Directory}
 };
-import rivet/{ build, utils };
+import rivet/utils;
 
-import ./templates;
+import ./{project.*, project/templates};
 
 var new_desc := "Sets up a new Rivet project and performs `git init` (if `git` is installed
 on the system).";
@@ -26,7 +26,7 @@ var available_templates := "Available templates:
 
 pub func cmd_new(args: [:]string, is_init: bool) -> ! {
     mut template := "";
-    mut fp := flag.FlagParser.new(args);
+    fp := flag.FlagParser.new(args);
     if is_init {
         fp.set_limit_free_args_to_exactly(0)!;
     } else {
@@ -54,7 +54,7 @@ pub func cmd_new(args: [:]string, is_init: bool) -> ! {
         utils.error(err_fp.to_string())
     };
 
-    mut project := build.Project();
+    mut project := Project(version: semver.Version.build(0, 1, 0));
     if is_init {
         project.name = Path.base_name(process.get_cwd()!);
     } else {
@@ -72,8 +72,6 @@ pub func cmd_new(args: [:]string, is_init: bool) -> ! {
             project.version = semver.Version.from_string(version) catch |err| {
                 utils.error(err.to_string())
             };
-        } else {
-            project.version = semver.Version.build(0, 1, 0);
         }
         if license := readln("License (optional):") {
             project.license = license;
@@ -85,7 +83,7 @@ pub func cmd_new(args: [:]string, is_init: bool) -> ! {
             project.repository_url = repo_url;
         }
     }
-    check_project(project);
+    check_project(&mut project);
 
     if is_init {
         utils.info("initializing project `{}`...", project.name);
@@ -131,7 +129,7 @@ pub func cmd_new(args: [:]string, is_init: bool) -> ! {
     }
 }
 
-func check_project(mut project: build.Project) {
+func check_project(project: &mut Project) {
     if project.name.is_empty() {
         utils.error("project name cannot be empty");
     }
@@ -154,7 +152,7 @@ func check_project(mut project: build.Project) {
     }
 }
 
-func create_rivet_json(project: build.Project, is_init: bool) -> ! {
+func create_rivet_json(project: Project, is_init: bool) -> ! {
     path_ := if is_init { "rivet.json" } else { Path.join(project.name, "rivet.json")! };
     if !Path.exists(path_) {
         utils.info("creating `rivet.json` file...");
@@ -162,7 +160,7 @@ func create_rivet_json(project: build.Project, is_init: bool) -> ! {
     }
 }
 
-func generate_rivet_json(project: build.Project) -> string {
+func generate_rivet_json(project: Project) -> string {
     mut sb := strings.Builder.new();
     sb.writeln("{");
     sb.write_fmt("    \"name\": \"{}\"", project.name);

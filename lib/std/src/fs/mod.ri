@@ -1,10 +1,10 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 /// Reads the file in `path` and returns the contents.
 pub func read_file(path: string) -> !string {
-    mut f := File.open(path, "rb")!;
+    f := File.open(path, "rb")!;
     res := f.read_all()!;
     f.close();
     return res;
@@ -12,7 +12,7 @@ pub func read_file(path: string) -> !string {
 
 /// Writes `text` data to a file in `path`.
 pub func write_file(path: string, text: string) -> ! {
-    mut f := File.open(path, "wb")!;
+    f := File.open(path, "wb")!;
     f.write(text);
     f.close();
 }

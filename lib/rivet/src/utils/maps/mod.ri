@@ -1,8 +1,8 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-// TODO: remove file, use Map![K, V] instead
+// TODO: remove file
 
 struct StringUint {
     pub key: string;
@@ -12,8 +12,8 @@ struct StringUint {
 pub struct MapStringUint {
     mut pairs: []mut StringUint;
 
-    pub func set(mut self, key: string, value: uint) {
-        for mut pair in self.pairs {
+    pub func set(&mut self, key: string, value: uint) {
+        for &mut pair in self.pairs {
             if pair.key == key {
                 pair.value = value;
                 return; // found
@@ -24,7 +24,7 @@ pub struct MapStringUint {
     }
 
     pub func get(&self, key: string) -> ?uint {
-        for pair in self.pairs {
+        for &pair in self.pairs {
             if pair.key == key {
                 return pair.value;
             }
@@ -32,8 +32,8 @@ pub struct MapStringUint {
         return none;
     }
 
-    pub func delete(mut self, key: string) {
-        for i, pair in self.pairs {
+    pub func delete(&mut self, key: string) {
+        for i, &pair in self.pairs {
             if pair.key == key {
                 self.pairs.delete(i);
                 break;
@@ -62,7 +62,7 @@ pub struct MapStringArrayOfStringsIterator {
     mut idx: uint;
 
     #[inline]
-    pub func next(mut self) -> ?StringArrayOfStrings {
+    pub func next(&mut self) -> ?StringArrayOfStrings {
         return if self.idx < self.ref.len() {
             idx := self.idx;
             self.idx += 1;
@@ -76,12 +76,13 @@ pub struct MapStringArrayOfStringsIterator {
 pub struct MapStringArrayOfStrings {
     mut pairs: []mut StringArrayOfStrings;
 
+    #[inline]
     pub func iterator(&self) -> MapStringArrayOfStringsIterator {
         return MapStringArrayOfStringsIterator(self);
     }
 
-    pub func set(mut self, key: string, value: []string) {
-        for mut pair in self.pairs {
+    pub func set(&mut self, key: string, value: []string) {
+        for &mut pair in self.pairs {
             if pair.key == key {
                 pair.value = value;
                 return; // found
@@ -92,7 +93,7 @@ pub struct MapStringArrayOfStrings {
     }
 
     pub func get(&self, key: string) -> ?[]string {
-        for pair in self.pairs {
+        for &pair in self.pairs {
             if pair.key == key {
                 return pair.value;
             }
@@ -100,8 +101,8 @@ pub struct MapStringArrayOfStrings {
         return none;
     }
 
-    pub func delete(mut self, key: string) {
-        for i, pair in self.pairs {
+    pub func delete(&mut self, key: string) {
+        for i, &pair in self.pairs {
             if pair.key == key {
                 self.pairs.delete(i);
                 break;
@@ -128,8 +129,8 @@ struct StringBool {
 pub struct MapStringBool {
     mut pairs: []mut StringBool;
 
-    pub func set(mut self, key: string, value: bool) {
-        for mut pair in self.pairs {
+    pub func set(&mut self, key: string, value: bool) {
+        for &mut pair in self.pairs {
             if pair.key == key {
                 pair.value = value;
                 return; // found
@@ -140,7 +141,7 @@ pub struct MapStringBool {
     }
 
     pub func get(&self, key: string) -> ?bool {
-        for pair in self.pairs {
+        for &pair in self.pairs {
             if pair.key == key {
                 return pair.value;
             }
@@ -148,8 +149,8 @@ pub struct MapStringBool {
         return none;
     }
 
-    pub func delete(mut self, key: string) {
-        for i, pair in self.pairs {
+    pub func delete(&mut self, key: string) {
+        for i, &pair in self.pairs {
             if pair.key == key {
                 self.pairs.delete(i);
                 break;

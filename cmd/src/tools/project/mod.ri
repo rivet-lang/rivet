@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -9,7 +9,7 @@ pub alias Version := semver.Version;
 pub struct Project {
     pub mut name: string;
     pub mut description: string;
-    pub mut version: Version;
+    pub mut version: ^Version;
     pub mut license: string;
     pub mut authors: []string;
     pub mut dependencies: []Dependency;

@@ -27,7 +27,6 @@ class Obj:
         self.is_mut = is_mut
         self.is_used = False
         self.is_changed = False
-        self.is_hidden_ref = False
         self.level = level
         self.pos = pos
         self.typ = typ
@@ -70,10 +69,6 @@ class Scope:
     def update_type(self, name, typ):
         if obj := self.lookup(name):
             obj.typ = typ
-
-    def update_is_hidden_ref(self, name, val):
-        if obj := self.lookup(name):
-            obj.is_hidden_ref = val
 
     def update_ir_name(self, name, ir_name):
         if obj := self.lookup(name):
@@ -351,7 +346,7 @@ class Var(Sym):
 class Field:
     def __init__(
         self, name, is_mut, is_public, typ, has_def_expr = False,
-        def_expr = None
+        def_expr = None, attrs = None
     ):
         self.name = name
         self.is_mut = is_mut
@@ -359,6 +354,7 @@ class Field:
         self.typ = typ
         self.has_def_expr = has_def_expr
         self.def_expr = def_expr
+        self.attrs = None
 
 class TypeKind(Enum):
     Placeholder = auto_enum()
@@ -559,14 +555,17 @@ class StructInfo:
         self.is_enum_variant = is_enum_variant
 
 class Type(Sym):
-    def __init__(self, is_public, name, kind, fields = [], info = None):
+    def __init__(self, is_public, name, kind, fields = [], info = None, attributes=None):
         Sym.__init__(self, is_public, name)
+        self.attributes = attributes
         self.kind = kind
         self.fields = fields.copy()
         self.full_fields_ = []
         self.info = info
         self.size = -1
         self.align = -1
+        self.raw_size = -1
+        self.raw_align = -1
         self.default_value = None
 
     def find_field(self, name):
@@ -640,7 +639,7 @@ class Type(Sym):
             return self.info.is_boxed
         elif isinstance(self.info, StructInfo):
             return self.info.is_boxed
-        return self.kind in (TypeKind.Trait, TypeKind.String, TypeKind.DynArray)
+        return self.kind == TypeKind.Trait
 
     def is_primitive(self):
         if self.kind == TypeKind.Enum:
@@ -661,7 +660,7 @@ class Func(Sym):
     def __init__(
         self, abi, is_public, is_extern, is_unsafe, is_method, is_variadic,
         name, args, ret_typ, has_named_args, has_body, name_pos, self_is_mut,
-        self_is_ptr, self_typ = None, attributes = None
+        self_is_ptr, self_typ = None, attributes = None, self_is_boxed = False
     ):
         Sym.__init__(self, is_public, name)
         self.is_main = False
@@ -671,8 +670,9 @@ class Func(Sym):
         self.is_method = is_method
         self.is_variadic = is_variadic
         self.self_typ = self_typ
-        self.self_is_mut = self_is_mut
         self.self_is_ptr = self_is_ptr
+        self.self_is_boxed = self_is_boxed
+        self.self_is_mut = self_is_mut
         self.args = args
         self.ret_typ = ret_typ
         self.has_named_args = has_named_args
@@ -729,11 +729,6 @@ def universe():
     uni.add(Type(True, "comptime_float", TypeKind.ComptimeFloat))
     uni.add(Type(True, "float32", TypeKind.Float32))
     uni.add(Type(True, "float64", TypeKind.Float64))
-    uni.add(
-        Type(
-            True, "string", TypeKind.String,
-            info = StructInfo(False, is_boxed = True)
-        )
-    )
+    uni.add(Type(True, "string", TypeKind.String, info = StructInfo(False)))
 
     return uni

@@ -1,8 +1,8 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, token, utils, report };
+import ../{ ast, token, utils/{self, report} };
 
 enum LoopControlLegalityTracker {
     None,
@@ -18,11 +18,11 @@ enum ReturnLegalityTracker {
 
 #[boxed]
 pub struct Checker {
-    mut env: ast.Env;
+    env: ^mut ast.Env;
 
-    mut source_file: ast.SourceFile;
-    mut sym: ast.Sym := ast.InvalidSym();
-    mut cur_func: ast.Func;
+    mut source_file: ^mut ast.SourceFile;
+    sym: ^mut ast.Sym := ast.InvalidSym();
+    mut cur_func: ^mut ast.Func := ^mut ast.Func();
 
     mut inside_extern: bool;
     mut inside_test: bool;
@@ -34,26 +34,26 @@ pub struct Checker {
     mut loop_control_tracker: LoopControlLegalityTracker;
     mut return_tracker: ReturnLegalityTracker;
 
-    mut expected_type: ast.Type;
+    mut expected_type: ^mut ast.Type;
     mut scope_returns: bool;
     mut unsafe_operations: uint;
 
     mut defer_stmts_start: uint;
-    mut defer_stmts: []ast.Stmt.Defer;
+    mut defer_stmts: []mut ast.Stmt.Defer;
 
-    pub func check_files(mut self, mut source_files: []mut ast.SourceFile) {
+    pub func check_files(^mut self, source_files: []^mut ast.SourceFile) {
         // check global variables
-        for mut source_file in source_files {
+        for source_file in source_files {
             self.sym = source_file.mod;
             self.source_file = source_file;
-            self.expected_type = .Void;
+            self.expected_type = ^mut .Void;
             self.check_global_vars(source_file.decls);
         }
         // check the source code
-        for mut source_file in source_files {
+        for source_file in source_files {
             self.sym = source_file.mod;
             self.source_file = source_file;
-            self.expected_type = .Void;
+            self.expected_type = ^mut .Void;
             self.check_decls(source_file.decls);
             // check unused imports
             for imported_sym in source_file.imported_symbols.syms {
@@ -87,12 +87,12 @@ pub struct Checker {
     }
 
     func check_var_decl(
-        mut self, mut lefts: []mut ast.ObjectData, mut right: ast.Expr, scope: ast.Scope,
+        ^mut self, lefts: []^mut ast.ObjectData, right: ^mut ast.Expr, scope: ^mut ast.Scope,
         pos: token.Pos
     ) {
         if lefts.len == 1 {
             old_expected_type := self.expected_type;
-            mut left0 := lefts[0];
+            left0 := lefts[0];
             if !left0.is_extern {
                 if left0.name == "_" && left0.is_mut {
                     report.error("cannot use `mut` on `_`", left0.pos);
@@ -149,7 +149,7 @@ pub struct Checker {
             right_sym := right_type.symbol()?;
             if right_sym.info is .Tuple(tuple_info) {
                 if tuple_info.types.len == lefts.len {
-                    for i, mut vd in lefts {
+                    for i, vd in lefts {
                         if vd.name == "_" && vd.is_mut {
                             report.error("cannot use `mut` on `_`", vd.pos);
                         }
@@ -196,7 +196,7 @@ pub struct Checker {
         }
     }
 
-    func check_scope_vars(self, scope: ast.Scope) {
+    func check_scope_vars(^self, scope: ^mut ast.Scope) {
         if !self.inside_extern {
             for sym in scope.syms {
                 if sym is ast.Var(var_info) {
@@ -248,7 +248,7 @@ pub struct Checker {
         }
     }
 
-    func check_expr_evaluated_but_not_used(self, expr_type: ast.Type, pos: token.Pos) {
+    func check_expr_evaluated_but_not_used(^self, expr_type: ^mut ast.Type, pos: token.Pos) {
         _ = self;
         if !((expr_type is .Result(res) && !res.inner.is_void())
             || (expr_type is .Option(opt) && !opt.inner.is_void())
@@ -257,26 +257,26 @@ pub struct Checker {
         }
     }
 
-    func has_return(self, mut stmts: []mut ast.Stmt, allow_throw: bool := false) -> bool {
-        for mut stmt in stmts {
-            if stmt is .Expr(mut expr) && self.expr_has_return(expr, allow_throw) {
+    func has_return(^self, stmts: []^mut ast.Stmt, allow_throw: bool := false) -> bool {
+        for stmt in stmts {
+            if stmt is .Expr(expr) && self.expr_has_return(expr, allow_throw) {
                 return true;
-            } else if stmt is .ComptimeIf(mut comptime_if) {
-                mut ct_stmts := ast.nodes_to_stmts(self.env.evalue_comptime_if(comptime_if));
+            } else if stmt is .ComptimeIf(&mut comptime_if) {
+                ct_stmts := ast.nodes_to_stmts(self.env.evalue_comptime_if(comptime_if));
                 return self.has_return(ct_stmts);
             }
         }
         return false;
     }
 
-    func expr_has_return(self, mut expr: ast.Expr, allow_throw: bool := false) -> bool {
-        return match expr {
-            .ComptimeIf(mut comptime_if) -> {
-                mut ct_expr := ast.nodes_to_exprs(self.env.evalue_comptime_if(comptime_if))[0];
+    func expr_has_return(^self, expr: ^mut ast.Expr, allow_throw: bool := false) -> bool {
+        return match expr.^ {
+            .ComptimeIf(&mut comptime_if) -> {
+                ct_expr := ast.nodes_to_exprs(self.env.evalue_comptime_if(comptime_if))[0];
                 self.expr_has_return(ct_expr)
             },
-            .Match(mut match_expr) -> {
-                for i, mut branch in match_expr.branches {
+            .Match(&match_expr) -> {
+                for i, branch in match_expr.branches {
                     if match_expr.is_exhaustive && i == match_expr.branches.len {
                         if self.expr_has_return(branch.expr, allow_throw) {
                             return true;
@@ -287,8 +287,8 @@ pub struct Checker {
                 }
                 false
             },
-            .If(mut if_expr) -> {
-                for mut branch in if_expr.branches {
+            .If(if_expr) -> {
+                for branch in if_expr.branches {
                     if branch.is_else && self.expr_has_return(branch.expr, allow_throw) {
                         return true;
                     }
@@ -296,14 +296,14 @@ pub struct Checker {
                 false
             },
             .Call(call_expr) -> call_expr.type is .Never,
-            .Block(mut block) -> self.has_return(block.stmts, allow_throw),
+            .Block(block) -> self.has_return(block.stmts, allow_throw),
             .Return -> true,
             .Throw if allow_throw -> true,
             else -> false
         };
     }
 
-    func inside_unsafe(mut self) -> bool {
+    func inside_unsafe(^mut self) -> bool {
         self.unsafe_operations += 1;
         return self.inside_unsafe_block;
     }

@@ -1,19 +1,19 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import std/strings;
 
-import ../{ ast, report, token };
+import ../{ ast, utils/report, token };
 
 extend Parser {
     #[inline]
-    func parse_import_decl(mut self, attributes: ast.Attributes, is_public: bool, mut pos: token.Pos) -> ast.Decl {
-        return .Import(self.parse_import("", attributes, is_public, pos));
+    func parse_import_decl(^mut self, attributes: ast.Attributes, is_public: bool, pos: token.Pos) -> ^mut ast.Decl {
+        return ^mut .Import(self.parse_import("", attributes, is_public, pos));
     }
 
     func parse_import(
-        mut self, prev_mod_path: string, attributes: ast.Attributes, is_public: bool, mut pos: token.Pos
+        ^mut self, prev_mod_path: string, attributes: ast.Attributes, is_public: bool, mut pos: token.Pos
     ) -> ast.ImportDecl {
         mut mod_path_pos := self.tok.pos;
         mut mod_path := self.parse_import_path();
@@ -43,7 +43,7 @@ extend Parser {
                         pos: pos
                     ));
                 } else {
-                    mut subimport_pos := self.tok.pos;
+                    subimport_pos := self.tok.pos;
                     subimports.push(self.parse_import(mod_path, attributes, is_public, subimport_pos));
                 }
                 if !self.accept(.Comma) {
@@ -78,7 +78,7 @@ extend Parser {
         );
     }
 
-    func parse_import_path(mut self) -> string {
+    func parse_import_path(^mut self) -> string {
         mut sb := strings.Builder.new();
         if self.accept(.Dot) {
             sb.write(".");
@@ -107,7 +107,7 @@ extend Parser {
         return sb.to_string();
     }
 
-    func parse_import_list(mut self, mod_path_pos: token.Pos) -> (bool, []ast.ImportListInfo) {
+    func parse_import_list(^mut self, mod_path_pos: token.Pos) -> (bool, []ast.ImportListInfo) {
         mut import_list := []ast.ImportListInfo();
         mut glob := false;
         if self.accept(.Dot) {

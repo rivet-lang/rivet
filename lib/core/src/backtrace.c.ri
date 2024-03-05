@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -40,22 +40,20 @@ $if !_RELEASE_ { // skip backtrace in release mode
         fn_ptr: ?[&]mut uint8
     ) -> int32 {
         unsafe {
-            if safe_fn_ptr := fn_ptr {
+            fn_name := if safe_fn_ptr := fn_ptr {
                 if mem.cmp(safe_fn_ptr, c"_R4core4mainF", 13) == 0 {
                     return -1; // stop backtracing
                 }
-            }
-            fn_name := if fn_ptr == none {
-                "???"
+                demangle_symbol(string.from_raw(safe_fn_ptr))
             } else {
-                demangle_symbol(string.from_raw(fn_ptr))
+                "???"
             };
             file_name := if filename_ptr == none {
                 "???"
             } else {
                 string.from_raw(filename_ptr)
             };
-            console_ewriteln("   from {} in \"{}\":{}", fn_name, file_name, lineno);
+            console_ewriteln("   from {} in {}:{}", fn_name, file_name, lineno);
         }
         return 0;
     }

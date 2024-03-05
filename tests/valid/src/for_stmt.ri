@@ -8,7 +8,7 @@ test "`for` statement with array" {
 
 test "`for` statement with dynamic array" {
     mut sum := 0;
-    for i in +[1, 2, 3, 4, 5, 6, 7, 8, 9, 10] {
+    for i in ^[1, 2, 3, 4, 5, 6, 7, 8, 9, 10] {
         sum += i;
     }
     @assert(sum == 55);
@@ -32,7 +32,7 @@ test "`for` statement with `string.as_bytes()`" {
 
 test "`for` statement with referenced value" {
     mut res := 0;
-    arr: []mut int := +[1, 2, 3];
+    arr: []mut int := ^[1, 2, 3];
     for &value in arr {
         res += value.*;
     }
@@ -40,9 +40,9 @@ test "`for` statement with referenced value" {
 }
 
 test "`for` statement with mutable value" {
-    mut arr: []mut int32 := +[1, 2, 3];
-    for mut elem in arr {
-        elem = elem * 2;
+    arr: []mut int32 := ^[1, 2, 3];
+    for &mut elem in arr {
+        elem.* = elem.* * 2;
     }
-    @assert(arr == +[2, 4, 6]);
+    @assert(arr == ^[2, 4, 6]);
 }

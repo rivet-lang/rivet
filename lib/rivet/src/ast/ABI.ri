@@ -1,0 +1,36 @@
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
+// source code is governed by an MIT license that can be found in the LICENSE
+// file.
+
+import std/traits;
+
+pub enum ABI as uint8 < traits.Stringable {
+    Rivet,
+    C;
+
+    #[inline]
+    pub func from_string(abi: string) -> ?ABI {
+        return match abi {
+            "C" -> .C,
+            "Rivet" -> .Rivet,
+            else -> none
+        };
+    }
+
+    // TODO: remove, use `.to_lower()` instead
+    #[inline]
+    pub func lower(&self) -> string {
+        return match self.* {
+            .C -> "c",
+            .Rivet -> "rivet"
+        };
+    }
+
+    #[inline]
+    pub func to_string(&self) -> string {
+        return match self.* {
+            .C -> "C",
+            .Rivet -> "Rivet"
+        };
+    }
+}

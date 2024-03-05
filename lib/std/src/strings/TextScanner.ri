@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -17,7 +17,7 @@ pub struct TextScanner {
     /// Returns the next character code from the input text or `none` if it
     /// can't reach the next character. Advances the scanner position.
     #[inline]
-    pub func next(mut self) -> ?uint8 {
+    pub func next(&mut self) -> ?uint8 {
         if self.pos < self.len {
             opos := self.pos;
             self.pos += 1;
@@ -29,7 +29,7 @@ pub struct TextScanner {
     /// Skips ahead `n` characters, stopping at the end of the input; `skip` is
     /// slightly faster than `.next()`.
     #[inline]
-    pub func skip(mut self, n: uint := 1) {
+    pub func skip(&mut self, n: uint := 1) {
         self.pos += n;
         if self.pos > self.len {
             self.pos = self.len;
@@ -48,7 +48,7 @@ pub struct TextScanner {
     }
 
     /// Goes back `n` characters from the current scanner position.
-    pub func back(mut self, n: uint := 1) {
+    pub func back(&mut self, n: uint := 1) {
         self.pos -= n;
         if self.pos > self.len {
             self.pos = self.len;
@@ -71,7 +71,7 @@ pub struct TextScanner {
     /// of the input text.
     /// NOTE: after `c := ts.next()`, `ts.current()` will also return `c`.
     #[inline]
-    pub func current(self) -> ?uint8 {
+    pub func current(&self) -> ?uint8 {
         if self.pos > 0 {
             return self.input[self.pos - 1];
         }
@@ -81,7 +81,7 @@ pub struct TextScanner {
     /// Has the same effect as `while c := ts.next() -> {}` i.e. after calling `.goto_end()`,
     /// the scanner will be at the end of the input text.
     /// Further `.next()` calls will return `none`, unless you go back.
-    pub func goto_end(mut self) {
+    pub func goto_end(&mut self) {
         self.pos = self.len;
     }
 
@@ -92,7 +92,7 @@ pub struct TextScanner {
 
     /// Resets the internal state of the scanner. After calling `.reset()`, `.next()`
     /// will start reading again from the start of the input text.
-    pub func reset(mut self) {
+    pub func reset(&mut self) {
         self.pos = 0;
     }
 }

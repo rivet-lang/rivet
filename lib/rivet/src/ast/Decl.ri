@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -14,7 +14,7 @@ pub enum Decl {
         docs: []Comment;
         attributes: Attributes;
         abi: ABI;
-        mut decls: []Decl;
+        mut decls: []^mut Decl;
         pos: token.Pos;
     },
     Alias {
@@ -22,45 +22,45 @@ pub enum Decl {
         attributes: Attributes;
         is_public: bool;
         name: string;
-        parent: Expr;
+        parent: ^mut Expr;
         is_typealias: bool;
-        mut parent_type: Type;
+        mut parent_type: ^mut Type;
         pos: token.Pos;
-        mut sym: Sym;
+        mut sym: ^mut Sym:= invalid_sym;
     },
     Trait {
         docs: []Comment;
         attributes: Attributes;
         is_public: bool;
         name: string;
-        mut bases: []mut Type;
-        mut decls: []Decl;
+        mut bases: []^mut Type;
+        mut decls: []^mut Decl;
         pos: token.Pos;
-        mut sym: Sym;
+        mut sym: ^mut Sym:= invalid_sym;
     },
     Enum {
         docs: []Comment;
         attributes: Attributes;
         is_public: bool;
         name: string;
-        mut underlying_type: Type;
-        mut bases: []mut Type;
+        mut underlying_type: ^mut Type;
+        mut bases: []^mut Type;
         mut variants: []mut EnumVariantDecl;
         is_tagged: bool;
-        mut decls: []Decl;
+        mut decls: []^mut Decl;
         pos: token.Pos;
-        mut sym: Sym;
+        mut sym: ^mut Sym := invalid_sym;
     },
     Struct {
         docs: []Comment;
         attributes: Attributes;
         is_public: bool;
         name: string;
-        mut bases: []mut Type;
-        mut decls: []Decl;
+        mut bases: []^mut Type;
+        mut decls: []^mut Decl;
         is_opaque: bool;
         pos: token.Pos;
-        mut sym: Sym;
+        mut sym: ^mut Sym := invalid_sym;
     },
     Field {
         docs: []Comment;
@@ -68,16 +68,16 @@ pub enum Decl {
         is_public: bool;
         is_mut: bool;
         name: string;
-        mut type: Type;
-        mut def_expr: Expr;
+        mut type: ^mut Type;
+        mut def_expr: ^mut Expr;
         has_def_expr: bool;
         pos: token.Pos;
     },
     Extend {
         attributes: Attributes;
-        mut type: Type;
-        mut bases: []mut Type;
-        mut decls: []Decl;
+        mut type: ^mut Type;
+        mut bases: []^mut Type;
+        mut decls: []^mut Decl;
         pos: token.Pos;
     },
     Const {
@@ -86,10 +86,10 @@ pub enum Decl {
         is_public: bool;
         name: string;
         has_type: bool;
-        mut type: Type;
-        mut expr: Expr;
+        mut type: ^mut Type;
+        mut expr: ^mut Expr;
         pos: token.Pos;
-        mut sym: Sym;
+        mut sym: ^mut Sym := invalid_sym;
     },
     Var {
         docs: []Comment;
@@ -97,11 +97,11 @@ pub enum Decl {
         is_public: bool;
         is_extern: bool;
         abi: ABI;
-        mut lefts: []mut ObjectData;
-        mut right: Expr;
+        mut lefts: []^mut ObjectData;
+        mut right: ^mut Expr;
         pos: token.Pos;
-        mut sym: Sym;
-        mut scope: Scope;
+        mut sym: ^mut Sym := invalid_sym;
+        scope: ^mut Scope;
     },
     Func {
         docs: []Comment;
@@ -116,32 +116,33 @@ pub enum Decl {
         is_operator: bool;
         abi: ABI;
         name: string;
-        mut args: []mut Arg;
+        args: []^mut Arg;
         has_named_args: bool;
-        mut ret_type: Type;
-        mut stmts: []mut Stmt;
-        mut scope: Scope;
+        ret_type: ^mut Type;
+        stmts: []^mut Stmt;
+        scope: ^mut Scope;
         has_body: bool;
-        self_is_mut: bool;
         self_is_ptr: bool;
-        mut self_type: Type;
+        self_is_boxed: bool;
+        self_is_mut: bool;
+        mut self_type: ^mut Type;
         pos: token.Pos;
         self_pos: token.Pos;
-        mut sym: Sym;
-        mut defer_stmts: []Stmt.Defer;
+        mut sym: ^mut Sym := invalid_sym;
+        mut defer_stmts: []mut Stmt.Defer;
     },
     Test {
         docs: []Comment;
         attributes: Attributes;
         name: string;
-        mut stmts: []mut Stmt;
-        scope: Scope;
+        mut stmts: []^mut Stmt;
+        scope: ^mut Scope;
         pos: token.Pos;
-        mut defer_stmts: []Stmt.Defer;
+        mut defer_stmts: []mut Stmt.Defer;
     };
 
-    pub func position(self) -> token.Pos {
-        return match self {
+    pub func position(^self) -> token.Pos {
+        return match self.^ {
             .Empty(empty_pos) -> empty_pos,
             .Comment(comment) -> comment.pos,
             .ComptimeIf(comptime_if) -> comptime_if.pos,
@@ -160,8 +161,8 @@ pub enum Decl {
         };
     }
 
-    pub func decls(self) -> ?[]Self {
-        return match self {
+    pub func decls(^self) -> ?[]^mut Self {
+        return match self.^ {
             .ComptimeIf(comptime_if) -> if branch_idx := comptime_if.branch_idx {
                 nodes_to_decls(
                     comptime_if.branches[branch_idx].nodes
@@ -181,46 +182,16 @@ pub enum Decl {
 
 pub struct EnumVariantDecl {
     pub name: string;
-    pub mut type: Type;
+    pub mut type: ^mut Type;
     pub has_type: bool;
     pub has_value: bool;
-    pub value: Expr;
-    pub mut decls: []Decl;
+    pub value: ^mut Expr;
+    pub mut decls: []^mut Decl;
     pub pos: token.Pos;
 }
 
-pub struct ImportDecl {
-    pub attributes: Attributes;
-    pub is_public: bool;
-    pub path: string;
-    pub path_pos: token.Pos;
-    pub mut alias_name: string;
-    pub mut has_custom_alias: bool;
-    pub glob: bool;
-    pub mut subimports: []mut ImportDecl;
-    pub import_list: []ImportListInfo;
-    pub mut info: ImportedMod;
-    pub pos: token.Pos;
-}
-
-pub struct ImportedMod {
-    pub name: string;
-    pub full_name: string;
-    pub alias_name: string;
-    pub found: bool;
-    pub files: []string;
-    pub mut mod: Module;
-}
-
-pub struct ImportListInfo {
-    pub name: string;
-    pub alias_name: string;
-    pub mut has_custom_alias: bool;
-    pub pos: token.Pos;
-}
-
-pub func filter_field_decl(decls: []Decl) -> []Decl {
-    mut fields := []Decl();
+pub func filter_field_decl(decls: []^mut Decl) -> []^mut Decl {
+    mut fields := []^mut Decl();
     for decl in decls {
         if decl is .Field {
             fields.push(decl);

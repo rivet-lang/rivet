@@ -1,15 +1,15 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report };
+import ../{ ast, utils/report };
 
 extend Checker {
-    func check_expr(mut self, mut expr: ast.Expr) -> ast.Type {
-        return match expr {
+    func check_expr(^mut self, expr: ^mut ast.Expr) -> ^mut ast.Type {
+        return match expr.^ {
             .Empty, .Comment -> .Void,
             .Type(type) -> type,
-            .ComptimeIf(mut comptime_if) -> {
+            .ComptimeIf(&mut comptime_if) -> {
                 exprs := ast.nodes_to_exprs(
                     self.env.evalue_comptime_if(comptime_if)
                 );
@@ -31,12 +31,12 @@ extend Checker {
                         );
                     }
                 }
-                .Never(loop_control.pos)
+                ^mut .Never(loop_control.pos)
             },
-            .Paren(mut paren) -> self.check_expr(paren.expr),
-            .NoneLiteral -> .None,
+            .Paren(paren) -> self.check_expr(paren.expr),
+            .NoneLiteral -> ^mut .None,
             .BoolLiteral -> self.env.bool_t,
-            .CharLiteral(mut char_lit) -> {
+            .CharLiteral(&mut char_lit) -> {
                 char_lit.type = if char_lit.is_byte {
                     self.env.uint8_t
                 } else {
@@ -49,7 +49,7 @@ extend Checker {
                 };
                 char_lit.type
             },
-            .IntegerLiteral(mut int_lit) -> {
+            .IntegerLiteral(&mut int_lit) -> {
                 int_lit.type = if self.env.is_int(self.expected_type) {
                     self.expected_type
                 } else {
@@ -57,34 +57,34 @@ extend Checker {
                 };
                 int_lit.type
             },
-            .FloatLiteral(mut float_lit) -> {
+            .FloatLiteral(&mut float_lit) -> {
                 float_lit.type = self.env.comptime_float_t;
                 float_lit.type
             },
-            .StringLiteral(mut string_lit) -> {
+            .StringLiteral(&mut string_lit) -> {
                 string_lit.type = if string_lit.is_bytestr {
-                    .Basic(self.env.universe.add_or_get_array(
+                    ^mut .Basic(self.env.universe.add_or_get_array(
                         self.env.uint8_t, string_lit.value.len, false
                     ))
                 } else if string_lit.is_cstr {
-                    .Pointer(self.env.uint8_t, is_indexable: true)
+                    ^mut .Pointer(self.env.uint8_t, is_indexable: true)
                 } else {
                     self.env.string_t
                 };
                 string_lit.type
             },
-            .SelfLiteral(mut self_lit) -> {
+            .SelfLiteral(&mut self_lit) -> {
                 self_lit.type = self_lit.obj.type;
                 self_lit.type
             },
-            .SelfTy -> .Void,
-            .EnumLiteral(mut enum_lit) -> {
-                enum_lit.type = .Void;
+            .SelfTy -> ^mut .Void,
+            .EnumLiteral(&mut enum_lit) -> {
+                enum_lit.type = ^mut .Void;
                 if sym := self.expected_type.symbol(); sym.info is .Enum(enum_info) {
                     if variant := enum_info.get_variant(enum_lit.value) {
                         enum_lit.sym = sym;
                         enum_lit.variant = variant;
-                        enum_lit.type = .Basic(sym, pos: enum_lit.pos);
+                        enum_lit.type = ^mut .Basic(sym, pos: enum_lit.pos);
                         if enum_info.is_tagged && !enum_lit.from_is_cmp
                             && !enum_lit.is_instance {
                             if variant.has_type {
@@ -113,9 +113,9 @@ extend Checker {
                 }
                 enum_lit.type
             },
-            .TupleLiteral(mut tuple_lit) -> self.check_tuple_literal(tuple_lit),
-            .ArrayCtor(mut array_ctor) -> {
-                if mut init_value := array_ctor.init_value {
+            .TupleLiteral(&mut tuple_lit) -> self.check_tuple_literal(tuple_lit),
+            .ArrayCtor(&mut array_ctor) -> {
+                if init_value := array_ctor.init_value {
                     init_t := self.check_expr(init_value);
                     if !self.check_compatible_types(init_t, array_ctor.elem_type) {
                         report.error(
@@ -131,7 +131,7 @@ extend Checker {
                         );
                     }
                 }
-                if mut len_value := array_ctor.len_value {
+                if len_value := array_ctor.len_value {
                     len_t := self.check_expr(len_value);
                     if !(len_t == self.env.uint_t || len_t == self.env.comptime_int_t) {
                         report.error(
@@ -140,7 +140,7 @@ extend Checker {
                         );
                     }
                 }
-                if mut cap_value := array_ctor.cap_value {
+                if cap_value := array_ctor.cap_value {
                     cap_t := self.check_expr(cap_value);
                     if !(cap_t == self.env.uint_t || cap_t == self.env.comptime_int_t) {
                         report.error(
@@ -150,13 +150,13 @@ extend Checker {
                     }
                 }
                 array_ctor.type = if array_ctor.is_dyn {
-                    .Basic(
+                    ^mut .Basic(
                         self.env.universe.add_or_get_dyn_array(
                             array_ctor.elem_type, array_ctor.is_mut
                         ), pos: array_ctor.pos
                     )
                 } else {
-                    .Basic(
+                    ^mut .Basic(
                         self.env.universe.add_or_get_array(
                             array_ctor.elem_type, array_ctor.len_res, array_ctor.is_mut
                         ), pos: array_ctor.pos
@@ -164,8 +164,8 @@ extend Checker {
                 };
                 array_ctor.type
             },
-            .ArrayLiteral(mut array_lit) -> self.check_array_literal(array_lit),
-            .Ident(mut ident) -> {
+            .ArrayLiteral(&mut array_lit) -> self.check_array_literal(array_lit),
+            .Ident(&mut ident) -> {
                 ident.type = if ident.name == "_" {
                     .Void
                 } else if ident.is_comptime {
@@ -174,7 +174,7 @@ extend Checker {
                     match ident.sym is {
                         ast.Const(const_sym) -> const_sym.type,
                         ast.Var(var_sym) -> var_sym.type,
-                        ast.Func(func_sym) -> {
+                        ast.Func(mut func_sym) -> {
                             if func_sym.abi != .Rivet {
                                 mut err := report.error_builder(
                                     "cannot use an extern function as a value", ident.pos
@@ -184,15 +184,15 @@ extend Checker {
                             }
                             func_sym.type(self.env.universe)
                         },
-                        else -> .Void
+                        else -> ^mut .Void
                     }
                 } else {
-                    .Void
+                    ^mut .Void
                 };
                 ident.type
             },
-            .Selector(mut selector) -> self.check_selector(selector),
-            .Indirect(mut indirect) -> {
+            .Selector(&mut selector) -> self.check_selector(selector),
+            .Indirect(&mut indirect) -> {
                 indirect.left_type = self.check_expr(indirect.left);
                 indirect.type = if indirect.left_type.is_pointer()
                     || (indirect.left_type is .Pointer(ptr) && !ptr.is_indexable)
@@ -211,21 +211,21 @@ extend Checker {
                         err.add_help("use index access to element 0 instead");
                     }
                     err.emit();
-                    .Void
+                    ^mut .Void
                 };
                 indirect.type
             },
-            .OptionCheck(mut option_check) -> {
+            .OptionCheck(&mut option_check) -> {
             	option_check.left_type = self.check_expr(option_check.left);
                 option_check.type = if option_check.left_type is .Option(opt) {
                     opt.inner
                 } else {
                     report.error("cannot check a non-option value", option_check.left.position());
-                    .Void
+                    ^mut .Void
                 };
                 option_check.type
             },
-            .Range(mut range) -> {
+            .Range(&mut range) -> {
                 range.type = if range.has_start {
                     self.check_expr(range.start)
                 } else {
@@ -241,10 +241,10 @@ extend Checker {
                 }
                 range.type
             },
-            .Index(mut index) -> self.check_index(index),
-            .Call(mut call_expr) -> self.check_call(call_expr),
-            .BuiltinCall(mut builtin_call) -> self.check_builtin_call(builtin_call),
-            .Block(mut block) -> {
+            .Index(&mut index) -> self.check_index(index),
+            .Call(&mut call_expr) -> self.check_call(call_expr),
+            .BuiltinCall(&mut builtin_call) -> self.check_builtin_call(builtin_call),
+            .Block(&mut block) -> {
                 self.defer_stmts_start = self.defer_stmts.len;
                 if block.is_unsafe {
                     if self.inside_unsafe_block {
@@ -254,17 +254,17 @@ extend Checker {
                     }
                 }
                 old_expected_type := self.expected_type;
-                self.expected_type = .Void;
+                self.expected_type = ^mut .Void;
                 self.check_stmts(block.stmts);
                 self.expected_type = old_expected_type;
                 block.type = if block.is_expr {
                     self.check_expr(block.expr)
                 } else {
-                    .Void
+                    ^mut .Void
                 };
                 if block.type is .Void && block.is_expr {
                     // if the expression has no value then it is another statement
-                    block.stmts.push(.Expr(block.expr, block.pos));
+                    block.stmts.push(^mut .Expr(block.expr, block.pos));
                     block.is_expr = false;
                 }
                 if block.is_unsafe {
@@ -279,11 +279,11 @@ extend Checker {
                 self.defer_stmts = self.defer_stmts[:self.defer_stmts_start].to_dynamic_array();
                 block.type
             },
-            .Unary(mut unary) -> self.check_unary(unary),
-            .Binary(mut binary) -> self.check_binary(binary),
-            .If(mut if_expr) -> self.check_if(if_expr),
-            .Match(mut match_expr) -> self.check_match(match_expr),
-            .Guard(mut guard) -> {
+            .Unary(&mut unary) -> self.check_unary(unary),
+            .Binary(&mut binary) -> self.check_binary(binary),
+            .If(&mut if_expr) -> self.check_if(if_expr),
+            .Match(&mut match_expr) -> self.check_match(match_expr),
+            .Guard(&mut guard) -> {
                 old_inside_guard_expr := self.inside_guard_expr;
                 self.inside_guard_expr = true;
                 self.check_var_decl(guard.vars, guard.expr, guard.scope, guard.pos);
@@ -294,24 +294,24 @@ extend Checker {
                     );
                 }
                 self.inside_guard_expr = old_inside_guard_expr;
-                .Void
+                ^mut .Void
             },
-            .Return(mut return_expr) -> self.check_return(return_expr),
-            .Throw(mut throw_expr) -> self.check_throw(throw_expr),
-            .Assign(mut assign) -> self.check_assign(assign)
+            .Return(&return_expr) -> self.check_return(return_expr),
+            .Throw(&throw_expr) -> self.check_throw(throw_expr),
+            .Assign(&mut assign) -> self.check_assign(assign)
         };
     }
 
-    func check_tuple_literal(mut self, mut tuple_lit: ast.Expr.TupleLiteral) -> ast.Type {
+    func check_tuple_literal(^mut self, tuple_lit: &mut ast.Expr.TupleLiteral) -> ^mut ast.Type {
         old_expected_type := self.expected_type;
         mut has_expected_types := false;
-        mut expected_types := []ast.Type();
+        mut expected_types := []^mut ast.Type();
         if expected_type_sym := self.expected_type.symbol(); expected_type_sym.info is .Tuple(tuple_info) {
             has_expected_types = tuple_lit.values.len == tuple_info.types.len;
             expected_types = tuple_info.types;
         }
-        mut types := []ast.Type();
-        for i, mut value in tuple_lit.values {
+        mut types := []^mut ast.Type();
+        for i, value in tuple_lit.values {
             if has_expected_types {
                 self.expected_type = expected_types[i];
             }
@@ -326,18 +326,18 @@ extend Checker {
             });
         }
         self.expected_type = old_expected_type;
-        tuple_lit.type = .Basic(
+        tuple_lit.type = ^mut .Basic(
             self.env.universe.add_or_get_tuple(types), pos: tuple_lit.pos
         );
         return tuple_lit.type;
     }
 
-    func check_array_literal(mut self, mut array_lit: ast.Expr.ArrayLiteral) -> ast.Type {
+    func check_array_literal(^mut self, array_lit: &mut ast.Expr.ArrayLiteral) -> ^mut ast.Type {
         old_expected_type := self.expected_type;
         mut size: uint := 0;
         mut is_mut := false;
         mut has_expected_type := false;
-        mut value_type := ast.Type.Void;
+        mut value_type := ^mut ast.Type.Void;
         if value_sym := self.expected_type.symbol(); value_sym.info is .Array
             || value_sym.info is .DynArray {
             has_expected_type = true;
@@ -354,7 +354,7 @@ extend Checker {
         if has_expected_type {
             value_type = self.env.comptime_number_to_type(value_type);
         }
-        for i, mut value in array_lit.values {
+        for i, value in array_lit.values {
             type := self.check_expr(value);
             if i == 0 && !has_expected_type {
                 value_type = self.env.comptime_number_to_type(type);
@@ -373,7 +373,7 @@ extend Checker {
         }
         self.expected_type = old_expected_type;
         array_lit.type = if array_lit.is_dyn {
-            .Basic(self.env.universe.add_or_get_dyn_array(value_type, is_mut), pos: array_lit.pos)
+            ^mut .Basic(self.env.universe.add_or_get_dyn_array(value_type, is_mut), pos: array_lit.pos)
         } else {
             arr_len := if array_lit.values.len > 0 {
                 array_lit.values.len
@@ -383,7 +383,7 @@ extend Checker {
                 }
                 size
             };
-            .Basic(
+            ^mut .Basic(
                 self.env.universe.add_or_get_array(value_type, arr_len, is_mut),
                 pos: array_lit.pos
             )
@@ -391,9 +391,9 @@ extend Checker {
         return array_lit.type;
     }
 
-    func check_selector(mut self, mut selector: ast.Expr.Selector) -> ast.Type {
+    func check_selector(^mut self, selector: &mut ast.Expr.Selector) -> ^mut ast.Type {
         selector.type = if selector.is_path {
-            if selector.left_sym is ast.TypeSym(type_sym) {
+            if selector.left_sym is ast.TypeSym(mut type_sym) {
                 if type_sym.info is .Enum(enum_info) {
                     if variant := enum_info.get_variant(selector.field_name); variant.has_type {
                         mut err := report.error_builder(
@@ -409,10 +409,10 @@ extend Checker {
                         err.emit();
                     }
                 }
-                .Basic(type_sym, pos: selector.pos)
+                ^mut .Basic(type_sym, pos: selector.pos)
             } else {
                 match selector.sym is {
-                    ast.Func(func_sym) -> {
+                    ast.Func(mut func_sym) -> {
                         if func_sym.is_method {
                             report.error(
                                 "cannot take value of method `{}`".fmt(
@@ -422,7 +422,7 @@ extend Checker {
                         }
                         func_sym.type(self.env.universe)
                     },
-                    ast.TypeSym(type_sym_) -> .Basic(type_sym_, pos: selector.pos),
+                    ast.TypeSym(mut type_sym_) -> ^mut .Basic(type_sym_, pos: selector.pos),
                     ast.Const(const_sym) -> const_sym.type,
                     ast.Var(var_sym) -> var_sym.type,
                     else -> {
@@ -431,7 +431,7 @@ extend Checker {
                         );
                         err.add_note("please report this bug, thanks =D");
                         err.emit();
-                        .Void
+                        ^mut .Void
                     }
                 }
             }
@@ -443,7 +443,7 @@ extend Checker {
                     selector.field_is_mut = field.is_mut;
                     field.type
                 } else if sym := left_sym.scope.find(selector.field_name) {
-                    if sym is ast.Func(func_sym) {
+                    if sym is ast.Func(mut func_sym) {
                         if func_sym.is_method {
                             mut err := report.error_builder(
                                 "cannot take value of method `{}`".fmt(selector.field_name),
@@ -451,7 +451,7 @@ extend Checker {
                             );
                             err.add_help("use parentheses to call the method");
                             err.emit();
-                            .Void
+                            ^mut .Void
                         } else {
                             mut err := report.error_builder(
                                 "cannot take value of associated function `{}`".fmt(
@@ -470,7 +470,7 @@ extend Checker {
                                 sym.type_of(), left_sym.name, selector.field_name
                             ), selector.pos
                         );
-                        .Void
+                        ^mut .Void
                     }
                 } else {
                     mut err := report.error_builder(
@@ -486,7 +486,7 @@ extend Checker {
                         );
                     }
                     err.emit();
-                    .Void
+                    ^mut .Void
                 }
             } else {
                 report.error(
@@ -494,13 +494,13 @@ extend Checker {
                         selector.left_type, selector.field_name
                     ), selector.field_pos
                 );
-                .Void
+                ^mut .Void
             }
         };
         return selector.type;
     }
 
-    func check_index(mut self, mut index: ast.Expr.Index) -> ast.Type {
+    func check_index(^mut self, index: &mut ast.Expr.Index) -> ^mut ast.Type {
         index.left_type = self.check_expr(index.left);
         left_sym := index.left_type.symbol()?;
         index_t := self.check_expr(index.index);
@@ -510,7 +510,7 @@ extend Checker {
                 index.index.position()
             );
         }
-        index.type = match left_sym.info {
+        index.type = match left_sym.info.^ {
             .Array, .DynArray, .Slice -> {
                 elem_type := left_sym.info.elem_type()?;
                 if index.index is .Range {
@@ -518,7 +518,7 @@ extend Checker {
                     if left_sym.info is .Slice {
                         index.left_type
                     } else {
-                        .Slice(
+                        ^mut .Slice(
                             elem_type, is_mut,
                             self.env.universe.add_or_get_slice(elem_type, is_mut)
                         )
@@ -564,7 +564,7 @@ extend Checker {
         return index.type;
     }
 
-    func check_unary(mut self, mut unary: ast.Expr.Unary) -> ast.Type {
+    func check_unary(^mut self, unary: &mut ast.Expr.Unary) -> ^mut ast.Type {
         unary.type = self.check_expr(unary.right);
         match unary.op {
             .Bang if unary.type != self.env.bool_t -> report.error(
@@ -588,6 +588,7 @@ extend Checker {
                     unary.pos
                 );
             },
+            .Xor -> unary.type = ^mut .Boxed(unary.type, unary.is_mut_ptr, unary.type.position()),
             .Amp -> {
                 mut expected_pointer := false;
                 mut indexable_pointer := false;
@@ -602,7 +603,7 @@ extend Checker {
                     indexable_pointer = opt_ptr.is_indexable;
                 }
                 mut right := unary.right.clean_paren();
-                if right is .Index(mut index) {
+                if right is .Index(&mut index) {
                     if index.left_type is .Pointer && !expected_pointer {
                         report.error("cannot take the address of a pointer indexing", unary.pos);
                     }
@@ -618,14 +619,14 @@ extend Checker {
                         report.error("cannot take the address of a boxed value", unary.pos);
                     }
                 }
-                unary.type = .Pointer(unary.type, unary.is_mut_ptr, indexable_pointer);
+                unary.type = ^mut .Pointer(unary.type, unary.is_mut_ptr, indexable_pointer);
             },
             else -> {}
         }
         return unary.type;
     }
 
-    func check_binary(mut self, mut binary: ast.Expr.Binary) -> ast.Type {
+    func check_binary(^mut self, binary: &mut ast.Expr.Binary) -> ^mut ast.Type {
         left_type := self.check_expr(binary.left);
         old_expected_type := self.expected_type;
         self.expected_type = left_type;
@@ -657,7 +658,7 @@ extend Checker {
         if left_sym := left_type.symbol() {
             match binary.op {
                 .Plus, .Minus, .Mul, .Div, .Mod, .Xor, .Amp, .Pipe -> {
-                    mut promoted_type := ast.Type.Void;
+                    mut promoted_type := ^mut ast.Type.Void;
                     if left_sym.info.is_compound() {
                         if op_method := left_sym.find_method(binary.op.to_string()) {
                             promoted_type = op_method.ret_type;
@@ -767,7 +768,7 @@ extend Checker {
                                             "cannot take the address of a boxed value", binary.var_obj.pos
                                         );
                                     }
-                                    ast.Type.Pointer(variant.type, binary.var_obj.is_mut)
+                                    ^mut ast.Type.Pointer(variant.type, binary.var_obj.is_mut)
                                 } else {
                                     variant.type
                                 };
@@ -867,9 +868,9 @@ extend Checker {
         return binary.type;
     }
 
-    func check_if(mut self, mut if_expr: ast.Expr.If) -> ast.Type {
+    func check_if(^mut self, if_expr: &mut ast.Expr.If) -> ^mut ast.Type {
         if_expr.expected_type = self.expected_type;
-        for i, mut branch in if_expr.branches {
+        for i, &mut branch in if_expr.branches {
             if !branch.is_else {
                 bcond_t := self.check_expr(branch.cond);
                 if branch.cond !is .Guard && bcond_t != self.env.bool_t {
@@ -879,7 +880,7 @@ extend Checker {
                     );
                 }
             }
-            mut branch_t := ast.Type.Void;
+            mut branch_t := ^mut ast.Type.Void;
             if i == 0 {
                 branch_t = self.check_expr(branch.expr);
                 if if_expr.expected_type is .Void {
@@ -903,7 +904,7 @@ extend Checker {
         return if_expr.expected_type;
     }
 
-    func check_return(mut self, mut return_expr: ast.Expr.Return) -> ast.Type {
+    func check_return(^mut self, return_expr: &ast.Expr.Return) -> ^mut ast.Type {
         if self.cur_func.ret_type is .Never {
             report.error("`never` functions cannot use `return` statements", return_expr.pos);
         } else if self.return_tracker == .Defer {
@@ -949,10 +950,10 @@ extend Checker {
             err.emit();
         }
         self.scope_returns = true;
-        return .Never(return_expr.pos);
+        return ^mut .Never(return_expr.pos);
     }
 
-    func check_throw(mut self, mut throw_expr: ast.Expr.Throw) -> ast.Type {
+    func check_throw(^mut self, throw_expr: &ast.Expr.Throw) -> ^mut ast.Type {
         if self.cur_func.ret_type is .Never {
             report.error("`never` functions cannot use `throw` statements", throw_expr.pos);
         } else if self.return_tracker == .Defer {
@@ -988,10 +989,10 @@ extend Checker {
             err_b.emit();
         }
         self.scope_returns = true;
-        return .Never(throw_expr.pos);
+        return ^mut .Never(throw_expr.pos);
     }
 
-    func check_assign(mut self, mut assign: ast.Expr.Assign) -> ast.Type {
+    func check_assign(^mut self, assign: &mut ast.Expr.Assign) -> ^mut ast.Type {
         left_type := self.check_expr(assign.left);
         self.check_expr_is_mut(assign.left, true);
         old_expected_type := self.expected_type;
@@ -999,11 +1000,11 @@ extend Checker {
         right_type := self.check_expr(assign.right);
         self.expected_type = old_expected_type;
         if assign.left is .Ident(ident) && ident.name == "_" {
-            return .Void;
+            return ^mut .Void;
         }
         self.check_types(right_type, left_type) catch |err| {
             report.error(err.to_string(), assign.right.position());
         };
-        return .Void;
+        return ^mut .Void;
     }
 }

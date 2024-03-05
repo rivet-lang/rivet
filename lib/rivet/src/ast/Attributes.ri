@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -8,14 +8,14 @@ import ../token;
 pub struct AttributeDuplicatedError < Throwable {
     name: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return "duplicated attribute `{}`".fmt(self.name);
     }
 }
 
 pub struct AttributeArgument {
     pub name: string;
-    pub expr: Expr;
+    pub expr: ^mut Expr;
     pub is_named: bool;
 }
 
@@ -37,7 +37,7 @@ pub struct Attribute {
 pub struct Attributes {
     pub mut attributes: []Attribute;
 
-    pub func add(mut self, attribute: Attribute) -> ! {
+    pub func add(&mut self, attribute: Attribute) -> ! {
         if self.has(attribute.name) {
             throw AttributeDuplicatedError(attribute.name);
         }

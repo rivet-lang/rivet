@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -9,7 +9,7 @@ var fmt_desc := "Formats the given Rivet source files or recursively formats all
 directory, then prints their formatted source to stdout.";
 
 pub func cmd_fmt(args: [:]string) -> ! {
-    mut fp := flag.FlagParser.new(args);
+    fp := flag.FlagParser.new(args);
     fp.set_application_name("rivet fmt");
     fp.set_arguments_description("[FILES|DIRECTORIES]");
     fp.set_application_short_description(fmt_desc);
@@ -27,13 +27,14 @@ pub func cmd_fmt(args: [:]string) -> ! {
         utils.error("no input received");
     }
     for input in remaining {
-        mut prefs_ := prefs.Prefs(is_fmt: true, hide_all_warns: true);
+        prefs_ := ^mut prefs.Prefs(is_fmt: true, hide_all_warns: true);
         prefs_.set_input(input);
         prefs_.load_module_info()!;
         env := ast.Env.new(prefs_);
         files := Directory.walk(input, ".ri")!;
-        mut formatter := fmt.Formatter(prefs_, write_to_file: write_to_file);
-        for source_file in parser.Parser(env: env).parse_module_files(files) {
+        formatter := ^mut fmt.Formatter(prefs_, write_to_file: write_to_file);
+        parser_ := ^mut parser.Parser(env: env);
+        for source_file in parser_.parse_module_files(files) {
             utils.info("Formatting file `{}`...", source_file.path);
             output := formatter.format(source_file);
             console.writeln(output);

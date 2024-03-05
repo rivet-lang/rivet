@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -8,20 +8,20 @@ import ../token;
 
 #[boxed]
 pub enum Node < Stringable {
-    Decl(Decl),
-    Stmt(Stmt),
-    Expr(Expr);
+    Decl(^mut Decl),
+    Stmt(^mut Stmt),
+    Expr(^mut Expr);
 
-    pub func position(self) -> token.Pos {
-        return match self {
+    pub func position(^self) -> token.Pos {
+        return match self.^ {
             .Decl(decl) -> decl.position(),
             .Stmt(stmt) -> stmt.position(),
             .Expr(expr) -> expr.position()
         };
     }
 
-    pub func to_string(self) -> string {
-        return match self {
+    pub func to_string(^self) -> string {
+        return match self.^ {
             /*.Decl(decl) -> decl.to_string(),
             .Stmt(stmt) -> stmt.to_string(),*/
             .Expr(expr) -> expr.to_string(),
@@ -30,8 +30,8 @@ pub enum Node < Stringable {
     }
 }
 
-pub func nodes_to_decls(nodes: []mut Node) -> []mut Decl {
-    mut decls := []mut Decl(cap: nodes.len);
+pub func nodes_to_decls(nodes: []^mut Node) -> []^mut Decl {
+    mut decls := []^mut Decl(cap: nodes.len);
     for node in nodes {
         if node is .Decl(decl) {
             decls.push(decl);
@@ -40,8 +40,8 @@ pub func nodes_to_decls(nodes: []mut Node) -> []mut Decl {
     return decls;
 }
 
-pub func nodes_to_stmts(nodes: []mut Node) -> []mut Stmt {
-    mut stmts := []mut Stmt(cap: nodes.len);
+pub func nodes_to_stmts(nodes: []^mut Node) -> []^mut Stmt {
+    mut stmts := []^mut Stmt(cap: nodes.len);
     for node in nodes {
         if node is .Stmt(stmt) {
             stmts.push(stmt);
@@ -50,8 +50,8 @@ pub func nodes_to_stmts(nodes: []mut Node) -> []mut Stmt {
     return stmts;
 }
 
-pub func nodes_to_exprs(nodes: []mut Node) -> []mut Expr {
-    mut exprs := []mut Expr(cap: nodes.len);
+pub func nodes_to_exprs(nodes: []^mut Node) -> []^mut Expr {
+    mut exprs := []^mut Expr(cap: nodes.len);
     for node in nodes {
         if node is .Expr(expr) {
             exprs.push(expr);

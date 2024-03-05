@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -41,7 +41,7 @@ $if _TESTS_ {
         return "\x1b[33m{}\x1b[39m".fmt(msg);
     }
 
-    func assert_test(cond: bool, msg: string, pos: string, mut test_: Test) {
+    func assert_test(cond: bool, msg: string, pos: string, test_: &mut Test) {
         if !cond {
             test_.result = .Failed;
             test_.err_msg = "assertion failed: {}".fmt(msg);
@@ -50,7 +50,7 @@ $if _TESTS_ {
         }
     }
 
-    func test_error_throwed(err: Throwable, pos: string, mut test_: Test) {
+    func test_error_throwed(err: ^Throwable, pos: string, test_: &mut Test) {
         test_.result = .ErrorThrowed;
         test_.err = err;
         test_.err_pos = pos;
@@ -66,22 +66,22 @@ $if _TESTS_ {
 
     struct Test {
         name: string;
-        fn: func (mut Test);
+        fn: func (&mut Test);
         mut result: TestResult;
         mut early_return: bool;
         mut err_pos: string;
         mut err_msg: string;
-        mut err: Throwable;
+        mut err: ^Throwable;
     }
 
     struct TestRunner {
-        mut tests: []mut Test;
+        tests: []mut Test;
         mut ok_tests: uint64;
         mut fail_tests: uint64;
         mut skip_tests: uint64;
 
-        func run(mut self) {
-            for i, mut test_ in self.tests {
+        func run(&mut self) {
+            for i, &mut test_ in self.tests {
                 console_ewrite(" [{}/{}] {} ", i + 1, self.tests.len, test_.name);
                 (test_.fn)(test_);
                 match test_.result {
@@ -111,23 +111,23 @@ $if _TESTS_ {
             console_ewriteln(bold("{} total.".fmt(self.tests.len)));
         }
 
-        func print_ok(mut self) {
+        func print_ok(&mut self) {
             console_ewriteln(ok_status);
             self.ok_tests += 1;
         }
 
-        func print_skip(mut self) {
+        func print_skip(&mut self) {
             console_ewriteln(skip_status);
             self.skip_tests += 1;
         }
 
-        func print_failed(mut self, pos: string, msg: string) {
+        func print_failed(&mut self, pos: string, msg: string) {
             console_ewriteln(failed_status);
             console_ewriteln("     at {}: {}", bold(pos), msg);
             self.fail_tests += 1;
         }
 
-        func print_error_throwed(mut self, pos: string, err: Throwable) {
+        func print_error_throwed(&mut self, pos: string, err: ^Throwable) {
             console_ewriteln(failed_status);
             console_ewriteln("     at {}: error throwed: {}", bold(pos), err);
             self.fail_tests += 1;

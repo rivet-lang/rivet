@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -10,9 +10,9 @@ var max_len := [@as(uint, 0), 35, 60, 85, 93, 100];
 
 #[boxed]
 pub struct Formatter {
-    prefs: prefs.Prefs;
+    prefs: ^prefs.Prefs;
 
-    mut source_file: ast.SourceFile;
+    mut source_file: ^mut ast.SourceFile;
     mut imports_output: strings.Builder := strings.Builder.new(100);
     mut output: strings.Builder := strings.Builder.new(1000);
 
@@ -21,13 +21,13 @@ pub struct Formatter {
     mut line_len: uint;
     mut empty_line: bool;
 
-    pub func format(mut self, source_file: ast.SourceFile) -> string {
+    pub func format(^mut self, source_file: ^mut ast.SourceFile) -> string {
         self.source_file = source_file;
         self.format_decls(source_file.decls, is_root: true);
         return self.output.to_string();
     }
 
-    func write(mut self, s: string) {
+    func write(^mut self, s: string) {
         if self.indent > 0 && self.empty_line {
             self.write_indent();
         }
@@ -37,11 +37,11 @@ pub struct Formatter {
     }
 
     #[inline]
-    func write_fmt(mut self, s: string, args: ...traits.Stringable) {
+    func write_fmt(^mut self, s: string, args: ...^traits.Stringable) {
         self.write(s.fmt(args));
     }
 
-    func writeln(mut self, s: string := "") {
+    func writeln(^mut self, s: string := "") {
         if self.indent > 0 && self.empty_line && s.len > 0 {
             self.write_indent();
         }
@@ -51,16 +51,16 @@ pub struct Formatter {
     }
 
     #[inline]
-    func writeln_fmt(mut self, s: string, args: ...traits.Stringable) {
+    func writeln_fmt(^mut self, s: string, args: ...^traits.Stringable) {
         self.writeln(s.fmt(args));
     }
 
-    func write_indent(mut self) {
+    func write_indent(^mut self) {
         self.output.write(utils.tabs(self.indent));
         self.line_len += self.indent * 4;
     }
 
-    func wrap_long_line(mut self, penalty_idx: uint, add_indent: bool) -> bool {
+    func wrap_long_line(^mut self, penalty_idx: uint, add_indent: bool) -> bool {
         if penalty_idx > 0 && self.line_len <= max_len[penalty_idx] {
             return false;
         }
@@ -81,7 +81,7 @@ pub struct Formatter {
 
     // when the removal action actually occurs, the string of the last line after
     // the removal is returned
-    func remove_new_line(mut self, imports_output: bool := false) -> string {
+    func remove_new_line(^mut self, imports_output: bool := false) -> string {
         mut buffer := if imports_output { self.imports_output } else { self.output };
         buffer_len := if buffer.len() > 0 { buffer.len() - 1 } else { 0 };
         mut i := buffer_len;
@@ -116,7 +116,7 @@ pub struct Formatter {
         return string.from_bytes(reverse(last_line_str)[:]);
     }
 
-    func should_insert_newline_before_node(self, node: ast.Node, prev_node: ast.Node) -> bool {
+    func should_insert_newline_before_node(^self, node: ^mut ast.Node, prev_node: ^mut ast.Node) -> bool {
         // no need to insert a newline if there is already one
         if self.output.last_n(2) == "\n\n" {
             return false;
@@ -124,7 +124,7 @@ pub struct Formatter {
         prev_line_nr := prev_node.position().end_line;
         // the nodes are declarations
         if node is .Decl(decl) && prev_node is .Decl(prev_decl) {
-            match prev_decl {
+            match prev_decl.^ {
                 // Force a newline after function declarations
                 // The only exception is inside a block of no body functions
                 .Func(func_decl) if decl !is .Func || !func_decl.has_body -> return true,
@@ -145,16 +145,16 @@ pub struct Formatter {
             true
         };
     }
-}
 
-func reverse(buf: []uint8) -> []uint8 {
-    mut reversed := []uint8();
-    mut i := buf.len - 1;
-    while i >= 0 : i -= 1 {
-        reversed.push(buf[i]);
-        if i == 0 {
-            break;
+    func reverse(buf: []uint8) -> []uint8 {
+        mut reversed := []uint8(cap: buf.len - 1);
+        mut i := buf.len - 1;
+        while i >= 0 : i -= 1 {
+            reversed.push(buf[i]);
+            if i == 0 {
+                break;
+            }
         }
+        return reversed;
     }
-    return reversed;
 }

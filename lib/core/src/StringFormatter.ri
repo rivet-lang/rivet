@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -7,7 +7,7 @@ pub struct StringFormatter {
     mut i: uint;
     mut res: StringBuilder;
 
-    func fmt(mut self, args: ...Stringable) -> string {
+    func fmt(&mut self, args: ...^Stringable) -> string {
         self.res = StringBuilder.new(self.buf.len);
         mut args_idx: uint := 0;
         while self.i < self.buf.len : self.i += 1 {
@@ -112,7 +112,7 @@ pub struct StringFormatter {
         return self.res.to_string();
     }
 
-    func fwidth(mut self) -> (bool, int) {
+    func fwidth(&mut self) -> (bool, int) {
         if unsafe { self.buf.ptr[self.i] != ':' } {
             return (false, 0);
         }

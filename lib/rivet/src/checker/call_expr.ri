@@ -1,12 +1,12 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report, utils/maps };
+import ../{ ast, utils/{maps, report} };
 
 extend Checker {
-    func check_call(mut self, mut call_expr: ast.Expr.Call) -> ast.Type {
-        call_expr.type = .Void;
+    func check_call(^mut self, call_expr: &mut ast.Expr.Call) -> ^mut ast.Type {
+        call_expr.type = ^mut .Void;
 
         mut left := call_expr.left;
         inside_parens := if left is .Paren(paren)
@@ -17,13 +17,13 @@ extend Checker {
             false
         };
 
-        match left {
-            .SelfTy(mut self_ty) -> self.check_ctor_call(self_ty.sym, call_expr),
-            .Ident(mut ident) if (ident.is_sym || ident.is_obj) -> match ident.sym is {
+        match left.^ {
+            .SelfTy(self_ty) -> self.check_ctor_call(self_ty.sym, call_expr),
+            .Ident(ident) if (ident.is_sym || ident.is_obj) -> match ident.sym is {
                 ast.TypeSym(mut type_sym) if type_sym.info is .Trait
                     || type_sym.info is .Struct || type_sym.info is .String
                     || type_sym.info is .Enum -> self.check_ctor_call(type_sym, call_expr),
-                ast.Func(func_) -> {
+                ast.Func(mut func_) -> {
                     call_expr.func_ = func_;
                     if func_.is_main {
                         report.error("cannot call to `main` function", ident.pos);
@@ -45,14 +45,14 @@ extend Checker {
                     }
                 }
             },
-            .Selector(mut selector) -> if selector.is_path {
+            .Selector(&mut selector) -> if selector.is_path {
                 match selector.sym is {
                     ast.TypeSym(mut s_type_sym) if s_type_sym.info is .Trait
                         || s_type_sym.info is .Struct || s_type_sym.info is .String
                         || s_type_sym.info is .Enum -> self.check_ctor_call(
                         s_type_sym, call_expr
                     ),
-                    ast.Func(s_func_) -> {
+                    ast.Func(mut s_func_) -> {
                         call_expr.func_ = s_func_;
                         self.check_func_call(s_func_, call_expr);
                     },
@@ -79,7 +79,7 @@ extend Checker {
                     );
                     err.add_help("use the option-check syntax: `foo?.method()` or use `??`: `(foo ?? 5).method()`");
                     err.emit();
-                    return .Void;
+                    return ^mut .Void;
                 }
                 if left_sym := selector.left_type.symbol() {
                     if method := left_sym.find_method(selector.field_name) {
@@ -129,7 +129,7 @@ extend Checker {
                     );
                 }
             },
-            .EnumLiteral(mut enum_lit) -> {
+            .EnumLiteral(&mut enum_lit) -> {
                 enum_lit.is_instance = true;
                 _ = self.check_expr(left);
                 self.check_ctor_call(enum_lit.sym, call_expr);
@@ -191,19 +191,19 @@ extend Checker {
         return call_expr.type;
     }
 
-    func check_ctor_call(mut self, mut type_sym: ast.TypeSym, mut call_expr: ast.Expr.Call) {
+    func check_ctor_call(^mut self, type_sym: ^mut ast.TypeSym, call_expr: &mut ast.Expr.Call) {
         call_expr.is_constructor = true;
         call_expr.type = if type_sym.info is .Struct(struct_info) && struct_info.is_enum_variant {
             call_expr.is_enum_variant = true;
             call_expr.enum_variant_sym = type_sym;
-            .Basic(struct_info.parent)
+            ^mut .Basic(struct_info.parent)
         } else {
-            .Basic(type_sym, pos: call_expr.pos)
+            ^mut .Basic(type_sym, pos: call_expr.pos)
         };
-        match type_sym.info {
-            .Enum(enum_info) -> {
+        match type_sym.info.^ {
+            .Enum(&enum_info) -> {
                 variant := if call_expr.left is .Selector(selector) {
-                    @as(ast.TypeInfo.Enum, @as(ast.TypeSym, selector.left_sym).info)
+                    @as(ast.TypeInfo.Enum, @as(^mut ast.TypeSym, selector.left_sym).info)
                         .get_variant(selector.field_name)?
                 } else {
                     enum_info.get_variant(@as(ast.Expr.EnumLiteral, call_expr.left).value)?
@@ -220,7 +220,7 @@ extend Checker {
                     } else if variant.has_type {
                         old_expected_type := self.expected_type;
                         self.expected_type = variant.type;
-                        mut arg0 := call_expr.args[0];
+                        arg0 := call_expr.args[0];
                         self.check_types(
                             self.check_expr(arg0.expr), variant.type
                         ) catch |err| {
@@ -247,13 +247,13 @@ extend Checker {
                     );
                 }
             },
-            .Trait(mut trait_info) -> {
+            .Trait(&mut trait_info) -> {
                 if call_expr.has_spread_expr {
                     report.error(
                         "cannot use spread expression with trait constructor", call_expr.pos
                     );
                 } else if call_expr.args.len == 1 {
-                    mut arg0 := call_expr.args[0];
+                    arg0 := call_expr.args[0];
                     value_t := self.env.comptime_number_to_type(self.check_expr(arg0.expr));
                     if value_t.symbol()? in trait_info.implements {
                         trait_info.mark_has_objects();
@@ -290,7 +290,7 @@ extend Checker {
                         return;
                     }
                 }
-                for i, mut arg in call_expr.args {
+                for i, &mut arg in call_expr.args {
                     mut field := ast.Field();
                     if arg.is_named {
                         if t_field := type_sym.lookup_field(arg.name) {
@@ -326,41 +326,45 @@ extend Checker {
                         err.add_note("in spread expression of constructor");
                         err.emit();
                     }
-                }
-                for field in type_fields {
-                    if !field.is_required && (field.type is .Option || field.has_def_expr) {
-                        continue;
-                    }
-                    was_initted := initted_fields.contains(field.name);
-                    if field.is_required && !was_initted {
-                        report.warn(
-                            "field `{}` of type `{}` must be initialized".fmt(
-                                field.name, type_sym.name
-                            ), call_expr.pos
-                        );
-                        continue;
-                    }
-                    match field.type {
-                        .Pointer, .Rawptr if !was_initted -> report.warn(
-                            "field `{}` of type `{}` must be initialized".fmt(
-                                field.name, type_sym.name
-                            ), call_expr.pos
-                        ),
-                        else -> if f_type_sym := field.type.symbol();
-                            f_type_sym.default_value == none {
-                            match f_type_sym.info {
-                                .Trait if !was_initted -> report.warn(
-                                    "field `{}` of type `{}` must be initialized".fmt(
-                                        field.name, type_sym.name
-                                    ), call_expr.pos
-                                ),
-                                .Enum(enum_info2) if enum_info2.is_tagged && !was_initted ->
-                                    report.warn(
+                } else {
+                    for field in type_fields {
+                        if !field.is_required && (field.type is .Option || field.has_def_expr) {
+                            continue;
+                        }
+                        was_initted := initted_fields.contains(field.name);
+                        if was_initted {
+                            continue;
+                        }
+                        if field.is_required && !was_initted {
+                            report.warn(
+                                "field `{}` of type `{}` must be initialized".fmt(
+                                    field.name, type_sym.name
+                                ), call_expr.pos
+                            );
+                            continue;
+                        }
+                        match field.type.^ {
+                            .Pointer, .Rawptr -> report.warn(
+                                "field `{}` of type `{}` must be initialized".fmt(
+                                    field.name, type_sym.name
+                                ), call_expr.pos
+                            ),
+                            else -> if f_type_sym := field.type.symbol();
+                                f_type_sym.default_value == none {
+                                match f_type_sym.info.^ {
+                                    .Trait -> report.warn(
                                         "field `{}` of type `{}` must be initialized".fmt(
                                             field.name, type_sym.name
                                         ), call_expr.pos
                                     ),
-                                else -> {}
+                                    .Enum(enum_info2) if enum_info2.is_tagged ->
+                                        report.warn(
+                                            "field `{}` of type `{}` must be initialized".fmt(
+                                                field.name, type_sym.name
+                                            ), call_expr.pos
+                                        ),
+                                    else -> {}
+                                }
                             }
                         }
                     }
@@ -369,7 +373,7 @@ extend Checker {
         }
     }
 
-    func check_func_call(mut self, func_: ast.Func, mut call_expr: ast.Expr.Call) {
+    func check_func_call(^mut self, func_: ^mut ast.Func, call_expr: &mut ast.Expr.Call) {
         call_expr.type = func_.ret_type;
         kind := func_.kind();
 
@@ -460,7 +464,7 @@ extend Checker {
         }
 
         old_expected_type := self.expected_type;
-        for i, mut arg in call_expr.args {
+        for i, &mut arg in call_expr.args {
             arg_fn := if func_.is_variadic && i >= func_.args.len - 1 {
                 func_.args[func_.args.len - 1]
             } else {
@@ -491,7 +495,7 @@ extend Checker {
             if spread_expr_sym.info is .DynArray || spread_expr_sym.info is .Array
                 || spread_expr_sym.info is .Slice {
                 last_arg_type := func_.args[func_.args.len - 1].type;
-                spread_t := ast.Type.Variadic(spread_expr_sym.info.elem_type()?);
+                spread_t := ^mut ast.Type.Variadic(spread_expr_sym.info.elem_type()?);
                 self.check_types(spread_t, last_arg_type) catch |err| {
                     report.error(err.to_string(), call_expr.spread_expr.position());
                 };

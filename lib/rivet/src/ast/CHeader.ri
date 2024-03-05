@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -27,7 +27,7 @@ pub enum CImportAction {
     },
     Define {
         name: string;
-        value: Expr;
+        value: ^mut Expr;
         pos: token.Pos;
     },
     Undefine {
@@ -41,7 +41,7 @@ pub enum CImportAction {
 }
 
 pub struct CImportIfBranch {
-    pub cond: Expr;
+    pub cond: ^mut Expr;
     pub is_else: bool;
     pub actions: []mut CImportAction;
     pub pos: token.Pos;
@@ -82,7 +82,7 @@ struct CDefine < traits.Stringable {
 struct CDefines {
     mut defines: []CDefine;
 
-    func get(self, name: string) -> ?CDefine {
+    func get(&self, name: string) -> ?CDefine {
         for def in self.defines {
             if def.name == name {
                 return def;
@@ -106,12 +106,12 @@ enum CImportValue {
 }
 
 extend Env {
-    func setup_c_utils(mut self) {
+    func setup_c_utils(^mut self) {
         self.c_include_paths = self.get_include_paths();
         self.c_defines = self.get_global_defines();
     }
 
-    func get_global_defines(self) -> CDefines {
+    func get_global_defines(^self) -> CDefines {
         if result := process.execute(
             "{} -x c -E -dM /dev/null".fmt(self.prefs.target_backend_compiler)
         ) {
@@ -147,7 +147,7 @@ extend Env {
         return CDefines();
     }
 
-    func get_include_paths(self) -> []string {
+    func get_include_paths(^self) -> []string {
         if result := process.execute(
             "{} -x c -E -v /dev/null".fmt(self.prefs.target_backend_compiler)
         ) {
@@ -163,10 +163,10 @@ extend Env {
             }
             return paths;
         }
-        return +[];
+        return ^[];
     }
 
-    func search_c_header(self, is_local: bool, header: string) -> ?string {
+    func search_c_header(^self, is_local: bool, header: string) -> ?string {
         if is_local {
             if Path.is_file(header) {
                 return header;

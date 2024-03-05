@@ -13,6 +13,9 @@ class Resolver:
         self.sym = None
         self.self_sym = None
 
+        self.inside_extend_type = False
+        self.inside_typematch_type = False
+
     def resolve_files(self, source_files):
         self.load_preludes()
         for sf in source_files:
@@ -70,10 +73,12 @@ class Resolver:
                             decl.sym.default_value = attribute.args[0].expr
                             self.resolve_expr(decl.sym.default_value)
                     for base in decl.bases:
+                        self.inside_extend_type = True
                         if self.resolve_type(base):
                             base_sym = base.symbol()
                             if base_sym.kind == sym.TypeKind.Trait:
                                 base_sym.info.implement(decl.sym)
+                        self.inside_extend_type = False
                     for v in decl.variants:
                         if len(v.decls) > 0:
                             self.self_sym = v.typ.symbol()
@@ -81,11 +86,8 @@ class Resolver:
                     self.self_sym = decl.sym
                     self.resolve_decls(decl.decls)
             elif isinstance(decl, ast.TraitDecl):
-                for attribute in decl.attributes.attributes:
-                    if attribute.name == "default_value":
-                        decl.sym.default_value = attribute.args[0].expr
-                        self.resolve_expr(decl.sym.default_value)
                 for base in decl.bases:
+                    self.inside_extend_type = True
                     if self.resolve_type(base):
                         base_sym = base.symbol()
                         if base_sym.kind == sym.TypeKind.Trait:
@@ -94,11 +96,13 @@ class Resolver:
                                 if base_sym not in impl.info.traits:
                                     base_sym.info.implement(impl)
                                     impl.info.traits.append(base_sym)
+                    self.inside_extend_type = False
                 self.self_sym = decl.sym
                 self.resolve_decls(decl.decls)
             elif isinstance(decl, ast.StructDecl):
                 self.self_sym = decl.sym
                 for base in decl.bases:
+                    self.inside_extend_type = True
                     if self.resolve_type(base):
                         base_sym = base.symbol()
                         if base_sym.kind == sym.TypeKind.Trait:
@@ -108,12 +112,14 @@ class Resolver:
                             decl.sym.info.bases.append(base_sym)
                             for b_trait in base_sym.info.traits:
                                 b_trait.info.implement(decl.sym)
+                    self.inside_extend_type = False
                 self.resolve_decls(decl.decls)
             elif isinstance(decl, ast.FieldDecl):
                 self.resolve_type(decl.typ)
                 if decl.has_def_expr:
                     self.resolve_expr(decl.def_expr)
             elif isinstance(decl, ast.ExtendDecl):
+                self.inside_extend_type = True
                 if self.resolve_type(decl.typ):
                     self.self_sym = decl.typ.symbol()
                     for base in decl.bases:
@@ -123,17 +129,21 @@ class Resolver:
                                 base_sym.info.implements.append(self.self_sym)
                             elif self.self_sym.kind == sym.TypeKind.Struct and self.self_sym.kind == base_sym.kind:
                                 self.self_sym.info.bases.append(base_sym)
+                    self.inside_extend_type = False
                     self.resolve_decls(decl.decls)
             elif isinstance(decl, ast.FuncDecl):
                 if decl.is_method:
                     self_typ = type.Type(self.self_sym)
                     if decl.self_is_ptr:
                         self_typ = type.Ptr(self_typ, decl.self_is_mut)
+                    elif decl.self_is_boxed:
+                        self_typ.is_boxed = True
+                        self_typ.is_mut = decl.self_is_mut
                     try:
                         decl.scope.add(
                             sym.Obj(
-                                decl.self_is_mut and not decl.self_is_ptr, "self", self_typ,
-                                sym.ObjLevel.Rec, decl.name_pos
+                                False, "self", self_typ, sym.ObjLevel.Rec,
+                                decl.name_pos
                             )
                         )
                     except utils.CompilerError as e:
@@ -192,8 +202,8 @@ class Resolver:
                 try:
                     stmt.scope.add(
                         sym.Obj(
-                            stmt.index.is_mut, stmt.index.name,
-                            self.comp.void_t, sym.ObjLevel.Local, stmt.index.pos
+                            False, stmt.index.name, self.comp.void_t,
+                            sym.ObjLevel.Local, stmt.index.pos
                         )
                     )
                 except utils.CompilerError as e:
@@ -201,7 +211,7 @@ class Resolver:
             try:
                 stmt.scope.add(
                     sym.Obj(
-                        stmt.value.is_mut, stmt.value.name, self.comp.void_t,
+                        False, stmt.value.name, self.comp.void_t,
                         sym.ObjLevel.Local, stmt.value.pos
                     )
                 )
@@ -271,13 +281,15 @@ class Resolver:
             self.resolve_expr(expr.right)
         elif isinstance(expr, ast.BinaryExpr):
             self.resolve_expr(expr.left)
+            self.inside_typematch_type = expr.op in (Kind.KwIs, Kind.KwNotIs)
             self.resolve_expr(expr.right)
+            self.inside_typematch_type = False
             if expr.has_var:
                 try:
                     expr.scope.add(
                         sym.Obj(
-                            expr.var.is_mut and not expr.var.is_ref, expr.var.name,
-                            self.comp.void_t, sym.ObjLevel.Local, expr.var.pos
+                            False, expr.var.name, self.comp.void_t,
+                            sym.ObjLevel.Local, expr.var.pos
                         )
                     )
                 except utils.CompilerError as e:
@@ -336,13 +348,15 @@ class Resolver:
             for b in expr.branches:
                 if not b.is_else:
                     for pat in b.pats:
+                        self.inside_typematch_type = expr.is_typematch
                         self.resolve_expr(pat)
+                        self.inside_typematch_type = False
                     if b.has_var:
                         try:
                             b.scope.add(
                                 sym.Obj(
-                                    b.var_is_mut and not b.var_is_ref, b.var_name,
-                                    self.comp.void_t, sym.ObjLevel.Local, b.var_pos
+                                    False, b.var_name, self.comp.void_t,
+                                    sym.ObjLevel.Local, b.var_pos
                                 )
                             )
                         except utils.CompilerError as e:
@@ -482,8 +496,6 @@ class Resolver:
             return True
         elif isinstance(typ, type.Ptr):
             return self.resolve_type(typ.typ)
-        elif isinstance(typ, type.Ptr):
-            return self.resolve_type(typ.typ)
         elif isinstance(typ, type.Variadic):
             if self.resolve_type(typ.typ):
                 elem_sym = typ.typ.symbol()
@@ -547,6 +559,7 @@ class Resolver:
         elif isinstance(typ, type.Type):
             if typ.is_resolved():
                 return True # resolved
+            result = False
             if isinstance(typ.expr, ast.Ident):
                 self.resolve_ident(typ.expr)
                 if typ.expr.sym != None:
@@ -557,7 +570,7 @@ class Resolver:
                             if self.resolve_type(typ.expr.sym.info.parent):
                                 typ.unalias()
                         typ_sym = typ.symbol()
-                        return True
+                        result = True
                     else:
                         report.error(
                             f"expected type, found {typ.expr.sym.typeof()}",
@@ -584,7 +597,7 @@ class Resolver:
                                 typ.expr.field_sym.info.parent
                             ):
                                 typ.unalias()
-                        return True
+                        result = True
                     else:
                         report.error(
                             f"expected type, found {typ.expr.field_sym.typeof()}",
@@ -593,11 +606,24 @@ class Resolver:
             elif isinstance(typ.expr, ast.SelfTyExpr):
                 if self.self_sym:
                     typ.resolve(self.self_sym)
-                    return True
+                    result = True
                 else:
                     report.error("cannot resolve type for `Self`", typ.expr.pos)
             else:
                 report.error(f"expected type, found {typ.expr}", typ.expr.pos)
+            if result and isinstance(
+                typ, type.Type
+            ) and not typ.is_boxed and not self.inside_extend_type and not self.inside_typematch_type:
+                tsym = typ.symbol()
+                if isinstance(tsym, sym.Type) and tsym.is_boxed():
+                    report.error(
+                        f"cannot use type `{tsym.name}` as a simple value",
+                        typ.expr.pos
+                    )
+                    report.help(
+                        f"type `{tsym.name}` is boxed, you should use `^{typ.expr}` instead"
+                    )
+            return result
         return False
 
     def eval_size(self, expr):

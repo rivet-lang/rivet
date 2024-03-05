@@ -1,11 +1,10 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ./prefs.Prefs;
-import ./builder.Builder;
+import ./{ prefs.Prefs, builder.Builder };
 
-pub func compile(prefs: Prefs) -> ! {
+pub func compile(prefs: ^mut Prefs) -> ! {
     mut builder := Builder.new(prefs);
     builder.run()!;
 }

@@ -1,5 +1,5 @@
 test "dynamic arrays: push and pop" {
-    mut vec := +["A", "B"];
+    mut vec := ^["A", "B"];
     @assert(vec.len == 2);
 
     vec.push("C");
@@ -12,14 +12,14 @@ test "dynamic arrays: push and pop" {
 }
 
 test "dynamic arrays: clear" {
-    mut vec := +["A", "B"];
+    mut vec := ^["A", "B"];
     @assert(vec.len == 2);
     @assert(vec[0] == "A");
     @assert(vec[1] == "B");
 
     vec.clear();
     @assert(vec.len == 0);
-    @assert(vec == +[]);
+    @assert(vec == ^[]);
 
     vec.push("C");
     @assert(vec.len == 1);

@@ -288,7 +288,7 @@ class FuncDecl:
         self, docs, attributes, is_public, is_extern, is_unsafe, name, name_pos,
         args, ret_typ, stmts, scope, has_body = False, is_method = False,
         self_is_mut = False, self_is_ptr = False, has_named_args = False,
-        is_main = False, is_variadic = False, abi = None
+        is_main = False, is_variadic = False, abi = None, self_is_boxed = False
     ):
         self.sym = None
         self.docs = docs
@@ -299,8 +299,9 @@ class FuncDecl:
         self.name_pos = name_pos
         self.args = args
         self.self_typ = None
-        self.self_is_mut = self_is_mut
         self.self_is_ptr = self_is_ptr
+        self.self_is_boxed = self_is_boxed
+        self.self_is_mut = self_is_mut
         self.is_main = is_main
         self.is_extern = is_extern
         self.is_unsafe = is_unsafe
@@ -592,7 +593,7 @@ class ArrayCtor:
                     res += ", "
             if self.cap_value:
                 res += f"cap: {self.cap_value}"
-                if self.self.len_value:
+                if self.len_value:
                     res += ", "
             if self.len_value:
                 res += f"len: {self.len_value}"
@@ -611,7 +612,7 @@ class ArrayLiteral:
     def __repr__(self):
         if len(self.elems) == 0:
             if self.is_dyn:
-                return "+[]"
+                return "^[]"
             return "[]"
         res = ""
         if self.is_dyn:
@@ -847,7 +848,7 @@ class RangeExpr:
 class SelectorExpr:
     def __init__(
         self, left, field_name, pos, field_pos, is_indirect = False,
-        is_option_check = False
+        is_option_check = False, is_boxed_indirect = False
     ):
         self.left = left
         self.left_sym = None
@@ -857,6 +858,7 @@ class SelectorExpr:
         self.field_pos = field_pos
         self.field_sym = None
         self.is_indirect = is_indirect
+        self.is_boxed_indirect = is_boxed_indirect
         self.is_option_check = is_option_check
         self.is_path = False
         self.not_found = False
@@ -974,8 +976,8 @@ class IfExpr:
 
 class MatchBranch:
     def __init__(
-        self, pats, has_var, var_is_ref, var_is_mut, var_name, var_pos, has_cond, cond,
-        expr, is_else, scope
+        self, pats, has_var, var_is_ref, var_is_mut, var_name, var_pos,
+        has_cond, cond, expr, is_else, scope
     ):
         self.pats = pats
         self.has_var = has_var

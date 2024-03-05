@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -12,7 +12,7 @@ func assert(cond: bool, msg: string) {
     }
 }
 
-func runtime_error(s: string, args: ...Stringable) -> never {
+func runtime_error(s: string, args: ...^Stringable) -> never {
     console_ewriteln("runtime error: {}", s.fmt(args));
     bt_print(2);
     process_exit(100);

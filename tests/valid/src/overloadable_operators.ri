@@ -21,7 +21,7 @@ struct Vec {
 
 var vec := Vec(2, 2);
 
-test "overloadable operators: +" {
+test "overloadable operators: ^" {
     mut v1 := vec;
     v1 = v1 + vec;
     @assert(v1.x == 4 && v1.y == 4);

@@ -1,50 +1,50 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report, token };
+import ../{ ast, utils/report, token };
 
 extend Resolver {
-    func resolve_expr(mut self, mut expr: ast.Expr) {
-        match expr {
+    func resolve_expr(^mut self, expr: ^mut ast.Expr) {
+        match expr.^ {
             .Empty(empty_pos) -> report.error("bug: unexpected empty expression found", empty_pos),
-            .ComptimeIf(mut comptime_if) -> {
+            .ComptimeIf(&mut comptime_if) -> {
                 exprs := ast.nodes_to_exprs(
                     self.env.evalue_comptime_if(comptime_if)
                 );
                 self.resolve_expr(exprs[0]);
             },
-            .Paren(mut paren) -> self.resolve_expr(paren.expr),
-            .Type(mut type) -> _ = self.resolve_type(type),
-            .Ident(mut ident) -> self.resolve_ident(ident),
-            .Selector(mut selector) -> self.resolve_selector(selector),
-            .Indirect(mut indirect) -> self.resolve_expr(indirect.left),
-            .OptionCheck(mut option_check) -> self.resolve_expr(option_check.left),
-            .SelfTy(mut self_ty) -> if self.self_sym_is_set {
+            .Paren(paren) -> self.resolve_expr(paren.expr),
+            .Type(type) -> _ = self.resolve_type(type),
+            .Ident(&mut ident) -> self.resolve_ident(ident),
+            .Selector(&mut selector) -> self.resolve_selector(selector),
+            .Indirect(&mut indirect) -> self.resolve_expr(indirect.left),
+            .OptionCheck(&mut option_check) -> self.resolve_expr(option_check.left),
+            .SelfTy(&mut self_ty) -> if self.self_sym_is_set {
                 self_ty.sym = self.self_sym;
                 self_ty.found = true;
             } else {
                 report.error("cannot resolve `Self` expression", self_ty.pos);
             },
-            .SelfLiteral(mut self_lit) -> if self.self_sym_is_set {
+            .SelfLiteral(&mut self_lit) -> if self.self_sym_is_set {
                 self_lit.sym = self.self_sym;
                 self_lit.found = true;
-                self_lit.obj = @as(ast.Var, self_lit.scope.lookup("self")?);
+                self_lit.obj = @as(^mut ast.Var, self_lit.scope.lookup("self")?);
                 self_lit.obj.is_used = true;
             } else {
                 report.error("cannot resolve `self` expression", self_lit.pos);
             },
-            .TupleLiteral(mut tuple_lit) -> {
-                for mut value in tuple_lit.values {
+            .TupleLiteral(tuple_lit) -> {
+                for value in tuple_lit.values {
                     self.resolve_expr(value);
                 }
             },
-            .ArrayCtor(mut array_ctor) -> {
+            .ArrayCtor(&mut array_ctor) -> {
                 _ = self.resolve_type(array_ctor.elem_type);
-                if mut init_value := array_ctor.init_value {
+                if init_value := array_ctor.init_value {
                     self.resolve_expr(init_value);
                 }
-                if mut len_value := array_ctor.len_value {
+                if len_value := array_ctor.len_value {
                     self.resolve_expr(len_value);
                     if !array_ctor.is_dyn {
                         if len_res := self.eval_size(len_value) {
@@ -61,20 +61,20 @@ extend Resolver {
                         }
                     }
                 }
-                if mut cap_value := array_ctor.cap_value {
+                if cap_value := array_ctor.cap_value {
                     self.resolve_expr(cap_value);
                 }
             },
-            .ArrayLiteral(mut array_lit) -> {
-                for mut value in array_lit.values {
+            .ArrayLiteral(array_lit) -> {
+                for value in array_lit.values {
                     self.resolve_expr(value);
                 }
             },
-            .BuiltinCall(mut builtin_call) -> {
+            .BuiltinCall(&mut builtin_call) -> {
                 if builtin := self.env.find_builtin(builtin_call.name) {
                     if builtin is .Func {
                         builtin_call.builtin = builtin;
-                        for mut arg in builtin_call.args {
+                        for arg in builtin_call.args {
                             self.resolve_expr(arg.expr);
                         }
                     } else {
@@ -90,9 +90,9 @@ extend Resolver {
                     );
                 }
             },
-            .Call(mut call) -> {
+            .Call(&mut call) -> {
                 self.resolve_expr(call.left);
-                for mut arg in call.args {
+                for arg in call.args {
                     self.resolve_expr(arg.expr);
                 }
                 if call.has_spread_expr {
@@ -103,7 +103,7 @@ extend Resolver {
                         self.check_variable_shadowing(
                             call.err_handler.varname, call.err_handler.varname_pos
                         );
-                        call.err_handler.scope.add_local(ast.Var(
+                        call.err_handler.scope.add_local(^mut ast.Var(
                             name: call.err_handler.varname,
                             type: self.env.throwable_t,
                             level: .Local,
@@ -116,16 +116,16 @@ extend Resolver {
                     self.resolve_expr(call.err_handler.expr);
                 }
             },
-            .Unary(mut unary) -> self.resolve_expr(unary.right),
-            .Binary(mut binary) -> {
+            .Unary(unary) -> self.resolve_expr(unary.right),
+            .Binary(binary) -> {
                 self.resolve_expr(binary.left);
                 self.resolve_expr(binary.right);
                 if binary.has_var_obj {
                     self.check_variable_shadowing(binary.var_obj.name, binary.var_obj.pos);
-                    binary.var_obj.sym = ast.Var(
+                    binary.var_obj.sym = ^mut ast.Var(
                         is_mut: binary.var_obj.is_mut && !binary.var_obj.is_ref,
                         name: binary.var_obj.name,
-                        type: .Void,
+                        type: ^mut .Void,
                         level: .Local,
                         pos: binary.var_obj.pos
                     );
@@ -134,7 +134,7 @@ extend Resolver {
                     );
                 }
             },
-            .Range(mut range) -> {
+            .Range(range) -> {
                 if range.has_start {
                     self.resolve_expr(range.start);
                 }
@@ -142,28 +142,28 @@ extend Resolver {
                     self.resolve_expr(range.end);
                 }
             },
-            .Index(mut index) -> {
+            .Index(index) -> {
                 self.resolve_expr(index.left);
                 self.resolve_expr(index.index);
             },
-            .Block(mut block) -> {
+            .Block(block) -> {
                 self.resolve_stmts(block.stmts);
                 if block.is_expr {
                     self.resolve_expr(block.expr);
                 }
             },
-            .Return(mut return_expr) -> if return_expr.has_expr {
+            .Return(return_expr) -> if return_expr.has_expr {
                 self.resolve_expr(return_expr.expr);
             },
-            .Throw(mut throw_expr) -> self.resolve_expr(throw_expr.expr),
-            .Guard(mut guard) -> {
-                for mut var_ in guard.vars {
+            .Throw(throw_expr) -> self.resolve_expr(throw_expr.expr),
+            .Guard(guard) -> {
+                for var_ in guard.vars {
                     self.check_variable_shadowing(var_.name, var_.pos);
-                    var_.sym = ast.Var(
+                    var_.sym = ^mut ast.Var(
                         is_mut: var_.is_mut,
                         name: var_.name,
                         level: .Local,
-                        type: .Void,
+                        type: ^mut .Void,
                         pos: var_.pos
                     );
                     guard.scope.add_local(var_.sym) catch |err| report.error(
@@ -175,28 +175,28 @@ extend Resolver {
                     self.resolve_expr(guard.cond);
                 }
             },
-            .If(mut if_expr) -> {
-                for mut branch in if_expr.branches {
+            .If(if_expr) -> {
+                for branch in if_expr.branches {
                     if !branch.is_else {
                         self.resolve_expr(branch.cond);
                     }
                     self.resolve_expr(branch.expr);
                 }
             },
-            .Match(mut match_expr) -> {
+            .Match(match_expr) -> {
                 self.resolve_expr(match_expr.expr);
-                for mut branch in match_expr.branches {
+                for branch in match_expr.branches {
                     if !branch.is_else {
-                        for mut pattern in branch.patterns {
+                        for pattern in branch.patterns {
                             self.resolve_expr(pattern);
                         }
                         if branch_var := branch.branch_var {
                             self.check_variable_shadowing(branch_var.name, branch_var.pos);
-                            match_expr.scope.add_local(ast.Var(
+                            match_expr.scope.add_local(^mut ast.Var(
                                 is_mut: branch_var.is_mut && !branch_var.is_ref,
                                 name: branch_var.name,
                                 level: .Local,
-                                type: .Void,
+                                type: ^mut .Void,
                                 pos: branch_var.pos
                             )) catch |err| report.error(
                                 err.to_string(), branch_var.pos
@@ -209,7 +209,7 @@ extend Resolver {
                     self.resolve_expr(branch.expr);
                 }
             },
-            .Assign(mut assign_expr) -> {
+            .Assign(assign_expr) -> {
                 self.resolve_expr(assign_expr.left);
                 self.resolve_expr(assign_expr.right);
             },
@@ -217,7 +217,7 @@ extend Resolver {
         }
     }
 
-    func resolve_ident(mut self, mut ident: ast.Expr.Ident) {
+    func resolve_ident(^mut self, ident: &mut ast.Expr.Ident) {
         if ident.name == "_" {
             ident.found = true;
             ident.is_obj = true;
@@ -235,12 +235,12 @@ extend Resolver {
                 report.error("unknown builtin constant `{}`".fmt(ident.name), ident.pos);
             }
             return;
-        } else if mut obj := ident.scope.lookup(ident.name) {
+        } else if obj := ident.scope.lookup(ident.name) {
             ident.found = true;
             ident.is_obj = true;
             ident.sym = obj;
-            @as(ast.Var, obj).is_used = true;
-        } else if mut imported := self.source_file.imported_symbols.find(ident.name) {
+            @as(^mut ast.Var, obj).is_used = true;
+        } else if imported := self.source_file.imported_symbols.find(ident.name) {
             if !(imported.sym is ast.TypeSym(type_sym) && type_sym.info is .Placeholder) {
                 imported.is_used = true;
                 ident.found = true;
@@ -289,9 +289,9 @@ extend Resolver {
         }
     }
 
-    func resolve_selector(mut self, mut selector: ast.Expr.Selector) {
+    func resolve_selector(^mut self, selector: &mut ast.Expr.Selector) {
         self.resolve_expr(selector.left);
-        match selector.left {
+        match selector.left.^ {
             .SelfTy(self_ty) if self_ty.found -> {
                 selector.is_path = true;
                 selector.left_sym = self_ty.sym;
@@ -323,7 +323,7 @@ extend Resolver {
         }
     }
 
-    func find_symbol(mut self, mut sym: ast.Sym, name: string, pos: token.Pos) -> ?ast.Sym {
+    func find_symbol(^mut self, sym: ^mut ast.Sym, name: string, pos: token.Pos) -> ?^mut ast.Sym {
         mut sym_ := sym;
         if sym is ast.SymRef(mut sym_ref) {
             sym_ = self.clean_symbol_reference(sym_ref);
@@ -349,7 +349,7 @@ extend Resolver {
         return none;
     }
 
-    func find_prelude(self, name: string) -> ?ast.Sym {
+    func find_prelude(^self, name: string) -> ?^mut ast.Sym {
         for &prelude in self.preludes {
             if prelude.name == name {
                 return prelude.sym;
@@ -358,7 +358,7 @@ extend Resolver {
         return none;
     }
 
-    func clean_symbol_reference(mut self, mut sym_ref: ast.SymRef) -> ast.Sym {
+    func clean_symbol_reference(^mut self, sym_ref: ^mut ast.SymRef) -> ^mut ast.Sym {
         if !sym_ref.ref_resolved {
             self.resolve_expr(sym_ref.ref_expr);
             if sym_ref.ref_expr is .Ident(ident) && ident.found && ident.is_sym {
@@ -376,7 +376,7 @@ extend Resolver {
         return sym_ref.ref;
     }
 
-    func check_symbol_abi(mut self, sym: ast.Sym, pos: token.Pos) {
+    func check_symbol_abi(^mut self, sym: ^mut ast.Sym, pos: token.Pos) {
         if sym.abi != .Rivet {
             if self.source_file_abi == sym.abi {
                 self.different_abi_usage_count += 1;

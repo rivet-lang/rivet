@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -21,33 +21,31 @@ pub func library_name(libname: string) -> string {
     };
 }
 
-#[boxed]
 pub struct SymbolNotFoundError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
 
-#[boxed]
 pub struct CannotLoadLibraryError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
 
-pub func load(path: string, global_symbols: bool := false) -> !Library {
+pub func load(path: string, global_symbols: bool := false) -> !^Library {
     flags: int32 := if global_symbols { libc.RTLD_NOW | libc.RTLD_GLOBAL } else { libc.RTLD_NOW };
     if ptr := unsafe { libc.dlopen(path.ptr, flags) } {
-        return Library(path, ptr);
+        return ^Library(path, ptr);
     }
     if dl_error := dlerror() {
-        throw CannotLoadLibraryError("cannot load '{}': {}".fmt(path, dl_error));
+        throw ^CannotLoadLibraryError("cannot load '{}': {}".fmt(path, dl_error));
     }
-    throw CannotLoadLibraryError("cannot load '{}'".fmt(path));
+    throw ^CannotLoadLibraryError("cannot load '{}'".fmt(path));
 }
 
 #[boxed]
@@ -55,30 +53,30 @@ struct Library {
     pub path: string;
     ptr: rawptr;
 
-    pub func address_of(self, symbol: string) -> !rawptr {
+    pub func address_of(^self, symbol: string) -> !rawptr {
         if ptr := unsafe { libc.dlsym(self.ptr, symbol.ptr) } {
             return ptr;
         }
         if dl_error := dlerror() {
-            throw SymbolNotFoundError(
+            throw ^SymbolNotFoundError(
                 "cannot found symbol '{}' in library '{}': {}".fmt(symbol, self.path, dl_error)
             );
         } else {
-            throw SymbolNotFoundError("cannot found symbol '{}' in library '{}'".fmt(symbol, self.path));
+            throw ^SymbolNotFoundError("cannot found symbol '{}' in library '{}'".fmt(symbol, self.path));
         }
     }
 
     #[inline]
-    pub func exists(self, symbol: string) -> bool {
+    pub func exists(^self, symbol: string) -> bool {
         return if _ := self.address_of(symbol) { true } else { false };
     }
 
     #[inline]
-    pub func close(self) {
+    pub func close(^self) {
         _ = unsafe { libc.dlclose(self.ptr) };
     }
 
-    func __destroy__(self) {
+    func __destroy__(^self) {
         self.close();
     }
 }

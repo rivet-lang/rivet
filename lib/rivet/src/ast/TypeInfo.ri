@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -8,7 +8,7 @@ pub struct EnumVariant {
     pub name: string;
     pub value: int;
     pub has_type: bool;
-    pub mut type: Type;
+    pub type: ^mut Type;
     pub has_fields: bool;
 }
 
@@ -32,35 +32,35 @@ pub enum TypeInfo < traits.Stringable {
         size: uint;
     },
     String,
-    Func(Func),
+    Func(^mut Func),
     Alias {
-        mut parent: Type;
+        parent: ^mut Type;
     },
     Array {
-        elem_type: Type;
+        elem_type: ^mut Type;
         size: uint;
         is_mut: bool;
         has_contains_method: bool;
     },
     Slice {
-        elem_type: Type;
+        elem_type: ^mut Type;
         is_mut: bool;
         has_contains_method: bool;
     },
     DynArray {
-        elem_type: Type;
+        elem_type: ^mut Type;
         is_mut: bool;
         has_contains_method: bool;
     },
     Tuple {
-        types: []Type;
+        types: []^mut Type;
     },
     Trait {
-        mut bases: []mut TypeSym;
-        mut implements: []mut TypeSym;
+        mut bases: []^mut TypeSym;
+        mut implements: []^mut TypeSym;
         mut has_objects: bool;
 
-        func index_of(&self, type_sym: TypeSym) -> ?uint {
+        func index_of(&self, type_sym: ^mut TypeSym) -> ?uint {
             for i, ts in self.implements {
                 if ts.id == type_sym.id {
                     return i;
@@ -69,29 +69,29 @@ pub enum TypeInfo < traits.Stringable {
             return none;
         }
 
-        func implement(mut self, type_sym: TypeSym) {
+        func implement(&mut self, type_sym: ^mut TypeSym) {
             if type_sym !in self.implements {
                 self.implements.push(type_sym);
-                for mut b in self.bases {
-                    @as(TypeInfo.Trait, b.info).implement(type_sym);
+                for b in self.bases {
+                    @as(^mut TypeInfo.Trait, b.info).implement(type_sym);
                 }
             }
         }
 
         #[inline]
-        func mark_has_objects(mut self) {
+        func mark_has_objects(&mut self) {
             self.has_objects = true;
         }
     },
     Enum {
-        underlying_type: Type;
+        underlying_type: ^mut Type;
         mut variants: []mut EnumVariant;
         is_tagged: bool;
         is_boxed: bool;
-        mut traits: []mut TypeSym;
+        mut traits: []^mut TypeSym;
 
         #[inline]
-        func add_variant(mut self, variant: EnumVariant) {
+        func add_variant(&mut self, variant: EnumVariant) {
             self.variants.push(variant);
         }
 
@@ -108,7 +108,7 @@ pub enum TypeInfo < traits.Stringable {
             return none;
         }
 
-        func get_variant_by_type(&self, type: Type) -> ?EnumVariant {
+        func get_variant_by_type(&self, type: ^mut Type) -> ?EnumVariant {
             for v in self.variants {
                 if v.has_type && v.type == type {
                     return v;
@@ -117,7 +117,7 @@ pub enum TypeInfo < traits.Stringable {
             return none;
         }
 
-        func contains_trait(&self, type_sym: TypeSym) -> bool {
+        func contains_trait(&self, type_sym: ^mut TypeSym) -> bool {
             for trait_ in self.traits {
                 if trait_.id == type_sym.id {
                     return true;
@@ -130,11 +130,11 @@ pub enum TypeInfo < traits.Stringable {
         is_boxed: bool;
         is_opaque: bool;
         is_enum_variant: bool;
-        mut parent: TypeSym; // enum type symbol if this is a enum variant
-        mut bases: []mut TypeSym;
-        mut traits: []mut TypeSym;
+        mut parent: ^mut TypeSym := invalid_type_sym; // enum type symbol if this is a enum variant
+        mut bases: []^mut TypeSym;
+        mut traits: []^mut TypeSym;
 
-        func contains_trait(&self, type_sym: TypeSym) -> bool {
+        func contains_trait(&self, type_sym: ^mut TypeSym) -> bool {
             for trait_ in self.traits {
                 if trait_.id == type_sym.id {
                     return true;
@@ -145,8 +145,8 @@ pub enum TypeInfo < traits.Stringable {
     };
 
     #[inline]
-    pub func elem_type(self) -> ?Type {
-        return match self {
+    pub func elem_type(&self) -> ?^mut Type {
+        return match self.* {
             .Slice(slice) -> slice.elem_type,
             .Array(arr) -> arr.elem_type,
             .DynArray(vec) -> vec.elem_type,
@@ -155,8 +155,8 @@ pub enum TypeInfo < traits.Stringable {
     }
 
     #[inline]
-    pub func is_mut_array(self) -> bool {
-        return match self {
+    pub func is_mut_array(&self) -> bool {
+        return match self.* {
             .Slice(slice) -> slice.is_mut,
             .Array(arr) -> arr.is_mut,
             .DynArray(vec) -> vec.is_mut,
@@ -165,15 +165,16 @@ pub enum TypeInfo < traits.Stringable {
     }
 
     #[inline]
-    pub func is_primitive(self) -> bool {
-        return self is .Bool || self is .Rune || self is .SizedInt || self is .SizedUint
-            || self is .Uint || self is .Int || self is .ComptimeInt
-            || self is .ComptimeFloat || self is .ComptimeFloat || self is .Float;
+    pub func is_primitive(&self) -> bool {
+        return self.* is .Bool || self.* is .Rune || self.* is .SizedInt
+            || self.* is .SizedUint || self.* is .Uint || self.* is .Int
+            || self.* is .ComptimeInt || self.* is .ComptimeFloat
+            || self.* is .ComptimeFloat || self.* is .Float;
     }
 
     #[inline]
-    pub func is_compound(self) -> bool {
-        return self is .Struct || self is .Trait || self is .Enum || self is .Tuple;
+    pub func is_compound(&self) -> bool {
+        return self.* is .Struct || self.* is .Trait || self.* is .Enum || self.* is .Tuple;
     }
 
     #[inline]

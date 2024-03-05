@@ -1,32 +1,32 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report };
+import ../{ ast, utils/report };
 
 extend Resolver {
-    func resolve_stmts(mut self, mut stmts: []mut ast.Stmt) {
-        for mut stmt in stmts {
+    func resolve_stmts(^mut self, stmts: []^mut ast.Stmt) {
+        for stmt in stmts {
             self.resolve_stmt(stmt);
         }
     }
 
-    func resolve_stmt(mut self, mut stmt: ast.Stmt) {
-        match stmt {
+    func resolve_stmt(^mut self, stmt: ^mut ast.Stmt) {
+        match stmt.^ {
             .Comment -> {},
             .Empty(empty_pos) -> report.error("bug: unexpected empty statement found", empty_pos),
-            .ComptimeIf(mut comptime_if) -> {
-                mut stmts := ast.nodes_to_stmts(
+            .ComptimeIf(&mut comptime_if) -> {
+                stmts := ast.nodes_to_stmts(
                     self.env.evalue_comptime_if(comptime_if)
                 );
                 self.resolve_stmts(stmts);
             },
-            .Expr(mut expr) -> self.resolve_expr(expr),
-            .VarDecl(mut var_stmt) -> {
-                for mut left in var_stmt.lefts {
+            .Expr(expr) -> self.resolve_expr(expr),
+            .VarDecl(var_stmt) -> {
+                for left in var_stmt.lefts {
                     self.check_variable_shadowing(left.name, left.pos);
                     _ = self.resolve_type(left.type);
-                    left.sym = ast.Var(
+                    left.sym = ^mut ast.Var(
                         is_mut: left.is_mut,
                         name: left.name,
                         level: .Local,
@@ -39,7 +39,7 @@ extend Resolver {
                 }
                 self.resolve_expr(var_stmt.right);
             },
-            .While(mut while_stmt) -> {
+            .While(while_stmt) -> {
                 if !while_stmt.is_inf {
                     self.resolve_expr(while_stmt.cond);
                 }
@@ -51,28 +51,28 @@ extend Resolver {
                     self.resolve_stmt(while_stmt.else_stmt);
                 }
             },
-            .For(mut for_stmt) -> {
+            .For(for_stmt) -> {
                 if for_stmt.has_index {
                     self.check_variable_shadowing(for_stmt.index.name, for_stmt.index.pos);
-                    for_stmt.index.sym = ast.Var(
+                    for_stmt.index.sym = ^mut ast.Var(
                         is_mut: for_stmt.index.is_mut,
                         name: for_stmt.index.name,
                         level: .Local,
                         pos: for_stmt.index.pos,
-                        type: .Void // updated later
+                        type: ^mut .Void // updated later
                     );
                     for_stmt.scope.add_local(for_stmt.index.sym) catch |err| report.error(
                         err.to_string(), for_stmt.index.pos
                     );
                 }
-                for mut value in for_stmt.values {
+                for value in for_stmt.values {
                     self.check_variable_shadowing(value.name, value.pos);
-                    value.sym = ast.Var(
+                    value.sym = ^mut ast.Var(
                         is_mut: value.is_mut,
                         name: value.name,
                         level: .Local,
                         pos: value.pos,
-                        type: .Void // updated later
+                        type: ^mut .Void // updated later
                     );
                     for_stmt.scope.add_local(value.sym) catch |err| report.error(
                         err.to_string(), value.pos
@@ -81,7 +81,7 @@ extend Resolver {
                 self.resolve_expr(for_stmt.iterable);
                 self.resolve_stmt(for_stmt.stmt);
             },
-            .Defer(mut defer_stmt) -> self.resolve_expr(defer_stmt.expr)
+            .Defer(defer_stmt) -> self.resolve_expr(defer_stmt.expr)
         }
     }
 }

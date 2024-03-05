@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -53,18 +53,18 @@ pub func option(args: []string, param: string) -> ?string {
     return none;
 }
 
-pub func error(msg: string, args: ...traits.Stringable) -> never {
+pub func error(msg: string, args: ...^traits.Stringable) -> never {
    console.ewriteln("{} {} {}", bold("rivet:"), bold(red("error:")), msg.fmt(args));
    process.exit(1);
 }
 
 #[inline]
-pub func warn(msg: string, args: ...traits.Stringable) {
+pub func warn(msg: string, args: ...^traits.Stringable) {
    console.ewriteln("{} {} {}", bold("rivet:"), bold(yellow("warning:")), msg.fmt(args));
 }
 
 #[inline]
-pub func info(msg: string, args: ...traits.Stringable) {
+pub func info(msg: string, args: ...^traits.Stringable) {
    console.ewriteln("{} {} {}", bold("rivet:"), bold(blue("info:")), msg.fmt(args));
 }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -11,37 +11,37 @@ extend Parser {
         Expr
     }
 
-    func parse_nodes(mut self, level: ComptimeLevel) -> []mut ast.Node {
+    func parse_nodes(^mut self, level: ComptimeLevel) -> []^mut ast.Node {
         return match level {
             .Decl -> {
-                mut decls := []mut ast.Node();
+                mut decls := []^mut ast.Node();
                 if self.accept(.Lbrace) {
                     while self.tok.kind != .Rbrace {
-                        decls.push(.Decl(self.parse_decl()))
+                        decls.push(^mut .Decl(self.parse_decl()))
                     }
                     self.expect(.Rbrace);
                 } else {
-                    decls.push(.Decl(self.parse_decl()))
+                    decls.push(^mut .Decl(self.parse_decl()))
                 }
                 decls
             },
             .Stmt -> {
-                mut stmts := []mut ast.Node();
+                mut stmts := []^mut ast.Node();
                 if self.accept(.Lbrace) {
                     while self.tok.kind != .Rbrace {
-                        stmts.push(.Stmt(self.parse_stmt()));
+                        stmts.push(^mut .Stmt(self.parse_stmt()));
                     }
                     self.expect(.Rbrace);
                 } else {
-                    stmts.push(.Stmt(self.parse_stmt()));
+                    stmts.push(^mut .Stmt(self.parse_stmt()));
                 }
                 stmts
             },
-            .Expr -> +[.Expr(self.parse_expr())]
+            .Expr -> ^[^mut .Expr(self.parse_expr())]
         };
     }
 
-    func parse_comptime_if(mut self, level: ComptimeLevel) -> ast.ComptimeIf {
+    func parse_comptime_if(^mut self, level: ComptimeLevel) -> ast.ComptimeIf {
         mut branches := []mut ast.ComptimeIfBranch();
         mut has_else := false;
         mut pos := self.tok.pos;
@@ -50,7 +50,7 @@ extend Parser {
             if self.accept(.KwElse) && self.tok.kind != .KwIf {
                 branches.push(
                     ast.ComptimeIfBranch(
-                        .Empty(self.tok.pos), nodes: self.parse_nodes(level),
+                        ^mut .Empty(self.tok.pos), nodes: self.parse_nodes(level),
                         is_else: true, pos: branch_pos + self.prev_tok.pos
                     )
                 );

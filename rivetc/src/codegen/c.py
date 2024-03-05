@@ -426,7 +426,7 @@ class CGen:
             self.write(c_escape(expr.name))
         elif isinstance(expr, ir.Selector):
             self.gen_expr(expr.left)
-            if isinstance(expr.left.typ, ir.Pointer):
+            if isinstance(expr.left.typ, ir.Ptr):
                 self.write("->")
             else:
                 self.write(".")
@@ -438,7 +438,7 @@ class CGen:
         self.write(self.gen_type(typ, wrap))
 
     def gen_type(self, typ, wrap = ""):
-        if isinstance(typ, ir.Pointer):
+        if isinstance(typ, ir.Ptr):
             return f"{self.gen_type(typ.typ, wrap)}*"
         elif isinstance(typ, ir.Array):
             sizes = []

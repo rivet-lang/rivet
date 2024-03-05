@@ -1,28 +1,28 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report };
+import ../{ ast, utils/report };
 
 extend Resolver {
-    func resolve_decls(mut self, mut decls: []mut ast.Decl) {
-        for mut decl in decls {
+    func resolve_decls(^mut self, decls: []^mut ast.Decl) {
+        for decl in decls {
             old_sym := self.sym;
             old_self_sym := self.self_sym;
             old_self_sym_is_set := self.self_sym_is_set;
-            match decl {
+            match decl.^ {
                 // .Empty(empty_pos) -> report.error("BUG: empty declaration found", empty_pos),
-                .ComptimeIf(mut comptime_if) -> {
-                    mut ct_decls := ast.nodes_to_decls(
+                .ComptimeIf(&mut comptime_if) -> {
+                    ct_decls := ast.nodes_to_decls(
                         self.env.evalue_comptime_if(comptime_if)
                     );
                     self.resolve_decls(ct_decls);
                 },
-                .Extern(mut extern_decl) -> self.resolve_decls(extern_decl.decls),
-                .Alias(mut alias_decl) -> if alias_decl.is_typealias {
+                .Extern(extern_decl) -> self.resolve_decls(extern_decl.decls),
+                .Alias(alias_decl) -> if alias_decl.is_typealias {
                     _ = self.resolve_type(alias_decl.parent_type);
                 } else {
-                    mut sym_ref := @as(ast.SymRef, alias_decl.sym);
+                    sym_ref := @as(^mut ast.SymRef, alias_decl.sym);
                     self.resolve_expr(sym_ref.ref_expr);
                     if sym_ref.ref_expr is .Ident(ident) && ident.found && ident.is_sym {
                         sym_ref.ref = ident.sym;
@@ -32,11 +32,11 @@ extend Resolver {
                         sym_ref.ref_resolved = true;
                     }
                 },
-                .Const(mut const_decl) -> if self.resolve_type(const_decl.type) {
+                .Const(const_decl) -> if self.resolve_type(const_decl.type) {
                     self.resolve_expr(const_decl.expr);
                 },
-                .Var(mut var_decl) -> {
-                    for mut left in var_decl.lefts {
+                .Var(var_decl) -> {
+                    for left in var_decl.lefts {
                         self.check_variable_shadowing(left.name, left.pos);
                         _ = self.resolve_type(left.type);
                     }
@@ -44,17 +44,17 @@ extend Resolver {
                         self.resolve_expr(var_decl.right);
                     }
                 },
-                .Trait(mut trait_decl) -> {
-                    self.self_sym = @as(ast.TypeSym, trait_decl.sym);
+                .Trait(trait_decl) -> {
+                    self.self_sym = @as(^mut ast.TypeSym, trait_decl.sym);
                     self.self_sym_is_set = true;
                     mut trait_info := @as(ast.TypeInfo.Trait, self.self_sym.info);
-                    for mut base in trait_decl.bases {
+                    for base in trait_decl.bases {
                         if self.resolve_type(base) {
-                            mut base_sym := base.symbol()?;
-                            if base_sym.info is .Trait(mut base_trait_info) {
+                            base_sym := base.symbol()?;
+                            if base_sym.info is .Trait(&mut base_trait_info) {
                                 trait_info.bases.push(base_sym);
-                                for mut impl in base_trait_info.implements {
-                                    if impl.info is .Struct(mut struct_info) {
+                                for impl in base_trait_info.implements {
+                                    if impl.info is .Struct(&mut struct_info) {
                                         if !struct_info.contains_trait(base_sym) {
                                             base_trait_info.implement(impl);
                                             struct_info.traits.push(base_sym);
@@ -69,26 +69,22 @@ extend Resolver {
                             }
                         }
                     }
-                    if default_value := trait_decl.attributes.find("default_value") {
-                        self.self_sym.default_value = default_value.args[0].expr;
-                        self.resolve_expr(self.self_sym.default_value?);
-                    }
                     self.resolve_decls(trait_decl.decls);
                 },
-                .Enum(mut enum_decl) -> {
+                .Enum(enum_decl) -> {
                     if enum_decl.is_tagged || self.resolve_type(enum_decl.underlying_type) {
-                        self.self_sym = @as(ast.TypeSym, enum_decl.sym);
+                        self.self_sym = @as(^mut ast.TypeSym, enum_decl.sym);
                         self.self_sym_is_set = true;
                         mut enum_info := @as(ast.TypeInfo.Enum, self.self_sym.info);
-                        for mut variant in enum_info.variants {
+                        for variant in enum_info.variants {
                             if !self.resolve_type(variant.type) {
                                 continue;
                             }
                         }
-                        for mut base in enum_decl.bases {
+                        for base in enum_decl.bases {
                             if self.resolve_type(base) {
-                                mut base_sym := base.symbol()?;
-                                if base_sym.info is .Trait(mut trait_info) {
+                                base_sym := base.symbol()?;
+                                if base_sym.info is .Trait(&mut trait_info) {
                                     enum_info.traits.push(base_sym);
                                     trait_info.implement(self.self_sym);
                                 } else {
@@ -101,7 +97,7 @@ extend Resolver {
                             }
                         }
                     }
-                    for mut variant in enum_decl.variants {
+                    for variant in enum_decl.variants {
                         if !variant.decls.is_empty() {
                             old_self_sym2 := self.self_sym;
                             self.self_sym = variant.type.symbol() ?? self.self_sym;
@@ -115,19 +111,19 @@ extend Resolver {
                     }
                     self.resolve_decls(enum_decl.decls);
                 },
-                .Struct(mut struct_decl) -> {
-                    self.self_sym = @as(ast.TypeSym, struct_decl.sym);
+                .Struct(struct_decl) -> {
+                    self.self_sym = @as(^mut ast.TypeSym, struct_decl.sym);
                     self.self_sym_is_set = true;
-                    for mut base in struct_decl.bases {
+                    for base in struct_decl.bases {
                         if self.resolve_type(base) {
                             mut struct_info := @as(ast.TypeInfo.Struct, self.self_sym.info);
-                            mut base_sym := base.symbol()?;
-                            if base_sym.info is .Trait(mut trait_info) {
+                            base_sym := base.symbol()?;
+                            if base_sym.info is .Trait(&mut trait_info) {
                                 struct_info.traits.push(base_sym);
                                 trait_info.implement(self.self_sym);
-                            } else if base_sym.info is .Struct(mut struct_info2) {
+                            } else if base_sym.info is .Struct(&mut struct_info2) {
                                 struct_info.bases.push(base_sym);
-                                for mut b_trait in struct_info2.traits {
+                                for b_trait in struct_info2.traits {
                                     @as(ast.TypeInfo.Trait, b_trait.info).implement(
                                         self.self_sym
                                     );
@@ -143,15 +139,15 @@ extend Resolver {
                     }
                     self.resolve_decls(struct_decl.decls);
                 },
-                .Extend(mut extend_decl) -> if self.resolve_type(extend_decl.type) {
+                .Extend(extend_decl) -> if self.resolve_type(extend_decl.type) {
                     self.self_sym = extend_decl.type.symbol()?;
                     self.self_sym_is_set = true;
-                    for mut base in extend_decl.bases {
+                    for base in extend_decl.bases {
                         if self.resolve_type(base) {
-                            mut base_sym := base.symbol()?;
-                            if base_sym.info is .Trait(mut trait_info) {
+                            base_sym := base.symbol()?;
+                            if base_sym.info is .Trait(&mut trait_info) {
                                 trait_info.implement(self.self_sym);
-                            } else if self.self_sym.info is .Struct(mut struct_info)
+                            } else if self.self_sym.info is .Struct(&mut struct_info)
                                 && base_sym.info is .Struct {
                                 struct_info.bases.push(base_sym);
                             } else {
@@ -165,7 +161,7 @@ extend Resolver {
                     }
                     self.resolve_decls(extend_decl.decls);
                 },
-                .Field(mut field_decl) -> if self.resolve_type(field_decl.type) {
+                .Field(field_decl) -> if self.resolve_type(field_decl.type) {
                     if field_decl.has_def_expr {
                         self.resolve_expr(field_decl.def_expr);
                     }
@@ -178,16 +174,18 @@ extend Resolver {
                         );
                     }
                 },
-                .Func(mut func_decl) -> {
+                .Func(&mut func_decl) -> {
                     if func_decl.is_method {
-                        mut self_type := ast.Type.Basic(self.self_sym);
+                        mut self_type := ^mut ast.Type.Basic(self.self_sym);
                         if func_decl.self_is_ptr {
-                            self_type = .Pointer(self_type, func_decl.self_is_ptr);
+                            self_type = ^mut .Pointer(self_type, func_decl.self_is_mut);
+                        } else if func_decl.self_is_boxed {
+                            self_type = ^mut .Boxed(self_type, func_decl.self_is_mut);
                         }
                         is_used := self.self_sym.info is .Trait && !func_decl.has_body;
-                        func_decl.scope.add_local(ast.Var(
+                        func_decl.scope.add_local(^mut ast.Var(
                             name: "self",
-                            is_mut: func_decl.self_is_mut && !func_decl.self_is_ptr,
+                            is_mut: func_decl.self_is_mut && !func_decl.self_is_ptr && !func_decl.self_is_boxed,
                             is_used: is_used,
                             is_changed: is_used,
                             level: .Receiver,
@@ -197,14 +195,14 @@ extend Resolver {
                             err.to_string(), func_decl.pos
                         );
                         func_decl.self_type = self_type;
-                        @as(ast.Func, func_decl.sym).self_type = self_type;
+                        @as(^mut ast.Func, func_decl.sym).self_type = self_type;
                     }
-                    for mut arg in func_decl.args {
+                    for arg in func_decl.args {
                         if self.resolve_type(arg.type) {
                             self.check_variable_shadowing(arg.name, arg.pos);
                             is_used := self.self_sym_is_set && self.self_sym.info is .Trait
                                 && !func_decl.has_body;
-                            func_decl.scope.add_local(ast.Var(
+                            func_decl.scope.add_local(^mut ast.Var(
                                 is_mut: arg.is_mut,
                                 is_used: is_used,
                                 is_changed: is_used,
@@ -221,12 +219,12 @@ extend Resolver {
                         }
                     }
                     _ = self.resolve_type(func_decl.ret_type);
-                    for mut stmt in func_decl.stmts {
+                    for stmt in func_decl.stmts {
                         self.resolve_stmt(stmt);
                     }
                 },
-                .Test(mut test_decl) -> {
-                    for mut stmt in test_decl.stmts {
+                .Test(test_decl) -> {
+                    for stmt in test_decl.stmts {
                         self.resolve_stmt(stmt);
                     }
                 },

@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -7,7 +7,7 @@ extern (Rivet) {
 
     func init_string_lits();
     func init_globals();
-    func drop_globals();
+    func destroy_globals();
 }
 
 func init_args(_argc: uint, _argv: [&][&]uint8) {
@@ -21,7 +21,7 @@ func init_args(_argc: uint, _argv: [&][&]uint8) {
 }
 
 $if _TESTS_ {
-    func main(_argc: int32, _argv: [&][&]uint8, mut test_runner: TestRunner) {
+    func main(_argc: int32, _argv: [&][&]uint8, test_runner: &mut TestRunner) {
         setup_signals_handler();
         init_args(@as(uint, _argc), _argv);
 
@@ -32,7 +32,7 @@ $if _TESTS_ {
             test_runner.run();
         }
 
-        drop_globals();
+        destroy_globals();
     }
 } else {
     func main(_argc: int32, _argv: [&][&]uint8, mod_main: func()) {
@@ -45,6 +45,6 @@ $if _TESTS_ {
         runtime_is_started = true;
         mod_main();
 
-        drop_globals();
+        destroy_globals();
     }
 }

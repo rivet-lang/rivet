@@ -152,7 +152,9 @@ class Compiler:
             if not fp.sym:
                 continue
             deps = []
-            if fp.sym.name not in ["c.libc", "c", "c.ctypes", "core", "core.mem"]:
+            if fp.sym.name not in [
+                "c.libc", "c", "c.ctypes", "core", "core.mem"
+            ]:
                 deps.append("core")
             self.import_graph_decls(fp, deps, fp.decls)
             g.add(fp.sym.name, deps)
@@ -220,15 +222,18 @@ class Compiler:
         full_name = ""
         abspath = ""
         files = []
-        is_super = pathx.startswith("../")
-        if pathx.startswith("./") or is_super:
-            pathx2 = pathx[3 if is_super else 2:]
+        is_super = pathx.startswith("..")
+        sum = 1 if (pathx.startswith("./") or pathx.startswith("../")) else 0
+        if is_super or pathx.startswith("."):
+            pathx2 = pathx[2 + sum if is_super else 1 + sum:]
             name = pathx2[pathx2.rfind("/") + 1:]
             dirname = path.abspath(path.dirname(file_path))
             old_wd = os.getcwd()
             os.chdir(dirname)
             if path.isdir(pathx):
                 found = True
+                if len(name) == 0: # pathx == "." || pathx == ".."
+                    name = path.basename(path.dirname(path.abspath(name)))
                 abspath = path.abspath(pathx)
                 mod_basedir = path.dirname(abspath)
                 if mod_basedir.endswith("/src"):
@@ -393,15 +398,21 @@ class Compiler:
 
     # Returns the size and alignment (in bytes) of `typ`, similarly to
     # C's `sizeof(T)` and `_Alignof(T)`.
-    def type_size(self, typ):
+    def type_size(self, typ, raw_size = False):
         if isinstance(typ, (type.Result, type.Option)):
-            return self.type_size(typ.typ)
+            return self.type_size(typ.typ, raw_size)
+        elif isinstance(typ, type.Type) and typ.is_boxed and not raw_size:
+            return self.pointer_size, self.pointer_size
         elif isinstance(typ, (type.Ptr, type.Func, type.Boxedptr)):
             return self.pointer_size, self.pointer_size
-        return self.type_symbol_size(typ.symbol())
+        elif isinstance(typ, type.DynArray):
+            return self.type_symbol_size(self.dyn_array_sym)
+        return self.type_symbol_size(typ.symbol(), raw_size)
 
-    def type_symbol_size(self, sy):
-        if sy.size != -1:
+    def type_symbol_size(self, sy, raw_size = False):
+        if raw_size and sy.raw_size != -1:
+            return sy.raw_size, sy.raw_align
+        if sy.size != -1 and not raw_size:
             return sy.size, sy.align
         size, align = 0, 0
         if sy.kind in (
@@ -409,6 +420,9 @@ class Compiler:
             sym.TypeKind.Never
         ):
             pass
+        elif sy.kind == sym.TypeKind.Trait:
+            size, align = self.pointer_size * 3, self.pointer_size
+            size += len(sy.fields) * self.pointer_size
         elif sy.kind == sym.TypeKind.Alias:
             size, align = self.type_size(sy.info.parent)
         elif sy.kind in (sym.TypeKind.Uint, sym.TypeKind.Int):
@@ -431,56 +445,52 @@ class Compiler:
             size, align = 8, 8
         elif sy.kind == sym.TypeKind.Enum:
             if sy.info.is_tagged:
-                if sy.info.is_boxed:
-                    size, align = self.pointer_size, self.pointer_size
-                else:
-                    total_size = self.pointer_size
-                    max_alignment = self.pointer_size
-                    for variant in sy.info.variants:
-                        if variant.has_typ:
-                            variant_size, alignment = self.type_size(
-                                variant.typ
-                            )
-                            if alignment > max_alignment:
-                                max_alignment = alignment
-                            total_size = utils.round_up(
-                                total_size, alignment
-                            ) + variant_size
-                    size = utils.round_up(total_size, max_alignment)
-                    align = max_alignment
+                total_size = self.pointer_size
+                max_alignment = self.pointer_size
+                for variant in sy.info.variants:
+                    if variant.has_typ:
+                        variant_size, alignment = self.type_size(variant.typ)
+                        if alignment > max_alignment:
+                            max_alignment = alignment
+                        total_size = utils.round_up(
+                            total_size, alignment
+                        ) + variant_size
+                size = utils.round_up(total_size, max_alignment)
+                align = max_alignment
             else:
                 size, align = self.type_size(sy.info.underlying_typ)
+        elif sy.kind == sym.TypeKind.DynArray:
+            elem_size, elem_align = self.type_size(self.dyn_array_sym)
         elif sy.kind == sym.TypeKind.Array:
             elem_size, elem_align = self.type_size(sy.info.elem_typ)
             size, align = int(sy.info.size.lit) * elem_size, elem_align
         elif sy.kind == sym.TypeKind.Slice:
             size, align = self.pointer_size * 3, self.pointer_size
-        elif sy.is_boxed():
-            size, align = self.pointer_size, self.pointer_size
-        elif sy.kind in (sym.TypeKind.Struct, sym.TypeKind.Tuple):
-            if sy.kind == sym.TypeKind.Struct and sy.info.is_boxed:
-                size, align = self.pointer_size, self.pointer_size
-            else:
-                total_size = 0
-                max_alignment = 0
-                types = sy.info.types if sy.kind == sym.TypeKind.Tuple else list(
-                    map(lambda it: it.typ, sy.full_fields())
-                )
-                for ftyp in types:
-                    field_size, alignment = self.type_size(ftyp)
-                    if alignment > max_alignment:
-                        max_alignment = alignment
-                    total_size = utils.round_up(
-                        total_size, alignment
-                    ) + field_size
-                size = utils.round_up(total_size, max_alignment)
-                align = max_alignment
+        elif sy.kind in (
+            sym.TypeKind.Struct, sym.TypeKind.Tuple, sym.TypeKind.String
+        ):
+            total_size = 0
+            max_alignment = 0
+            types = sy.info.types if sy.kind == sym.TypeKind.Tuple else list(
+                map(lambda it: it.typ, sy.full_fields())
+            )
+            for ftyp in types:
+                field_size, alignment = self.type_size(ftyp)
+                if alignment > max_alignment:
+                    max_alignment = alignment
+                total_size = utils.round_up(total_size, alignment) + field_size
+            size = utils.round_up(total_size, max_alignment)
+            align = max_alignment
         else:
             raise Exception(
                 f"Compiler.type_size(): unsupported type `{sy.qualname()}`"
             )
-        sy.size = size
-        sy.align = align
+        if raw_size:
+            sy.raw_size = size
+            sy.raw_align = align
+        else:
+            sy.size = size
+            sy.align = align
         return size, align
 
     def evalue_comptime_if(self, comptime_if):

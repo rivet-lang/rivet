@@ -1,18 +1,18 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report };
+import ../{ ast, utils/report };
 
 extend Resolver {
-    func resolve_type(mut self, mut type: ast.Type) -> bool {
-        return match type {
+    func resolve_type(^mut self, type: ^mut ast.Type) -> bool {
+        return match type.^ {
             .Void, .Never, .Rawptr, .Boxedptr -> true,
-            .Option(mut opt) -> self.resolve_type(opt.inner),
-            .Result(mut res) -> self.resolve_type(res.inner),
-            .Variadic(mut variadic) -> if self.resolve_type(variadic.inner) {
-                mut elem_sym := variadic.inner.symbol()?;
-                if elem_sym.info is .Trait(mut trait_info) {
+            .Option(opt) -> self.resolve_type(opt.inner),
+            .Result(res) -> self.resolve_type(res.inner),
+            .Variadic(&mut variadic) -> if self.resolve_type(variadic.inner) {
+                elem_sym := variadic.inner.symbol()?;
+                if elem_sym.info is .Trait(&mut trait_info) {
                     trait_info.has_objects = true;
                 }
                 variadic.sym = self.env.universe.add_or_get_slice(variadic.inner, false);
@@ -20,19 +20,19 @@ extend Resolver {
             } else {
                 false
             },
-            .Slice(mut slice) -> if self.resolve_type(slice.inner) {
+            .Slice(&mut slice) -> if self.resolve_type(slice.inner) {
                 slice.sym = self.env.universe.add_or_get_slice(slice.inner, slice.is_mut);
                 true
             } else {
                 false
             },
-            .DynArray(mut dyn_arr) -> if self.resolve_type(dyn_arr.inner) {
+            .DynArray(&mut dyn_arr) -> if self.resolve_type(dyn_arr.inner) {
                 dyn_arr.sym = self.env.universe.add_or_get_dyn_array(dyn_arr.inner, dyn_arr.is_mut);
                 true
             } else {
                 false
             },
-            .Array(mut arr) -> if self.resolve_type(arr.inner) {
+            .Array(&mut arr) -> if self.resolve_type(arr.inner) {
                 if arr_size := self.eval_size(arr.size) {
                     if arr_size <= 0 {
                         mut err := report.error_builder(
@@ -57,10 +57,10 @@ extend Resolver {
             } else {
                 false
             },
-            .Pointer(mut ptr) -> self.resolve_type(ptr.inner),
-            .Tuple(mut tuple) -> {
+            .Pointer(ptr) -> self.resolve_type(ptr.inner),
+            .Tuple(&mut tuple) -> {
                 mut resolved := false;
-                for mut inner in tuple.inners {
+                for inner in tuple.inners {
                     resolved = self.resolve_type(inner);
                 }
                 if resolved {
@@ -68,9 +68,9 @@ extend Resolver {
                 }
                 resolved
             },
-            .Func(mut func_t) -> {
+            .Func(&mut func_t) -> {
                 mut res1 := false;
-                for mut arg in func_t.args {
+                for arg in func_t.args {
                     res1 = self.resolve_type(arg.type);
                 }
                 res1 = self.resolve_type(func_t.ret_type);
@@ -78,8 +78,8 @@ extend Resolver {
                 func_t.has_sym = true;
                 res1
             },
-            .Basic(mut basic) -> if basic.is_unresolved {
-                match basic.expr {
+            .Basic(&mut basic) -> if basic.is_unresolved {
+                match basic.expr.^ {
                     .SelfTy -> if self.self_sym_is_set {
                         basic.is_unresolved = false;
                         basic.sym = self.self_sym;
@@ -87,13 +87,13 @@ extend Resolver {
                     } else {
                         false
                     },
-                    .Ident(mut ident) -> {
+                    .Ident(&mut ident) -> {
                         self.resolve_ident(ident);
                         if ident.found {
                             if ident.sym is ast.TypeSym(mut type_sym) {
                                 basic.is_unresolved = false;
                                 basic.sym = type_sym;
-                                if type_sym.info is .Alias(mut alias_info) {
+                                if type_sym.info is .Alias(alias_info) {
                                     if self.resolve_type(alias_info.parent) {
                                         type.unalias_in_place();
                                     }
@@ -107,7 +107,7 @@ extend Resolver {
                         }
                         ident.found
                     },
-                    .Selector(mut selector) -> {
+                    .Selector(&mut selector) -> {
                         self.resolve_selector(selector);
                         if selector.found {
                             if selector.sym is ast.TypeSym(mut type_sym) {
@@ -123,7 +123,7 @@ extend Resolver {
                                 } else {
                                     basic.is_unresolved = false;
                                     basic.sym = type_sym;
-                                    if type_sym.info is .Alias(mut alias_info) {
+                                    if type_sym.info is .Alias(alias_info) {
                                         if self.resolve_type(alias_info.parent) {
                                             type.unalias_in_place();
                                         }

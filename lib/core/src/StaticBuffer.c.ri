@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -8,7 +8,7 @@ struct StaticBuffer {
     mut buf: [25]mut uint8;
     mut len: uint;
 
-    pub func push(mut self, byte: uint8) {
+    pub func push(&mut self, byte: uint8) {
         if self.len > self.buf.len {
             process_panic("StaticBuffer.push: cannot push byte (len: {})", self.len);
         }
@@ -37,7 +37,7 @@ struct StaticBuffer {
     }
 
     #[inline]
-    pub func clear(mut self) {
+    pub func clear(&mut self) {
         self.len = 0;
     }
 }

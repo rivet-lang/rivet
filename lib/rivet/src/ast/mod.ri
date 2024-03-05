@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -21,41 +21,43 @@ pub struct Comment {
 }
 
 // Used in variable declarations/statements and guard expressions.
-#[boxed]
+#[boxed; default_value(^mut ObjectData())]
 pub struct ObjectData {
     pub name: string;
     pub is_mut: bool;
     pub is_ref: bool;
     pub has_type: bool;
-    pub mut type: Type;
+    pub mut type: ^mut Type;
     pub level: VarLevel;
     pub pos: token.Pos;
-    pub mut sym: Var;
+    pub mut sym: ^mut Var := ^mut Var();
     pub is_extern: bool;
     pub is_global: bool;
 }
 
-pub func universe() -> Module {
-    return Module(
+pub func universe() -> ^mut Module {
+    return ^mut Module(
         name: "universe",
-        scope: Scope(syms: +[
-            TypeSym(name: "bool", info: .Bool),
-            TypeSym(name: "rune", info: .Rune),
-            TypeSym(name: "int8", info: .SizedInt(8)),
-            TypeSym(name: "int16", info: .SizedInt(16)),
-            TypeSym(name: "int32", info: .SizedInt(32)),
-            TypeSym(name: "int64", info: .SizedInt(64)),
-            TypeSym(name: "int", info: .Int),
-            TypeSym(name: "uint8", info: .SizedUint(8)),
-            TypeSym(name: "uint16", info: .SizedUint(16)),
-            TypeSym(name: "uint32", info: .SizedUint(32)),
-            TypeSym(name: "uint64", info: .SizedUint(64)),
-            TypeSym(name: "uint", info: .Uint),
-            TypeSym(name: "comptime_int", info: .ComptimeInt),
-            TypeSym(name: "comptime_float", info: .ComptimeFloat),
-            TypeSym(name: "float32", info: .Float(32)),
-            TypeSym(name: "float64", info: .Float(64)),
-            TypeSym(name: "string", info: .Struct(is_boxed: true))
-        ])
+        scope: ^mut Scope(
+            syms: ^[
+                ^mut TypeSym(name: "bool", info: ^mut .Bool),
+                ^mut TypeSym(name: "rune", info: ^mut .Rune),
+                ^mut TypeSym(name: "int8", info: ^mut .SizedInt(8)),
+                ^mut TypeSym(name: "int16", info: ^mut .SizedInt(16)),
+                ^mut TypeSym(name: "int32", info: ^mut .SizedInt(32)),
+                ^mut TypeSym(name: "int64", info: ^mut .SizedInt(64)),
+                ^mut TypeSym(name: "int", info: ^mut .Int),
+                ^mut TypeSym(name: "uint8", info: ^mut .SizedUint(8)),
+                ^mut TypeSym(name: "uint16", info: ^mut .SizedUint(16)),
+                ^mut TypeSym(name: "uint32", info: ^mut .SizedUint(32)),
+                ^mut TypeSym(name: "uint64", info: ^mut .SizedUint(64)),
+                ^mut TypeSym(name: "uint", info: ^mut .Uint),
+                ^mut TypeSym(name: "comptime_int", info: ^mut .ComptimeInt),
+                ^mut TypeSym(name: "comptime_float", info: ^mut .ComptimeFloat),
+                ^mut TypeSym(name: "float32", info: ^mut .Float(32)),
+                ^mut TypeSym(name: "float64", info: ^mut .Float(64)),
+                ^mut TypeSym(name: "string", info: ^mut .Struct())
+            ]
+        )
     );
 }

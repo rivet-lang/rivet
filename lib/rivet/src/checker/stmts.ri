@@ -1,13 +1,13 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, token, report };
+import ../{ ast, token, utils/report };
 
 extend Checker {
-    func check_stmts(mut self, mut stmts: []mut ast.Stmt) {
+    func check_stmts(^mut self, stmts: []^mut ast.Stmt) {
         mut unreachable_pos := token.no_pos;
-        for mut stmt in stmts {
+        for stmt in stmts {
             if self.scope_returns && unreachable_pos.pos == 0 {
                 unreachable_pos = stmt.position();
             }
@@ -19,28 +19,26 @@ extend Checker {
         self.scope_returns = false;
     }
 
-    func check_stmt(mut self, mut stmt: ast.Stmt) {
-        match stmt {
-            .ComptimeIf(mut comptime_if) -> {
-                mut stmts := ast.nodes_to_stmts(
-                    self.env.evalue_comptime_if(comptime_if)
-                );
+    func check_stmt(^mut self, stmt: ^mut ast.Stmt) {
+        match stmt.^ {
+            .ComptimeIf(&mut comptime_if) -> {
+                stmts := ast.nodes_to_stmts(self.env.evalue_comptime_if(comptime_if));
                 self.check_stmts(stmts);
             },
-            .VarDecl(mut var_decl) -> self.check_var_decl(
+            .VarDecl(&var_decl) -> self.check_var_decl(
                 var_decl.lefts, var_decl.right, var_decl.scope, var_decl.pos
             ),
-            .For(mut for_stmt) -> self.check_for(for_stmt),
-            .While(mut while_stmt) -> self.check_while(while_stmt),
-            .Defer(mut defer_stmt) -> self.check_defer(defer_stmt),
-            .Expr(mut expr) -> self.check_expr_evaluated_but_not_used(
+            .For(&mut for_stmt) -> self.check_for(for_stmt),
+            .While(&mut while_stmt) -> self.check_while(while_stmt),
+            .Defer(&mut defer_stmt) -> self.check_defer(defer_stmt),
+            .Expr(expr) -> self.check_expr_evaluated_but_not_used(
                 self.check_expr(expr), expr.position()
             ),
             else -> {}
         }
     }
 
-    func check_for(mut self, mut for_stmt: ast.Stmt.For) {
+    func check_for(^mut self, for_stmt: &mut ast.Stmt.For) {
         prev_loop_control_tracker := self.loop_control_tracker;
         self.loop_control_tracker = .AnyLoop;
         defer self.loop_control_tracker = prev_loop_control_tracker;
@@ -68,7 +66,7 @@ extend Checker {
                     if elem_sym.is_boxed() {
                         report.error("cannot take the address of a boxed value", value0.pos);
                     }
-                    elem_type = .Pointer(elem_type);
+                    elem_type = ^mut .Pointer(elem_type);
                 }
             }
             if for_stmt.has_index {
@@ -78,13 +76,13 @@ extend Checker {
                 for_stmt.index.sym.type = self.env.uint_t;
             }
             if for_stmt.values.len == 1 {
-                mut value0 := for_stmt.values[0];
+                value0 := for_stmt.values[0];
                 self.check_name_case(.Snake, "variable", value0.name, value0.pos);
                 value0.sym.type = elem_type;
                 value0.sym.is_hidden_ref = value0.is_mut;
             } else {
                 types := @as(ast.TypeInfo.Tuple, elem_type.symbol()?.info).types;
-                for i, mut value in for_stmt.values {
+                for i, value in for_stmt.values {
                     self.check_name_case(.Snake, "variable", value.name, value.pos);
                     if value.is_ref && elem_sym.is_boxed() {
                         report.error("cannot take the address of a boxed value", value.pos);
@@ -104,7 +102,7 @@ extend Checker {
         }
     }
 
-    func check_while(mut self, mut while_stmt: ast.Stmt.While)  {
+    func check_while(^mut self, while_stmt: &mut ast.Stmt.While)  {
         prev_loop_control_tracker := self.loop_control_tracker;
         self.loop_control_tracker = .AnyLoop;
         defer self.loop_control_tracker = prev_loop_control_tracker;
@@ -128,7 +126,7 @@ extend Checker {
         }
     }
 
-    func check_defer(mut self, mut defer_stmt: ast.Stmt.Defer) {
+    func check_defer(^mut self, defer_stmt: &mut ast.Stmt.Defer) {
         prev_return_tracker := self.return_tracker;
         self.return_tracker = .Defer;
         defer self.return_tracker = prev_return_tracker;
@@ -144,6 +142,7 @@ extend Checker {
         self.check_expr_evaluated_but_not_used(
             self.check_expr(defer_stmt.expr), defer_stmt.expr.position()
         );
-        self.defer_stmts.push(defer_stmt);
+
+        self.defer_stmts.push(defer_stmt.*);
     }
 }

@@ -1,11 +1,11 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report, token };
+import ../{ ast, utils/report, token };
 
 extend Parser {
-    func parse_doc_comments(mut self) -> []ast.Comment {
+    func parse_doc_comments(^mut self) -> []ast.Comment {
         mut comments := []ast.Comment();
         while self.tok.kind == .DocComment || (self.tok.kind == .Comment && comments.len > 0) {
             comments.push(self.parse_comment());
@@ -13,7 +13,7 @@ extend Parser {
         return comments;
     }
 
-    pub func parse_attributes(mut self, parse_mod_attributes: bool := false) -> ast.Attributes {
+    pub func parse_attributes(^mut self, parse_mod_attributes: bool := false) -> ast.Attributes {
         mut attributes := ast.Attributes();
         while self.accept(.Hash) {
             if parse_mod_attributes {
@@ -58,12 +58,12 @@ extend Parser {
     }
 
     #[inline]
-    func is_public(mut self) -> bool {
+    func is_public(^mut self) -> bool {
         is_public := self.accept(.KwPub);
         return self.inside_trait || self.inside_enum_variant_with_fields || is_public;
     }
 
-    func parse_abi(mut self) -> ast.ABI {
+    func parse_abi(^mut self) -> ast.ABI {
         self.expect(.Lparen);
         abi_pos := self.tok.pos;
         abi := self.parse_name();
@@ -76,30 +76,30 @@ extend Parser {
         };
     }
 
-    func parse_decls(mut self) -> []ast.Decl {
-        mut decls := []ast.Decl();
+    func parse_decls(^mut self) -> []^mut ast.Decl {
+        mut decls := []^mut ast.Decl();
         while self.tok.kind != .EndOfFile {
             decls.push(self.parse_decl());
         }
         return decls;
     }
 
-    func parse_decl(mut self) -> ast.Decl {
+    func parse_decl(^mut self) -> ^mut ast.Decl {
         doc_comment := self.parse_doc_comments();
         is_mod_attr := self.tok.kind == .Hash && self.peek_tok.kind == .Bang;
         attributes := self.parse_attributes(is_mod_attr);
         if is_mod_attr {
-            return .Empty(self.tok.pos);
+            return ^mut .Empty(self.tok.pos);
         }
         is_public := self.is_public();
         mut pos := self.tok.pos;
         match {
-            self.tok.kind == .Comment -> return .Comment(self.parse_comment()),
+            self.tok.kind == .Comment -> return ^mut .Comment(self.parse_comment()),
             self.accept(.Dollar) -> match self.tok.kind {
-                .KwIf -> return .ComptimeIf(self.parse_comptime_if(.Decl)),
+                .KwIf -> return ^mut .ComptimeIf(self.parse_comptime_if(.Decl)),
                 else -> {
                     report.error("invalid comptime construction", self.tok.pos);
-                    return .Empty(self.tok.pos);
+                    return ^mut .Empty(self.tok.pos);
                 }
             },
             self.accept(.KwImport) -> return self.parse_import_decl(attributes, is_public, pos),
@@ -107,7 +107,7 @@ extend Parser {
                 self.inside_extern = true;
                 // extern function or var
                 abi := self.parse_abi();
-                mut decls := []ast.Decl();
+                mut decls := []^mut ast.Decl();
                 if self.accept(.Lbrace) {
                     if is_public {
                         report.error("`extern` blocks cannot be declared public", pos);
@@ -125,13 +125,13 @@ extend Parser {
                 }
                 pos += self.prev_tok.pos;
                 self.inside_extern = false;
-                return .Extern(doc_comment, attributes, abi, decls, pos)
+                return ^mut .Extern(doc_comment, attributes, abi, decls, pos)
             },
             self.accept(.KwAlias) -> {
                 name := self.parse_name();
                 self.expect(.DeclAssign);
-                mut parent := ast.Expr.Empty(self.tok.pos);
-                mut parent_type := ast.Type.Void;
+                mut parent := ^mut ast.Expr.Empty(self.tok.pos);
+                mut parent_type := ^mut ast.Type.Void;
                 mut is_typealias := false;
                 if self.tok.kind != .Name && self.tok.kind.is_start_of_type() {
                     is_typealias = true;
@@ -147,7 +147,7 @@ extend Parser {
                 }
                 pos += self.prev_tok.pos;
                 self.expect(.Semicolon);
-                return .Alias(
+                return ^mut .Alias(
                     doc_comment,
                     attributes,
                     is_public,
@@ -164,13 +164,13 @@ extend Parser {
                 type := if has_type {
                     self.parse_type()
                 } else {
-                    .Void
+                    ^mut .Void
                 };
                 pos += self.prev_tok.pos;
                 self.expect(.DeclAssign);
                 expr := self.parse_expr();
                 self.expect(.Semicolon);
-                return .Const(
+                return ^mut ^mut .Const(
                     doc_comment,
                     attributes,
                     is_public,
@@ -183,7 +183,7 @@ extend Parser {
             },
             self.accept(.KwVar) -> {
                 // variable declarations
-                mut lefts := []mut ast.ObjectData();
+                mut lefts := []^mut ast.ObjectData();
                 if self.accept(.Lparen) {
                     // multiple variables
                     while {
@@ -199,10 +199,10 @@ extend Parser {
                 right := if !self.inside_extern && self.accept(.DeclAssign) {
                     self.parse_expr()
                 } else {
-                    .Empty(self.tok.pos)
+                    ^mut .Empty(self.tok.pos)
                 };
                 self.expect(.Semicolon);
-                return .Var(
+                return ^mut .Var(
                     doc_comment,
                     attributes,
                     is_public,
@@ -219,7 +219,7 @@ extend Parser {
                 self.inside_trait = true;
 
                 name := self.parse_name();
-                mut bases := []mut ast.Type();
+                mut bases := []^mut ast.Type();
                 if self.accept(.Lt) {
                     while {
                         bases.push(self.parse_type());
@@ -228,14 +228,14 @@ extend Parser {
                         }
                     }
                 }
-                mut decls := []ast.Decl();
+                mut decls := []^mut ast.Decl();
                 self.expect(.Lbrace);
                 while !self.accept(.Rbrace) {
                     decls.push(self.parse_decl());
                 }
                 pos += self.prev_tok.pos;
                 self.inside_trait = prev_inside_trait;
-                return .Trait(
+                return ^mut .Trait(
                     doc_comment,
                     attributes,
                     is_public,
@@ -251,8 +251,8 @@ extend Parser {
 
                 name := self.parse_name();
                 is_opaque := self.accept(.Semicolon);
-                mut bases := []mut ast.Type();
-                mut decls := []ast.Decl();
+                mut bases := []^mut ast.Type();
+                mut decls := []^mut ast.Decl();
                 if !is_opaque {
                     if self.accept(.Lt) {
                         while {
@@ -269,7 +269,7 @@ extend Parser {
                 }
                 pos += self.prev_tok.pos;
                 self.inside_struct = prev_inside_struct;
-                return .Struct(
+                return ^mut .Struct(
                     doc_comment,
                     attributes,
                     is_public,
@@ -287,7 +287,7 @@ extend Parser {
                 } else {
                     self.env.comptime_int_t
                 };
-                mut bases := []mut ast.Type();
+                mut bases := []^mut ast.Type();
                 if self.accept(.Lt) {
                     while {
                         bases.push(self.parse_type());
@@ -304,9 +304,9 @@ extend Parser {
                     v_name := self.parse_name();
                     mut has_type := false;
                     mut has_value := false;
-                    mut v_type := ast.Type.Void;
-                    mut value := ast.Expr.Empty(self.tok.pos);
-                    mut variant_decls := []ast.Decl();
+                    mut v_type := ^mut ast.Type.Void;
+                    mut value := ^mut ast.Expr.Empty(self.tok.pos);
+                    mut variant_decls := []^mut ast.Decl();
                     if self.accept(.Lbrace) {
                         has_type = true;
                         is_tagged = true;
@@ -338,7 +338,7 @@ extend Parser {
                         break;
                     }
                 }
-                mut decls := []ast.Decl();
+                mut decls := []^mut ast.Decl();
                 if self.accept(.Semicolon) {
                     while self.tok.kind != .Rbrace {
                         decls.push(self.parse_decl());
@@ -346,7 +346,7 @@ extend Parser {
                 }
                 pos += self.tok.pos;
                 self.expect(.Rbrace);
-                return .Enum(
+                return ^mut .Enum(
                     doc_comment, attributes, is_public, name, underlying_type,
                     bases, variants, is_tagged, decls, pos
                 );
@@ -363,11 +363,11 @@ extend Parser {
                 def_expr := if has_def_expr {
                     self.parse_expr()
                 } else {
-                    .Empty(self.tok.pos)
+                    ^mut .Empty(self.tok.pos)
                 };
                 pos += self.prev_tok.pos;
                 self.expect(.Semicolon);
-                return .Field(
+                return ^mut .Field(
                     doc_comment,
                     attributes,
                     is_public,
@@ -384,7 +384,7 @@ extend Parser {
                 self.inside_extend = true;
 
                 type := self.parse_type();
-                mut bases := []mut ast.Type();
+                mut bases := []^mut ast.Type();
                 if self.accept(.Lt) {
                     while {
                         bases.push(self.parse_type());
@@ -395,14 +395,14 @@ extend Parser {
                 }
 
                 self.expect(.Lbrace);
-                mut decls := []ast.Decl();
+                mut decls := []^mut ast.Decl();
                 while !self.accept(.Rbrace) {
                     decls.push(self.parse_decl());
                 }
                 pos += self.prev_tok.pos;
 
                 self.inside_extend = prev_inside_extend;
-                return .Extend(
+                return ^mut .Extend(
                     attributes,
                     type,
                     bases,
@@ -420,16 +420,16 @@ extend Parser {
                 self.expect(.String);
                 self.inside_func = true;
                 self.open_scope();
-                mut sc := self.scope;
+                sc := self.scope;
                 sc.detached_from_parent = true;
-                mut stmts := []mut ast.Stmt();
+                mut stmts := []^mut ast.Stmt();
                 self.expect(.Lbrace);
                 while !self.accept(.Rbrace) {
                     stmts.push(self.parse_stmt());
                 }
                 self.close_scope();
                 self.inside_func = false;
-                return .Test(
+                return ^mut .Test(
                     doc_comment,
                     attributes,
                     name,
@@ -444,13 +444,13 @@ extend Parser {
             },
             else -> {}
         }
-        return .Empty(pos);
+        return ^mut .Empty(pos);
     }
 
     func parse_func_decl(
-        mut self, docs: []ast.Comment, attributes: ast.Attributes,
+        ^mut self, docs: []ast.Comment, attributes: ast.Attributes,
         is_public: bool, is_unsafe: bool, abi: ast.ABI
-    ) -> ast.Decl {
+    ) -> ^mut ast.Decl {
         mut is_operator := false;
         pos := self.prev_tok.pos;
         name := if token.is_overloadable_operator(self.tok.kind) {
@@ -463,29 +463,32 @@ extend Parser {
         is_special_method := name.starts_with("__") && name.ends_with("__");
 
         mut is_method := false;
-        mut self_is_mut := false;
         mut self_is_ptr := false;
+        mut self_is_boxed := false;
+        mut self_is_mut := false;
         mut self_pos := token.no_pos;
-        mut args := []mut ast.Arg();
+        mut args := []^mut ast.Arg();
         mut has_named_args := false;
         mut is_variadic := false;
 
         self.inside_func = true;
         self.open_scope();
-        mut sc := self.scope;
+        sc := self.scope;
         sc.detached_from_parent = true;
         self.expect(.Lparen);
         if self.tok.kind != .Rparen {
-            // receiver (`self`|`mut self`|`&self`|`&mut self`)
+            // receiver (`self`|`&self`|`&mut self`|`^self`|`^mut self`)
             if self.tok.kind == .KwSelf || (
-                self.tok.kind in [.Amp, .KwMut] && self.peek_tok.kind in [.KwMut, .KwSelf]
+                self.tok.kind in [.Amp, .Xor]
+                && self.peek_tok.kind in [.KwMut, .KwSelf]
             ) {
                 is_method = true;
                 self_pos = self.tok.pos;
                 self_is_ptr = self.accept(.Amp);
+                self_is_boxed = !self_is_ptr && self.accept(.Xor);
                 self_is_mut = self.accept(.KwMut);
                 self.expect(.KwSelf);
-                if self_is_mut || self_is_ptr {
+                if self_is_ptr || self_is_boxed {
                     self_pos += self.prev_tok.pos;
                 }
                 if self.tok.kind != .Rparen {
@@ -508,9 +511,9 @@ extend Parser {
                         has_named_args = true;
                         self.parse_expr()
                     } else {
-                        .Empty(self.tok.pos)
+                        ^mut .Empty(self.tok.pos)
                     };
-                    args.push(ast.Arg(
+                    args.push(^mut ast.Arg(
                         name: arg_name,
                         is_mut: arg_is_mut,
                         type: arg_type,
@@ -526,7 +529,7 @@ extend Parser {
         }
         self.expect(.Rparen);
 
-        mut ret_type := ast.Type.Void;
+        mut ret_type := ^mut ast.Type.Void;
         ret_t_pos := self.tok.pos;
         if self.accept(.Arrow) {
             is_result := self.accept(.Bang);
@@ -538,11 +541,11 @@ extend Parser {
                 ret_type = self.parse_type();
             }
             if is_result {
-                ret_type = .Result(ret_type, ret_t_pos + self.prev_tok.pos);
+                ret_type = ^mut .Result(ret_type, ret_t_pos + self.prev_tok.pos);
             }
         }
 
-        mut stmts := []mut ast.Stmt();
+        mut stmts := []^mut ast.Stmt();
         mut has_body := true;
         if (self.inside_trait || self.inside_extern) && self.accept(.Semicolon) {
             has_body = false;
@@ -555,7 +558,7 @@ extend Parser {
         self.close_scope();
         self.inside_func = false;
         is_main := self.mod_sym.is_root && self.mod_sym.name != "core" && name == "main";
-        return .Func(
+        return ^mut .Func(
             docs: docs,
             abi: abi,
             attributes: attributes,
@@ -573,8 +576,9 @@ extend Parser {
             ret_type: ret_type,
             stmts: stmts,
             has_body: has_body,
-            self_is_mut: self_is_mut,
             self_is_ptr: self_is_ptr,
+            self_is_boxed: self_is_boxed,
+            self_is_mut: self_is_mut,
             scope: sc,
             pos: pos + self.prev_tok.pos,
             self_pos: self_pos

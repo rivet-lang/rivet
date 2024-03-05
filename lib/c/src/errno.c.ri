@@ -1,15 +1,14 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import c/libc;
 
-#[boxed]
 pub struct ErrnoError < Throwable {
     pub msg: string;
     pub code: int32;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return "errno: {} (code: {})".fmt(self.msg, self.code);
     }
 }
@@ -35,6 +34,6 @@ pub func errno_msg(code: int32 := errno()) -> string {
 }
 
 #[inline]
-pub func last_errno_error() -> ErrnoError {
-    return ErrnoError(errno_msg(), errno());
+pub func last_errno_error() -> ^ErrnoError {
+    return ^ErrnoError(errno_msg(), errno());
 }

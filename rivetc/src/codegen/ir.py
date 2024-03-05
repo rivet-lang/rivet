@@ -29,7 +29,7 @@ def get_ir_op(op):
     elif op == Kind.Rshift:
         op_kind = InstKind.Rshift
     else:
-        return None
+        op_kind = None
     return op_kind
 
 class Type:
@@ -37,7 +37,7 @@ class Type:
         self.name = name
 
     def ptr(self, is_managed = False):
-        return Pointer(self, is_managed)
+        return Ptr(self, is_managed)
 
     def __repr__(self):
         return str(self)
@@ -46,20 +46,20 @@ class Type:
         return self.name
 
     def __eq__(self, other):
-        return str(self) == str(other)
+        return isinstance(other, Type) and self.name == other.name
 
-class Pointer:
+class Ptr:
     def __init__(self, typ, is_managed = False):
         self.typ = typ
         self.is_managed = is_managed
 
     def ptr(self, is_managed = False):
-        return Pointer(self, is_managed)
+        return Ptr(self, is_managed)
 
     def nr_level(self):
         nr = 0
         ptr = self
-        while isinstance(ptr, Pointer):
+        while isinstance(ptr, Ptr):
             ptr = ptr.typ
             nr += 1
         return nr
@@ -69,8 +69,44 @@ class Pointer:
 
     def __str__(self):
         if self.is_managed:
-            return f"+{self.typ}"
+            return f"^{self.typ}"
         return f"*{self.typ}"
+
+    def __eq__(self, other):
+        return isinstance(other, Ptr) and self.typ == other.typ
+
+class Array:
+    def __init__(self, typ, size):
+        self.typ = typ
+        self.size = size
+
+    def ptr(self):
+        return Ptr(self)
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return f"{[self.size]}{self.typ}"
+
+    def __eq__(self, other):
+        return isinstance(
+            other, Array
+        ) and self.typ == other.typ and self.size == other.size
+
+class Function:
+    def __init__(self, args, ret_typ):
+        self.args = args
+        self.ret_typ = ret_typ
+
+    def ptr(self):
+        return Ptr(self)
+
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return f"func({', '.join([str(arg) for arg in self.args])}) {self.ret_typ}"
 
     def __eq__(self, other):
         return str(self) == str(other)
@@ -91,40 +127,7 @@ DYN_ARRAY_T = Type("_R4core8DynArray")
 STRING_T = Type("_R4core6string")
 TEST_T = Type("_R4core4Test")
 TEST_RUNNER_T = Type("_R4core10TestRunner")
-
-class Array:
-    def __init__(self, typ, size):
-        self.typ = typ
-        self.size = size
-
-    def ptr(self):
-        return Pointer(self)
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return f"{[self.size]}{self.typ}"
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-class Function:
-    def __init__(self, args, ret_typ):
-        self.args = args
-        self.ret_typ = ret_typ
-
-    def ptr(self):
-        return Pointer(self)
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return f"*func({', '.join([str(arg) for arg in self.args])}) {self.ret_typ}"
-
-    def __eq__(self, other):
-        return str(self) == str(other)
+THROWABLE_T = Type("_R4core9Throwable").ptr(True)
 
 class RIRFile:
     def __init__(self, mod_name):

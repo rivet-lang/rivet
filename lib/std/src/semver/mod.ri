@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -13,7 +13,7 @@ pub enum Increment as uint8 {
 
 #[boxed]
 pub struct EmptyInputError < Throwable {
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         _ = self;
         return "empty input";
     }
@@ -23,7 +23,7 @@ pub struct EmptyInputError < Throwable {
 pub struct InvalidVersionFormatError < Throwable {
     input: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return "invalid version format for input '{}'".fmt(self.input);
     }
 }
@@ -32,7 +32,7 @@ pub struct InvalidVersionFormatError < Throwable {
 pub struct InvalidVersionError < Throwable {
     input: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.input;
     }
 }
@@ -47,27 +47,27 @@ pub struct Version < traits.Stringable {
     pub metadata: string;
 
     /// Returns a `Version` structure parsed from `input` `string`.
-    pub func from_string(input: string) -> !Self {
+    pub func from_string(input: string) -> !^Self {
         if input.is_empty() {
-            throw EmptyInputError();
+            throw ^EmptyInputError();
         }
         raw_version := RawVersion.parse(input);
         if validated := raw_version.validate() {
             return validated;
         }
-        throw InvalidVersionFormatError(input: input);
+        throw ^InvalidVersionFormatError(input: input);
     }
 
     /// Returns a `Version` structure with given `major`, `minor` and `patch` versions.
     #[inline]
-    pub func build(major: uint, minor: uint, patch: uint) -> Self {
+    pub func build(major: uint, minor: uint, patch: uint) -> ^Self {
         // TODO: check if versions are greater than zero.
-        return Version(major, minor, patch, "", "");
+        return ^Self(major, minor, patch, "", "");
     }
 
     /// Returns a `Version` structure with incremented values.
     #[inline]
-    pub func increment(self, typ: Increment) -> Self {
+    pub func increment(^self, typ: Increment) -> ^Self {
         mut major := self.major;
         mut minor := self.minor;
         mut patch := self.patch;
@@ -85,13 +85,13 @@ pub struct Version < traits.Stringable {
                 patch += 1;
             }
         }
-        return Version(major, minor, patch, self.prerelease, self.metadata);
+        return ^Self(major, minor, patch, self.prerelease, self.metadata);
     }
 
     /// Satisfies returns `true` if the `input` expression can be validated to `true`
     /// when run against this `Version`.
     #[inline]
-    pub func satisfies(self, input: string) -> bool {
+    pub func satisfies(^self, input: string) -> bool {
         return if range := Range.parse(input) {
             range.satisfies(self)
         } else {
@@ -100,17 +100,17 @@ pub struct Version < traits.Stringable {
     }
 
     #[inline]
-    pub func ==(self, v2: Self) -> bool {
+    pub func ==(^self, v2: ^Self) -> bool {
         return self.major == v2.major && self.minor == v2.minor && self.patch == v2.patch
             && self.prerelease == v2.prerelease;
     }
 
     #[inline]
-    pub func !=(self, v2: Self) -> bool {
+    pub func !=(^self, v2: ^Self) -> bool {
         return !(self == v2);
     }
 
-    pub func >(self, v2: Self) -> bool {
+    pub func >(^self, v2: ^Self) -> bool {
         if self.major < v2.major {
             return false;
         } else if self.major > v2.major {
@@ -123,7 +123,7 @@ pub struct Version < traits.Stringable {
         return self.patch > v2.patch;
     }
 
-    pub func <(self, v2: Self) -> bool {
+    pub func <(^self, v2: ^Self) -> bool {
         if self.major > v2.major {
             return false;
         } else if self.major < v2.major {
@@ -137,16 +137,16 @@ pub struct Version < traits.Stringable {
     }
 
     #[inline]
-    pub func >=(self, v2: Self) -> bool {
+    pub func >=(^self, v2: ^Self) -> bool {
         return self == v2 || self > v2;
     }
 
     #[inline]
-    pub func <=(self, v2: Self) -> bool {
+    pub func <=(^self, v2: ^Self) -> bool {
         return self == v2 || self < v2;
     }
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         common_string := "{}.{}.{}".fmt(self.major, self.minor, self.patch);
         prerelease_string := if self.prerelease.is_empty() { "" } else {
             "-".concat(self.prerelease)
@@ -161,11 +161,11 @@ pub struct Version < traits.Stringable {
 /// Converts the `input` version to a `Version` struct.
 /// coerce will strip any contents *after* the parsed version string.
 #[inline]
-pub func coerce(input: string) -> !Version {
+pub func coerce(input: string) -> !^Version {
     if version := RawVersion.parse(input).coerce() {
         return version;
     }
-    throw InvalidVersionError("invalid version for input '{}'".fmt(input));
+    throw ^InvalidVersionError("invalid version for input '{}'".fmt(input));
 }
 
 /// Returns `true` if the `input` `string` can be converted to a semantic `Version`

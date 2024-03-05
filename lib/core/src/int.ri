@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -56,7 +56,7 @@ extend int32 < Stringable {
         }
         unsafe {
             mut index := @as(uint, max);
-            buf := @as([&]mut uint8, mem.raw_alloc(index + 1));
+            buf := @as([&]mut uint8, mem.boxed_alloc(index + 1));
             buf[index] = 0;
             index -= 1;
 
@@ -116,7 +116,7 @@ extend int64 < Stringable {
         unsafe {
             max := 20;
             mut index := @as(uint, max);
-            buf := @as([&]mut uint8, mem.raw_alloc(index + 1));
+            buf := @as([&]mut uint8, mem.boxed_alloc(index + 1));
             buf[index] = 0;
             index -= 1;
 
