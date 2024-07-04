@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -38,7 +38,7 @@ struct CachedFile {
 struct SourceCache {
    mut sources: []mut CachedFile;
 
-   pub func find(self, path_: string) -> ?string {
+   pub func find(&self, path_: string) -> ?string {
 	  for source in self.sources {
 		 if source.path == path_ {
 			return source.content;
@@ -47,7 +47,7 @@ struct SourceCache {
 	  return none;
    }
 
-   pub func find_line(mut self, path_: string, line: uint) -> ?string {
+   pub func find_line(&mut self, path_: string, line: uint) -> ?string {
 	  return if lines := self.find_lines(path_) {
 		 lines[line]
 	  } else {
@@ -55,7 +55,7 @@ struct SourceCache {
 	  };
    }
 
-   pub func find_lines_between(mut self, path_: string, line: uint, end_line: uint) -> ?[:]string {
+   pub func find_lines_between(&mut self, path_: string, line: uint, end_line: uint) -> ?[:]string {
 	  return if lines := self.find_lines(path_) {
 		if lines.len > 0 && lines.len >= end_line {
 			lines[line:end_line]
@@ -67,8 +67,8 @@ struct SourceCache {
 	  };
    }
 
-   pub func find_lines(mut self, path_: string) -> ?[]string {
-	  for mut cached in self.sources {
+   pub func find_lines(&mut self, path_: string) -> ?[]string {
+	  for &mut cached in self.sources {
 		 if cached.path == path_ {
 			if cached.lines.is_empty() {
 			   cached.lines = cached.content.split_into_lines();

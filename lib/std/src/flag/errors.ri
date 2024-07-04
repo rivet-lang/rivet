@@ -1,22 +1,24 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import ../traits;
 
+#[boxed]
 pub struct UnknownFlagError < Throwable {
     flag: string;
 
-    pub func to_string(&self) -> string {
+    pub func to_string(^self) -> string {
         return "unknown flag `{}`".fmt(self.flag);
     }
 }
 
+#[boxed]
 pub struct ArgsCountError < Throwable {
     got: uint;
     want: uint;
 
-    pub func to_string(&self) -> string {
+    pub func to_string(^self) -> string {
         return if self.want == 0 {
             "expected no arguments, but got {}".fmt(self.got)
         } else if self.got > self.want {
@@ -31,12 +33,12 @@ pub struct ArgsCountError < Throwable {
 pub struct GenericError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
 
 // TODO: Remove this function and use a more specific type.
-pub func error(msg: string, args: ...traits.Stringable) -> Throwable {
-    return GenericError(msg.fmt(args));
+pub func error(msg: string, args: ...^traits.Stringable) -> ^Throwable {
+    return ^GenericError(msg.fmt(args));
 }

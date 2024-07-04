@@ -16,6 +16,11 @@ class _Ptr: # ugly hack =/
         self.val.__dict__ = val.__dict__
 
 class TBase:
+    def value_is_boxed(self):
+        if isinstance(self, Type):
+            return self.is_boxed
+        return self.symbol().is_boxed()
+
     def symbol(self):
         if isinstance(self, (DynArray, Array, Tuple, Variadic, Slice)):
             return self.sym
@@ -43,14 +48,17 @@ class TBase:
                 _Ptr(self).store(self.sym.info.parent)
 
 class Type(TBase):
-    def __init__(self, sym):
+    def __init__(self, sym, is_boxed = False, is_mut = False):
         self.sym = sym
         self.expr = None
         self._unresolved = False
 
+        self.is_boxed = is_boxed
+        self.is_mut = is_mut
+
     @staticmethod
-    def unresolved(expr):
-        typ = Type(None)
+    def unresolved(expr, is_boxed = False, is_mut = False):
+        typ = Type(None, is_boxed, is_mut)
         typ.expr = expr
         typ._unresolved = True
         return typ
@@ -62,8 +70,18 @@ class Type(TBase):
     def is_resolved(self):
         return not self._unresolved
 
+    def to_boxed(self, is_mut):
+        return Type(self.sym, True, is_mut)
+
     def qualstr(self):
-        return self.sym.qualname()
+        qualname = self.sym.qualname()
+        if self.is_boxed:
+            res = "+"
+            if self.is_mut:
+                res += "mut "
+            res += qualname
+            return res
+        return qualname
 
     def symbol(self):
         sy = self.sym
@@ -72,15 +90,22 @@ class Type(TBase):
     def __eq__(self, other):
         if not isinstance(other, Type):
             return False
-        if self.sym == other.sym:
-            return True
-        return False
+        if self.is_boxed and not other.is_boxed:
+            return False
+        if self.is_mut and not other.is_mut:
+            return False
+        return self.sym == other.sym
 
     def __str__(self):
         if self._unresolved:
             res = str(self.expr)
         else:
             res = str(self.sym.name)
+        if self.is_boxed:
+            if self.is_mut:
+                res = f"^mut {res}"
+            else:
+                res = f"^{res}"
         return res
 
 class Boxedptr(TBase):
@@ -345,7 +370,10 @@ class Option(TBase):
         self.sym = None
 
     def is_pointer(self):
-        return self.typ.__class__ in (Ptr, Func, Boxedptr) or self.typ.symbol().is_boxed()
+        if isinstance(self.typ, Type) and self.typ.is_boxed:
+            return True
+        tsym = self.typ.symbol()
+        return self.typ.__class__ in (Ptr, Func, Boxedptr) or tsym.is_boxed()
 
     def qualstr(self):
         return f"?{self.typ.qualstr()}"

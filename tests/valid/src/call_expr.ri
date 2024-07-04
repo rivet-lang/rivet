@@ -37,13 +37,3 @@ test "call expression with spread expression" {
     @assert(args(1, 2, 3, 4, 5, 6, 7, 8, 9, 10) == 55);
     @assert(args(...[10, 9, 8, 7, 6, 5, 4, 3, 2, 1]) == 55);
 }
-
-func mutable_primitive_type_argument(mut a: int) {
-    a += 2;
-}
-
-test "call expression to a function with mutable argument of primitive type without modifying its value" {
-    x := 2;
-    mutable_primitive_type_argument(x);
-    @assert(x == 2);
-}

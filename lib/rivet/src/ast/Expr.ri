@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -11,11 +11,11 @@ pub enum Expr < traits.Stringable {
     Empty(token.Pos),
     Comment(Comment),
     Paren {
-        mut expr: Expr;
+        mut expr: ^mut Expr;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
 
-        pub func clean_paren(&self) -> Expr {
+        pub func clean_paren(&self) -> ^mut Expr {
             mut res := self.expr;
             while res is .Paren(paren) {
                 res = paren.expr;
@@ -23,38 +23,38 @@ pub enum Expr < traits.Stringable {
             return res;
         }
     },
-    Type(Type),
+    Type(^mut Type),
     Assign {
-        mut left: Expr;
+        left: ^mut Expr;
         op: token.Kind;
-        mut right: Expr;
+        right: ^mut Expr;
         pos: token.Pos;
     },
     Ident {
         name: string;
-        scope: Scope;
+        scope: ^mut Scope;
         is_comptime: bool;
         mut is_obj: bool;
         mut is_sym: bool;
         mut found: bool;
-        mut sym: Sym;
+        mut sym: ^mut Sym := invalid_sym;
         mut builtin: Builtin := .Invalid;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     SelfTy {
-        scope: Scope;
+        scope: ^mut Scope;
         pos: token.Pos;
         mut found: bool;
-        mut sym: TypeSym;
+        mut sym: ^mut TypeSym := invalid_type_sym;
     },
     SelfLiteral {
-        mut scope: Scope;
+        mut scope: ^mut Scope;
         pos: token.Pos;
         mut found: bool;
-        mut sym: TypeSym;
-        mut obj: Var;
-        mut type: Type;
+        mut sym: ^mut TypeSym := invalid_type_sym;
+        mut obj: ^mut Var := ^mut Var();
+        mut type: ^mut Type;
     },
     NoneLiteral {
         pos: token.Pos;
@@ -67,17 +67,17 @@ pub enum Expr < traits.Stringable {
         value: string;
         mut is_byte: bool;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     IntegerLiteral {
         value: string;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     FloatLiteral {
         value: string;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     StringLiteral {
         value: string;
@@ -85,103 +85,104 @@ pub enum Expr < traits.Stringable {
         is_bytestr: bool;
         is_cstr: bool;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     EnumLiteral {
         value: string;
         mut is_instance: bool;
         from_is_cmp: bool;
         pos: token.Pos;
-        mut type: Type;
-        mut sym: TypeSym;
+        mut type: ^mut Type;
+        mut sym: ^mut TypeSym := invalid_type_sym;
         mut variant: EnumVariant;
     },
     TupleLiteral {
-        mut values: []mut Expr;
+        mut values: []^mut Expr;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     ArrayCtor {
         is_dyn: bool;
         is_mut: bool;
-        mut elem_type: Type;
-        mut init_value: ?Expr;
-        mut cap_value: ?Expr;
-        mut len_value: ?Expr;
+        mut elem_type: ^mut Type;
+        mut init_value: ?^mut Expr;
+        mut cap_value: ?^mut Expr;
+        mut len_value: ?^mut Expr;
         mut len_res: uint;
-        mut type: Type;
+        mut type: ^mut Type;
         pos: token.Pos;
     },
     ArrayLiteral {
-        mut values: []mut Expr;
+        mut values: []^mut Expr;
         is_dyn: bool;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     Selector {
-        mut left: Expr;
-        mut left_type: Type;
-        mut left_sym: Sym;
+        mut left: ^mut Expr;
+        mut left_type: ^mut Type;
+        mut left_sym: ^mut Sym := invalid_sym;
         field_name: string;
         field_pos: token.Pos;
         mut field_is_mut: bool;
-        mut field_type: Type;
+        mut field_type: ^mut Type;
         mut is_path: bool;
         mut found: bool;
-        mut sym: Sym;
+        mut sym: ^mut Sym := invalid_sym;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     Indirect {
-    	mut left: Expr;
+    	mut left: ^mut Expr;
     	mut pos: token.Pos;
-    	mut left_type: Type;
-    	mut type: Type;
+    	mut left_type: ^mut Type;
+    	mut type: ^mut Type;
+        mut is_boxed: bool;
     	mut is_mut: bool;
     },
     OptionCheck {
-    	mut left: Expr;
+    	mut left: ^mut Expr;
     	mut pos: token.Pos;
-    	mut left_type: Type;
-    	mut type: Type;
+    	mut left_type: ^mut Type;
+    	mut type: ^mut Type;
     },
     LoopControl {
         op: token.Kind;
         pos: token.Pos;
     },
     Range {
-        mut start: Expr;
-        mut end: Expr;
+        mut start: ^mut Expr;
+        mut end: ^mut Expr;
         has_start: bool;
         has_end: bool;
         is_inclusive: bool;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     Index {
-        mut left: Expr;
-        mut left_type: Type;
-        mut index: Expr;
+        mut left: ^mut Expr;
+        mut left_type: ^mut Type;
+        mut index: ^mut Expr;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
         mut is_ref: bool;
         mut is_mut_ptr: bool;
     },
     Call {
-        mut left: Expr;
+        mut left: ^mut Expr;
         mut args: []mut CallArg;
-        mut spread_expr: Expr;
+        mut spread_expr: ^mut Expr;
         has_spread_expr: bool;
         mut err_handler: CallErrorHandler;
         pos: token.Pos;
-        mut type: Type;
-        mut func_: Func;
+        mut type: ^mut Type;
+        mut func_: ^mut Func := ^mut Func();
 
         mut is_closure: bool;
         mut is_constructor: bool;
 
         mut is_enum_variant: bool;
-        mut enum_variant_sym: TypeSym;
+        mut enum_variant_sym: ^mut TypeSym := invalid_type_sym;
 
         func has_named_args(&self) -> bool {
             for arg in self.args {
@@ -226,61 +227,61 @@ pub enum Expr < traits.Stringable {
         mut args: []mut CallArg;
         pos: token.Pos;
         mut builtin: Builtin := .Invalid;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     Unary {
-        mut right: Expr;
+        mut right: ^mut Expr;
         op: token.Kind;
         is_mut_ptr: bool;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     Binary {
-        mut left: Expr;
-        mut right: Expr;
+        mut left: ^mut Expr;
+        mut right: ^mut Expr;
         op: token.Kind;
         has_var_obj: bool;
-        mut var_obj: ObjectData;
-        mut scope: Scope;
+        mut var_obj: ^mut ObjectData;
+        mut scope: ^mut Scope;
         pos: token.Pos;
-        mut type: Type;
+        mut type: ^mut Type;
     },
     Return {
-        mut expr: Expr;
+        mut expr: ^mut Expr;
         has_expr: bool;
         pos: token.Pos;
     },
     Throw {
-        mut expr: Expr;
+        mut expr: ^mut Expr;
         pos: token.Pos;
     },
     Block {
         is_unsafe: bool;
-        mut stmts: []mut Stmt;
-        mut expr: Expr;
+        mut stmts: []^mut Stmt;
+        mut expr: ^mut Expr;
         mut is_expr: bool;
-        scope: Scope;
+        scope: ^mut Scope;
         pos: token.Pos;
-        mut type: Type;
-        mut defer_stmts: []Stmt.Defer;
+        mut type: ^mut Type;
+        mut defer_stmts: []mut Stmt.Defer;
     },
     ComptimeIf(ComptimeIf),
     If {
         mut branches: []mut IfBranch;
         has_else: bool;
         pos: token.Pos;
-        mut expected_type: Type;
-        mut type: Type;
+        mut expected_type: ^mut Type;
+        mut type: ^mut Type;
     },
     Match {
-        mut expr: Expr;
+        mut expr: ^mut Expr;
         mut branches: []mut MatchBranch;
         mut is_typematch: bool;
         has_else: bool;
-        mut scope: Scope;
+        mut scope: ^mut Scope;
         pos: token.Pos;
-        mut expected_type: Type;
-        mut type: Type;
+        mut expected_type: ^mut Type;
+        mut type: ^mut Type;
         mut is_exhaustive: bool;
     },
     // Examples:
@@ -288,16 +289,16 @@ pub enum Expr < traits.Stringable {
     // - while byte := reader.read() { ... }
     // - match x := optional_or_result_fn(); x == some { ... }
     Guard {
-        mut vars: []mut ObjectData;
-        mut expr: Expr;
+        mut vars: []^mut ObjectData;
+        mut expr: ^mut Expr;
         has_cond: bool;
-        mut cond: Expr;
-        mut scope: Scope;
+        mut cond: ^mut Expr;
+        mut scope: ^mut Scope;
         pos: token.Pos;
     };
 
     #[inline]
-    pub func clean_paren(self) -> Self {
+    pub func clean_paren(^mut self) -> ^mut Self {
         return if self is .Paren(paren) {
             paren.clean_paren()
         } else {
@@ -305,8 +306,8 @@ pub enum Expr < traits.Stringable {
         };
     }
 
-    pub func position(self) -> token.Pos {
-        return match self {
+    pub func position(^self) -> token.Pos {
+        return match self.^ {
             .Empty(empty_pos) -> empty_pos,
             .Comment(comment) -> comment.pos,
             .Paren(paren) -> paren.pos,
@@ -345,9 +346,8 @@ pub enum Expr < traits.Stringable {
         };
     }
 
-    #[inline]
-    pub func to_string(self) -> string {
-        return match self {
+    pub func to_string(^self) -> string {
+        return match self.^ {
             .Empty -> "<empty-expression>",
             .Comment -> "<comment>",
             .Paren(paren) -> "({})".fmt(paren.expr),
@@ -623,10 +623,10 @@ pub enum Expr < traits.Stringable {
 
 pub struct CallArg {
     pub name: string;
-    pub mut expr: Expr;
+    pub expr: ^mut Expr;
     pub is_named: bool;
     pub pos: token.Pos;
-    pub mut type: Type;
+    pub mut type: ^mut Type;
 }
 
 pub struct CallErrorHandler {
@@ -634,30 +634,30 @@ pub struct CallErrorHandler {
     pub varname_pos: token.Pos;
     pub has_varname: bool;
     pub is_propagate: bool;
-    pub mut expr: Expr;
+    pub expr: ^mut Expr;
     pub has_expr: bool;
-    pub mut scope: Scope;
+    pub scope: ^mut Scope;
     pub pos: token.Pos;
 }
 
 pub struct IfBranch {
-    pub mut cond: Expr;
-    pub mut expr: Expr;
+    pub mut cond: ^mut Expr;
+    pub mut expr: ^mut Expr;
     pub is_else: bool;
     pub is_else_if: bool;
     pub pos: token.Pos;
-    pub mut type: Type;
+    pub mut type: ^mut Type;
 }
 
 pub struct MatchBranch {
-    pub mut patterns: []mut Expr;
-    pub mut branch_var: ?ObjectData;
+    pub mut patterns: []^mut Expr;
+    pub mut branch_var: ?^mut ObjectData;
     pub has_cond: bool;
-    pub mut var_type: Type;
-    pub mut cond: Expr;
-    pub mut expr: Expr;
+    pub mut var_type: ^mut Type;
+    pub mut cond: ^mut Expr;
+    pub mut expr: ^mut Expr;
     pub is_else: bool;
     pub pos: token.Pos;
-    pub mut scope: Scope;
-    pub mut type: Type;
+    pub mut scope: ^Scope;
+    pub mut type: ^mut Type;
 }

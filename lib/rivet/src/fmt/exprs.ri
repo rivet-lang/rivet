@@ -1,12 +1,12 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import ../ast;
 
 extend Formatter {
-    func format_expr(mut self, expr: ast.Expr) {
-        match expr {
+    func format_expr(^mut self, expr: ^mut ast.Expr) {
+        match expr.^ {
             .Empty -> {},
             .NoneLiteral -> self.write("none"),
             .Paren(paren) -> self.write_fmt("({})", paren.clean_paren()),

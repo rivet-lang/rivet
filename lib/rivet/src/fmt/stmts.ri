@@ -1,11 +1,11 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import ../ast;
 
 extend Formatter {
-    func format_stmts(mut self, stmts: []ast.Stmt) {
+    func format_stmts(^mut self, stmts: []^mut ast.Stmt) {
         self.indent += 1;
         for stmt in stmts {
             self.format_stmt(stmt);
@@ -13,8 +13,8 @@ extend Formatter {
         self.indent -= 1;
     }
 
-    func format_stmt(mut self, stmt: ast.Stmt) {
-        match stmt {
+    func format_stmt(^mut self, stmt: ^mut ast.Stmt) {
+        match stmt.^ {
             .Comment(comment) -> self.format_comment(comment, has_nl: true),
             .Expr(expr) -> self.format_expr(expr),
             else -> {}

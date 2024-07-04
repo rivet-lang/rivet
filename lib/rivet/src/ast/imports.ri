@@ -1,0 +1,66 @@
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
+// source code is governed by an MIT license that can be found in the LICENSE
+// file.
+
+import ../token;
+
+pub struct ImportDecl {
+    pub attributes: Attributes;
+    pub is_public: bool;
+    pub path: string;
+    pub path_pos: token.Pos;
+    pub mut alias_name: string;
+    pub mut has_custom_alias: bool;
+    pub glob: bool;
+    pub mut subimports: []mut ImportDecl;
+    pub import_list: []ImportListInfo;
+    pub mut info: ImportedMod;
+    pub pos: token.Pos;
+}
+
+pub struct ImportedMod {
+    pub name: string;
+    pub full_name: string;
+    pub alias_name: string;
+    pub found: bool;
+    pub files: []string;
+    pub mut mod: ^mut Module := empty_module;
+}
+
+pub struct ImportListInfo {
+    pub name: string;
+    pub alias_name: string;
+    pub mut has_custom_alias: bool;
+    pub pos: token.Pos;
+}
+
+#[boxed]
+pub struct ImportedSymbol {
+    pub name: string;
+    pub sym: ^mut Sym := invalid_sym;
+    pub pos: token.Pos;
+    pub mut is_used: bool;
+}
+
+pub struct ImportedSymbols {
+    pub mut syms: []^mut ImportedSymbol;
+
+    #[inline]
+    pub func add(&mut self, name: string, sym: ^mut Sym, pos: token.Pos, is_used: bool := false) {
+        self.syms.push(^mut ImportedSymbol(name, sym, pos, is_used));
+    }
+
+    pub func find(&self, name: string) -> ?^mut ImportedSymbol {
+        for imported_sym in self.syms {
+            if name == imported_sym.name {
+                return imported_sym;
+            }
+        }
+        return none;
+    }
+
+    #[inline]
+    pub func exists(&self, name: string) -> bool {
+        return self.find(name) != none;
+    }
+}

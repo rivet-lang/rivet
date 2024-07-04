@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -23,6 +23,7 @@ Commands:
    help             Print this help and exit.
 
 General Options:
+   -v, --version    Print version number and exit.
    -h, --help       Print command-specific usage.
 ";
 
@@ -36,7 +37,7 @@ func main() {
         "build", "run", "test", "check" -> {
             // These commands are handled directly by the compiler.
             is_test := cmd == "test";
-            mut prefs_ := prefs.Prefs.from_args(
+            prefs_ := prefs.Prefs.from_args(
                 process.args[2:], is_test, is_test || cmd == "run", cmd == "check"
             )!;
             prefs_.load_module_info()!;
@@ -44,7 +45,7 @@ func main() {
         },
         "new", "init" -> tools.cmd_new(process.args[2:], cmd == "init")!,
         "fmt" -> tools.cmd_fmt(process.args[2:])!,
-        "version" -> {
+        "-v", "--version", "version" -> {
             console.ewriteln(utils.full_version());
             process.exit(0);
         },

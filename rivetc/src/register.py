@@ -21,7 +21,7 @@ class Register:
             self.sym = sf.sym
             self.source_file = sf
             self.walk_decls(self.source_file.decls)
-        self.comp.throwable_t = type.Type(self.comp.throwable_sym)
+        self.comp.throwable_t = type.Type(self.comp.throwable_sym, True)
 
     def walk_decls(self, decls):
         for decl in decls:
@@ -57,7 +57,7 @@ class Register:
                         self.add_sym(
                             sym.Type(
                                 decl.is_public, decl.name, TypeKind.Alias,
-                                info = sym.AliasInfo(decl.parent)
+                                info = sym.AliasInfo(decl.parent), attributes=decl.attributes
                             ), decl.pos
                         )
                     else:
@@ -73,7 +73,7 @@ class Register:
                     decl.sym = self.sym.add_and_return(
                         sym.Type(
                             decl.is_public, decl.name, TypeKind.Trait,
-                            info = sym.TraitInfo()
+                            info = sym.TraitInfo(), attributes=decl.attributes
                         )
                     )
                     if self.is_core_mod and decl.name == "Throwable" and not self.comp.throwable_sym:
@@ -93,7 +93,7 @@ class Register:
                                 info = sym.StructInfo(
                                     decl.is_opaque,
                                     is_boxed = decl.attributes.has("boxed")
-                                )
+                                ), attributes=decl.attributes
                             )
                         )
                         if self.is_core_mod and decl.name == "DynArray":
@@ -109,7 +109,7 @@ class Register:
                         decl.attributes.has("boxed")
                     )
                     decl.sym = self.sym.add_and_return(
-                        sym.Type(decl.is_public, decl.name, TypeKind.Enum)
+                        sym.Type(decl.is_public, decl.name, TypeKind.Enum, attributes=decl.attributes)
                     )
                     for variant in decl.variants:
                         if info.has_variant(variant.name):
@@ -156,7 +156,7 @@ class Register:
                     self.sym.fields.append(
                         sym.Field(
                             decl.name, decl.is_mut, decl.is_public, decl.typ,
-                            decl.has_def_expr, decl.def_expr
+                            decl.has_def_expr, decl.def_expr, decl.attributes
                         )
                     )
             elif isinstance(decl, ast.ExtendDecl):
@@ -192,7 +192,8 @@ class Register:
                             decl.name, decl.args, decl.ret_typ,
                             decl.has_named_args, decl.has_body, decl.name_pos,
                             decl.self_is_mut, decl.self_is_ptr,
-                            attributes = decl.attributes
+                            attributes = decl.attributes,
+                            self_is_boxed = decl.self_is_boxed
                         )
                     )
                     decl.sym.is_main = decl.is_main
@@ -212,9 +213,7 @@ class Register:
                 self.check_imported_symbol(symbol, decl.pos)
                 if decl.is_public:
                     try:
-                        self.sym.add(
-                            sym.SymRef(True, symbol.name, symbol)
-                        )
+                        self.sym.add(sym.SymRef(True, symbol.name, symbol))
                     except utils.CompilerError as e:
                         report.error(e.args[0], decl.pos)
                 else:
@@ -222,9 +221,7 @@ class Register:
         elif len(decl.import_list) == 0:
             if decl.is_public:
                 try:
-                    self.sym.add(
-                        sym.SymRef(True, decl.alias, decl.mod_sym)
-                    )
+                    self.sym.add(sym.SymRef(True, decl.alias, decl.mod_sym))
                 except utils.CompilerError as e:
                     report.error(e.args[0], decl.pos)
             else:

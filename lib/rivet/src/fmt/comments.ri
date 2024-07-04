@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -16,7 +16,7 @@ extend Formatter {
     // - level:  either .Keep (don't indent), or .Indent (increment indentation)
     // - prev_line: the line number of the previous token to save linebreaks
     func format_comment(
-        mut self, comment: ast.Comment, same_line: bool := false,
+        ^mut self, comment: ast.Comment, same_line: bool := false,
         level: CommentsLevel := .Keep, has_nl: bool := false
     ) {
         if level == .Indent {
@@ -64,7 +64,7 @@ extend Formatter {
     }
 
     func format_comments(
-        mut self, comments: []ast.Comment, has_nl: bool := true,
+        ^mut self, comments: []ast.Comment, has_nl: bool := true,
         same_line: bool := false, level: CommentsLevel := .Keep, prev_line_: ?uint := none
     ) {
         mut prev_line := prev_line_ ?? 0;

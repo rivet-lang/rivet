@@ -1,13 +1,13 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import rivet/{ prefs, token, tokenizer, ast.Env };
 
-var prefs_ := prefs.Prefs();
+var prefs_ := ^mut prefs.Prefs();
 
 func tokenize(text: string) -> []token.Token {
-    mut tokenizer_ := tokenizer.Tokenizer.new(text, Env.new(prefs_));
+    tokenizer_ := tokenizer.Tokenizer.new(text, Env.new(prefs_));
     mut tokens := []token.Token(cap: text.len / 3);
     mut token_ := tokenizer_.next();
     while {

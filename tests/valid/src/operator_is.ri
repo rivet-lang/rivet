@@ -3,6 +3,6 @@ trait Any { }
 struct MyStruct < Any { }
 
 test "operator `is` with traits" {
-    a := Any(MyStruct());
+    a := ^Any(MyStruct());
     @assert(a is MyStruct);
 }

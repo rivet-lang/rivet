@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -64,7 +64,7 @@ extend rune < Stringable {
 
     pub func to_string(&self) -> string {
         len := self.len_utf8();
-        res := unsafe { @as([&]mut uint8, mem.raw_alloc(len + 1)) };
+        res := unsafe { @as([&]mut uint8, mem.boxed_alloc(len + 1)) };
         unsafe {
             _ = utf32_decode_to_buffer(self.*, res);
             return string.from_raw_with_len(res, len);
@@ -120,7 +120,7 @@ func len_utf8(code: uint32) -> uint {
 pub struct TooManyBytesError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }

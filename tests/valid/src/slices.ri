@@ -8,7 +8,7 @@ test "creating slices from arrays" {
 }
 
 test "creating slices from dynamic arrays" {
-    arr := +[1, 2, 3, 4];
+    arr := ^[1, 2, 3, 4];
     slice := arr[:];
     @assert(slice[0] == 1);
     @assert(slice[1] == 2);

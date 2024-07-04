@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -48,7 +48,7 @@ struct Slice {
         return self.len == 0;
     }
 
-    func slice(self, start: uint, end: uint) -> Self {
+    func slice(&self, start: uint, end: uint) -> Self {
         if start > end || end > self.len {
             runtime_error(
                 "slice index [{}:{}] out of range (len: {})", start, end, self.len
@@ -65,7 +65,7 @@ struct Slice {
     }
 
     #[inline]
-    func slice_from(self, start: uint) -> Self {
+    func slice_from(&self, start: uint) -> Self {
         return self.slice(start, self.len);
     }
 

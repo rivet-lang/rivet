@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -7,21 +7,23 @@ pub struct Field {
     pub name: string;
     pub is_mut: bool;
     pub has_def_expr: bool;
-    pub def_expr: Expr;
-    pub type: Type;
+    pub def_expr: ^mut Expr;
+    pub type: ^mut Type;
     pub is_required: bool;
 }
 
+pub var invalid_type_sym := ^mut TypeSym();
+
 #[boxed]
 pub struct TypeSym < Sym {
-    pub mut fields: []Field;
-    pub mut full_fields_: []Field;
-    pub mut info: TypeInfo := .Invalid;
+    pub mut fields: []^Field;
+    pub mut full_fields_: []^Field;
+    pub mut info: ^mut TypeInfo := ^mut .Invalid;
     pub mut size: uint;
     pub mut align: uint;
-    pub mut default_value: ?Expr;
+    pub mut default_value: ?^mut Expr;
 
-    pub func lookup_field(self, name: string) -> ?Field {
+    pub func lookup_field(^self, name: string) -> ?^Field {
         for f in self.fields {
             if f.name == name {
                 return f;
@@ -49,12 +51,12 @@ pub struct TypeSym < Sym {
     }
 
     #[inline]
-    pub func has_field(self, name: string) -> bool {
+    pub func has_field(^self, name: string) -> bool {
         return self.lookup_field(name) != none;
     }
 
     #[inline]
-    pub func lookup(self, name: string) -> ?Sym {
+    pub func lookup(^self, name: string) -> ?^mut Sym {
         return if s := self.scope.lookup(name) {
             s
         } else {
@@ -62,7 +64,7 @@ pub struct TypeSym < Sym {
         };
     }
 
-    pub func find_in_base(self, name: string) -> ?Sym {
+    pub func find_in_base(^self, name: string) -> ?^mut Sym {
          if self.info is .Trait(trait_info) {
             for b in trait_info.bases {
                 if s := b.scope.find(name) {
@@ -91,13 +93,13 @@ pub struct TypeSym < Sym {
     }
 
     #[inline]
-    pub func find_func(self, name: string) -> ?Func {
-        return if sym := self.scope.find(name); sym is Func(func_) {
+    pub func find_func(^self, name: string) -> ?^mut Func {
+        return if sym := self.scope.find(name); sym is Func(mut func_) {
             if self.info !is .Trait && !func_.has_body {
                 return none;
             }
             func_
-        } else if sym := self.find_in_base(name); sym is Func(func_) {
+        } else if sym := self.find_in_base(name); sym is Func(mut func_) {
             if self.info !is .Trait && !func_.has_body {
                 return none;
             }
@@ -108,7 +110,7 @@ pub struct TypeSym < Sym {
     }
 
     #[inline]
-    pub func find_method(self, name: string) -> ?Func {
+    pub func find_method(^self, name: string) -> ?^mut Func {
         return if func_ := self.find_func(name); func_.is_method {
             func_
         } else {
@@ -117,33 +119,33 @@ pub struct TypeSym < Sym {
     }
 
     #[inline]
-    pub func has_func(self, name: string) -> bool {
+    pub func has_func(^self, name: string) -> bool {
         return self.find_func(name) != none;
     }
 
     #[inline]
-    pub func has_method(self, name: string) -> bool {
+    pub func has_method(^self, name: string) -> bool {
         return self.find_method(name) != none;
     }
 
-    pub func full_fields(mut self) -> []Field {
+    pub func full_fields(^mut self) -> []^Field {
         if !self.full_fields_.is_empty() {
             return self.full_fields_;
         }
-        mut fields := []Field();
-        if self.info is .Trait(mut trait_info) {
-            for mut b in trait_info.bases {
+        mut fields := []^Field();
+        if self.info is .Trait(trait_info) {
+            for b in trait_info.bases {
                 for bf in b.full_fields() {
                     fields.push(bf);
                 }
             }
-        } else if self.info is .Struct(mut struct_info) {
-            for mut t in struct_info.traits {
+        } else if self.info is .Struct(struct_info) {
+            for t in struct_info.traits {
                 for tf in t.full_fields() {
                     fields.push(tf);
                 }
             }
-            for mut b in struct_info.bases {
+            for b in struct_info.bases {
                 for bf in b.full_fields() {
                     fields.push(bf);
                 }
@@ -157,7 +159,7 @@ pub struct TypeSym < Sym {
     }
 
     #[inline]
-    pub func implement_trait(self, trait_sym: TypeSym) -> bool {
+    pub func implement_trait(^mut self, trait_sym: ^mut TypeSym) -> bool {
         return if trait_sym.info is .Trait(trait_info) {
             self in trait_info.implements
         } else {
@@ -165,7 +167,7 @@ pub struct TypeSym < Sym {
         };
     }
 
-    pub func update(mut self, other: TypeSym) -> !bool {
+    pub func update(^mut self, other: ^TypeSym) -> !bool {
         if self.info is .Placeholder {
             // update placeholder
             if other.info !is .Placeholder {
@@ -182,9 +184,9 @@ pub struct TypeSym < Sym {
     }
 
     #[inline]
-    pub func is_boxed(self) -> bool {
-        return match self.info {
-            .String, .DynArray, .Trait -> true,
+    pub func is_boxed(^self) -> bool {
+        return match self.info.^ {
+            .Trait -> true,
             .Struct(struct_info) -> struct_info.is_boxed,
             .Enum(enum_info) -> enum_info.is_boxed,
             else -> false
@@ -192,17 +194,17 @@ pub struct TypeSym < Sym {
     }
 
     #[inline]
-    pub func is_primitive(self) -> bool {
+    pub func is_primitive(^self) -> bool {
         return self.info.is_primitive();
     }
 
     #[inline]
-    pub func ==(self, rhs: Self) -> bool {
+    pub func ==(^self, rhs: ^Self) -> bool {
         return self.id == rhs.id;
     }
 
     #[inline]
-    pub func !=(self, rhs: Self) -> bool {
+    pub func !=(^self, rhs: ^Self) -> bool {
         return self.id != rhs.id;
     }
 }

@@ -56,9 +56,9 @@ test "enums: tagged enum" {
         else -> @assert(false)
     }
     match e {
-        .Abc(mut e_abc2) -> {
-            e_abc2 += 2;
-            @assert(e_abc2 == 8);
+        .Abc(&mut e_abc2) -> {
+            e_abc2.* += 2;
+            @assert(e_abc2.* == 8);
         },
         else -> @assert(false)
     }
@@ -86,7 +86,7 @@ test "enums: tagged enum with fields" {
     }
 
     user_os = .Linux(kernel_version: 5_16_0, distro_name: "CentOS");
-    if user_os is .Linux(mut linux) {
+    if user_os is .Linux(&mut linux) {
         @assert(linux.kernel_version == 5_16_0);
         @assert(linux.distro_name == "CentOS");
         linux.kernel_version = 5_12_0;

@@ -1,28 +1,24 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import std/process;
 
-import ../utils/maps;
+import ../maps;
 
 #[boxed]
 pub struct OrderedDepMap {
     mut keys: []string;
     mut data: maps.MapStringArrayOfStrings; // TODO: replace with map type
 
-    pub func new() -> Self {
-        return Self();
-    }
-
-    pub func set(mut self, name: string, deps: []string) {
+    pub func set(^mut self, name: string, deps: []string) {
         if !self.data.contains(name) {
             self.keys.push(name);
         }
         self.data.set(name, deps);
     }
 
-    pub func add(mut self, name: string, deps: []string) {
+    pub func add(^mut self, name: string, deps: []string) {
         mut d := self.get(name);
         for dep in deps {
             if dep !in d {
@@ -33,15 +29,15 @@ pub struct OrderedDepMap {
     }
 
     #[inline]
-    pub func get(self, name: string) -> []string {
+    pub func get(^self, name: string) -> []string {
         return if res := self.data.get(name) {
             res
         } else {
-            +[]
+            ^[]
         };
     }
 
-    pub func delete(mut self, name: string) {
+    pub func delete(^mut self, name: string) {
         if !self.data.contains(name) {
             process.panic("OrderedDepMap.delete: no such key: `{}`", name);
         }
@@ -54,7 +50,7 @@ pub struct OrderedDepMap {
         self.data.delete(name);
     }
 
-    pub func apply_diff(mut self, name: string, deps: []string) {
+    pub func apply_diff(^mut self, name: string, deps: []string) {
         mut diff := []string();
         deps_of_name := self.get(name);
         for dep in deps_of_name {
@@ -65,7 +61,7 @@ pub struct OrderedDepMap {
         self.set(name, diff);
     }
 
-    pub func size(self) -> uint {
+    pub func size(^self) -> uint {
         return self.data.len();
     }
 }

@@ -1,36 +1,37 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report, token };
+import ../{ ast, utils/report, token };
 
 import std/fs.Path;
 
 struct Prelude {
     name: string;
-    sym: ast.Sym;
+    sym: ^mut ast.Sym;
 }
 
 #[boxed]
 pub struct Resolver {
-    mut env: ast.Env;
+    mut env: ^mut ast.Env;
 
-    mut sym: ast.Sym := ast.InvalidSym();
-    mut self_sym: ast.TypeSym;
+    sym: ^mut ast.Sym := ast.InvalidSym();
+    mut self_sym: ^mut ast.TypeSym := ast.invalid_type_sym;
     mut preludes: []Prelude;
 
     mut self_sym_is_set: bool;
 
-    mut source_file: ast.SourceFile;
+    mut source_file: ^mut ast.SourceFile;
     mut source_file_abi: ast.ABI;
     mut different_abi_usage_count: uint;
 
-    pub func resolve_files(mut self, source_files: []ast.SourceFile) {
-        Register(self.env).walk_files(source_files);
+    pub func resolve_files(^mut self, source_files: []^mut ast.SourceFile) {
+        register := ^mut Register(self.env);
+        register.walk_files(source_files);
         if report.total_errors() > 0 {
             return;
         }
-        self.preludes = +[
+        self.preludes = ^[
             Prelude("Throwable", self.env.throwable_sym)
         ];
         for sf in source_files {
@@ -45,7 +46,7 @@ pub struct Resolver {
         }
     }
 
-    func detect_source_file_abi(mut self) {
+    func detect_source_file_abi(^mut self) {
         filename := Path.file_name(self.source_file.path);
         if filename.ends_with(".c.ri") {
             self.source_file_abi = .C;
@@ -54,22 +55,22 @@ pub struct Resolver {
         }
     }
 
-    func check_vis(self, sym: ast.Sym, pos: token.Pos) {
+    func check_vis(^self, sym: ^mut ast.Sym, pos: token.Pos) {
         if !sym.is_public && !self.source_file.mod.has_access_to(sym) {
             report.error("{} `{}` is private".fmt(sym.type_of(), sym.name), pos);
         }
     }
 
-    func eval_size(mut self, mut expr: ast.Expr) -> ?int {
-        return match expr {
-            .ComptimeIf(mut comptime_if) -> {
-                mut ct_expr := ast.nodes_to_exprs(self.env.evalue_comptime_if(comptime_if))[0];
+    func eval_size(^mut self, expr: ^mut ast.Expr) -> ?int {
+        return match expr.^ {
+            .ComptimeIf(&mut comptime_if) -> {
+                ct_expr := ast.nodes_to_exprs(self.env.evalue_comptime_if(comptime_if))[0];
                 self.eval_size(ct_expr)
             },
-            .Block(mut block) if block.is_expr -> self.eval_size(block.expr),
-            .Paren(mut paren) -> self.eval_size(paren.expr),
+            .Block(block) if block.is_expr -> self.eval_size(block.expr),
+            .Paren(paren) -> self.eval_size(paren.expr),
             .IntegerLiteral(int_lit) -> int_lit.value.to_int() catch return none,
-            .Ident(mut ident) -> {
+            .Ident(&mut ident) -> {
                 self.resolve_ident(ident);
                 if ident.found {
                     self.eval_sym(ident.sym, ident.pos)
@@ -77,7 +78,7 @@ pub struct Resolver {
                     none
                 }
             },
-            .Selector(mut selector) -> {
+            .Selector(&mut selector) -> {
                 self.resolve_selector(selector);
                 if selector.found {
                     self.eval_sym(selector.sym, selector.pos)
@@ -85,7 +86,7 @@ pub struct Resolver {
                     none
                 }
             },
-            .Binary(mut binary) -> if left := self.eval_size(binary.left) {
+            .Binary(binary) -> if left := self.eval_size(binary.left) {
                 if right := self.eval_size(binary.right) {
                     match binary.op {
                         .Plus -> left + right,
@@ -107,7 +108,7 @@ pub struct Resolver {
                 none
             },
             .BuiltinCall(&mut builtin_call) if builtin_call.name in ["size_of", "align_of"] -> {
-                if builtin_call.args[0].expr is .Type(mut type) && self.resolve_type(type) {
+                if builtin_call.args[0].expr is .Type(type) && self.resolve_type(type) {
                     (size, align) := self.env.type_size(type);
                     if builtin_call.name == "size_of" {
                         @as(int, size)
@@ -122,7 +123,7 @@ pub struct Resolver {
         };
     }
 
-    func eval_sym(mut self, mut sym: ast.Sym, pos: token.Pos) -> ?int {
+    func eval_sym(^mut self, sym: ^mut ast.Sym, pos: token.Pos) -> ?int {
         if sym is ast.Const(mut const_) {
             if !const_.has_evaled_size {
                 const_.evaled_size = self.eval_size(const_.expr)?;
@@ -133,7 +134,7 @@ pub struct Resolver {
         return none;
     }
 
-    func check_variable_shadowing(self, name: string, pos: token.Pos) {
+    func check_variable_shadowing(^self, name: string, pos: token.Pos) {
         if self.source_file.imported_symbols.exists(name) {
             report.error(
                 "name `{}` hide an imported symbol".fmt(name), pos

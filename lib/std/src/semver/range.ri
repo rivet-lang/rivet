@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -19,13 +19,13 @@ enum Operator as uint8 {
 pub struct InvalidComparatorFormatError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
 
 struct Comparator {
-    ver: Version;
+    ver: ^Version;
     op: Operator;
 
     func parse(input: string) -> ?Comparator {
@@ -54,7 +54,7 @@ struct Comparator {
     }
 
     #[inline]
-    func satisfies(&self, ver: Version) -> bool {
+    func satisfies(&self, ver: ^Version) -> bool {
         return match self.op {
             .Gt -> ver > self.ver,
             .Lt -> ver < self.ver,
@@ -101,7 +101,7 @@ struct ComparatorSet {
         };
     }
 
-    func satisfies(&self, ver: Version) -> bool {
+    func satisfies(&self, ver: ^Version) -> bool {
         for comp in self.comparators {
             if !comp.satisfies(ver) {
                 return false;
@@ -127,7 +127,7 @@ struct Range {
         return Range(comparator_sets);
     }
 
-    func parse_x(input: string) -> ?Version {
+    func parse_x(input: string) -> ?^Version {
         raw_ver := RawVersion.parse(input).complete();
         for typ in versions {
             if raw_ver.raw_ints[typ].index_of_any(x_range_symbols) == none {
@@ -156,7 +156,7 @@ struct Range {
     func expand_x(raw_range: string) -> ?ComparatorSet {
         min_ver := Range.parse_x(raw_range) ?? return none;
         if min_ver.major == 0 {
-            return ComparatorSet(+[Comparator(min_ver, .Ge)]);
+            return ComparatorSet(^[Comparator(min_ver, .Ge)]);
         }
         mut max_ver := min_ver;
         max_ver = if min_ver.minor == 0 {
@@ -167,7 +167,7 @@ struct Range {
         return make_comparator_set_ge_lt(min_ver, max_ver);
     }
 
-    func satisfies(&self, ver: Version) -> bool {
+    func satisfies(&self, ver: ^Version) -> bool {
         mut final_result := false;
         for set in self.comparator_sets {
             final_result = final_result || set.satisfies(ver);
@@ -223,11 +223,11 @@ func expand_hyphen(raw_range: string) -> ?ComparatorSet {
 }
 
 #[inline]
-func make_comparator_set_ge_lt(min: Version, max: Version) -> ComparatorSet {
-    return ComparatorSet(+[Comparator(min, .Ge), Comparator(max, .Lt)]);
+func make_comparator_set_ge_lt(min: ^Version, max: ^Version) -> ComparatorSet {
+    return ComparatorSet(^[Comparator(min, .Ge), Comparator(max, .Lt)]);
 }
 
 #[inline]
-func make_comparator_set_ge_le(min: Version, max: Version) -> ComparatorSet {
-    return ComparatorSet(+[Comparator(min, .Ge), Comparator(max, .Le)]);
+func make_comparator_set_ge_le(min: ^Version, max: ^Version) -> ComparatorSet {
+    return ComparatorSet(^[Comparator(min, .Ge), Comparator(max, .Le)]);
 }

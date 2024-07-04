@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -9,30 +9,30 @@ pub enum Stmt {
     Empty(token.Pos),
     Comment(Comment),
     ComptimeIf(ComptimeIf),
-    Expr(Expr),
+    Expr(^mut Expr),
     VarDecl {
-        mut lefts: []mut ObjectData;
-        mut right: Expr;
-        mut scope: Scope;
+        lefts: []^mut ObjectData;
+        right: ^mut Expr;
+        scope: ^mut Scope;
         pos: token.Pos;
     },
     While {
-        mut cond: Expr;
-        mut continue_expr: Expr;
+        mut cond: ^mut Expr;
+        mut continue_expr: ^mut Expr;
         has_continue_expr: bool;
-        mut stmt: Stmt;
-        mut else_stmt: Stmt;
+        mut stmt: ^mut Stmt;
+        mut else_stmt: ^mut Stmt;
         has_else_stmt: bool;
         is_inf: bool;
         pos: token.Pos;
     },
     For {
-        mut index: ObjectData;
+        index: ^mut ObjectData;
         has_index: bool;
-        mut values: []mut ObjectData;
-        mut iterable: Expr;
-        mut stmt: Stmt;
-        mut scope: Scope;
+        values: []^mut ObjectData;
+        iterable: ^mut Expr;
+        stmt: ^mut Stmt;
+        scope: ^mut Scope;
         pos: token.Pos;
     },
     Defer {
@@ -42,13 +42,13 @@ pub enum Stmt {
             Success
         }
 
-        mut expr: Expr;
+        expr: ^mut Expr;
         mode: Mode;
         pos: token.Pos;
     };
 
-    pub func position(self) -> token.Pos {
-        return match self {
+    pub func position(^self) -> token.Pos {
+        return match self.^ {
             .Empty(empty_pos) -> empty_pos,
             .Comment(comment) -> comment.pos,
             .ComptimeIf(comptime_if) -> comptime_if.pos,

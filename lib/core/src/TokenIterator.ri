@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -9,7 +9,7 @@ pub struct TokenIterator {
 
     /// Returns a slice of the current token, or none if tokenization is
     /// complete, and advances to the next token.
-    pub func next(mut self) -> ?string {
+    pub func next(&mut self) -> ?string {
         result := self.peek() ?? return none;
         self.index += result.len;
         return result;
@@ -17,7 +17,7 @@ pub struct TokenIterator {
 
     /// Returns a slice of the current token, or none if tokenization is
     /// complete. Does not advance to the next token.
-    pub func peek(mut self) -> ?string {
+    pub func peek(&mut self) -> ?string {
         // move to beginning of token
         while self.index < self.buffer.len && self.is_split_byte(self.buffer[self.index])
             : self.index += 1 {}
@@ -42,7 +42,7 @@ pub struct TokenIterator {
     }
 
     /// Resets the iterator to the initial token.
-    pub func reset(mut self) {
+    pub func reset(&mut self) {
         self.index = 0;
     }
 

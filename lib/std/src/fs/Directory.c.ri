@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -11,7 +11,7 @@ import ../env;
 pub struct CannotMakeDirectoryError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -20,7 +20,7 @@ pub struct CannotMakeDirectoryError < Throwable {
 pub struct CannotMakeFileError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -29,7 +29,7 @@ pub struct CannotMakeFileError < Throwable {
 pub struct CouldNotOpenDirectoryError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -38,7 +38,7 @@ pub struct CouldNotOpenDirectoryError < Throwable {
 pub struct EmptyStringError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }

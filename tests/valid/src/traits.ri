@@ -1,13 +1,13 @@
 trait Reader {
-    func read(self) -> uint8;
+    func read(^self) -> uint8;
 }
 
 trait Writer {
-    func write(self, b: uint8) -> bool;
+    func write(^self, b: uint8) -> bool;
 }
 
 trait ReaderWriter < Reader, Writer {
-    func write_and_read(self, b: uint8) -> uint8;
+    func write_and_read(^self, b: uint8) -> uint8;
 }
 
 struct SomeStream < ReaderWriter {
@@ -27,15 +27,15 @@ struct SomeStream < ReaderWriter {
     }
 }
 
-func writer(w: Writer) -> bool {
+func writer(w: ^Writer) -> bool {
     return w.write('A');
 }
 
-func reader(r: Reader) -> uint8 {
+func reader(r: ^Reader) -> uint8 {
     return r.read();
 }
 
-func reader_writer(rw: ReaderWriter) -> uint8 {
+func reader_writer(rw: ^ReaderWriter) -> uint8 {
     return rw.write_and_read('A');
 }
 
@@ -49,40 +49,38 @@ test "traits: inheritance" {
 trait Eq {
     x: string;
 
-    func equal(self, x: Self) -> bool;
+    func equal(^self, x: ^Self) -> bool;
 
-    func nequal(self, x: Self) -> bool {
+    func nequal(^self, x: ^Self) -> bool {
         return !self.equal(x);
     }
 }
 
 #[boxed]
 struct Poketrait < Eq {
-    pub func equal(self, x: Eq) -> bool {
+    pub func equal(^self, x: ^Eq) -> bool {
         return self.x == x.x;
     }
 }
 
-func ship(a: Eq, b: Eq) -> bool {
+func ship(a: ^Eq, b: ^Eq) -> bool {
     return !a.nequal(b);
 }
 
 test "traits: default method" {
-    @assert(ship( Poketrait("Shell"), Poketrait("Shell") ));
+    @assert(ship(^Poketrait("Shell"), ^Poketrait("Shell")));
 }
 
-#[default_value(IntegerValue(5))]
-trait Integer {}
-
-struct IntegerValue {
-    int: int32;
+trait Jexs {
+    name: string;
 }
 
-struct IntegerStruct {
-    i: Integer;
+struct Impltor < Jexs { }
+
+func getter(name: string) -> string {
+    return name;
 }
 
-test "traits with `default_value` attribute" {
-    is_ := IntegerStruct();
-    @assert(is_.i is IntegerValue(int_v) && int_v.int == 5);
+test "traits: fields" {
+    @assert(getter(Jexs(Impltor(name: "jexs99")).name) == "jexs99");
 }

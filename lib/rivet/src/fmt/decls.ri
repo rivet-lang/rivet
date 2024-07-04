@@ -1,21 +1,21 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import ../{ ast, token };
 
 extend Formatter {
-    func format_decls(mut self, decls: []ast.Decl, is_root: bool := false) {
+    func format_decls(^mut self, decls: []^mut ast.Decl, is_root: bool := false) {
         mut prev_decl := if decls.len > 0 {
             decls[0]
         } else {
-            .Empty(token.no_pos)
+           ^mut .Empty(token.no_pos)
         };
         if !is_root {
             self.indent += 1;
         }
         for decl in decls {
-            if self.should_insert_newline_before_node(.Decl(decl), .Decl(prev_decl)) {
+            if self.should_insert_newline_before_node(^mut .Decl(decl), ^mut .Decl(prev_decl)) {
                 self.writeln();
             }
             self.format_decl(decl);
@@ -26,8 +26,8 @@ extend Formatter {
         }
     }
 
-    func format_decl(mut self, decl: ast.Decl) {
-        match decl {
+    func format_decl(^mut self, decl: ^mut ast.Decl) {
+        match decl.^ {
             .Comment(comment) -> self.format_comment(comment, has_nl: true),
             .Extern(extern_d) -> {
                 self.write_fmt("extern ({}) {{", extern_d.abi);
@@ -48,8 +48,8 @@ extend Formatter {
                 }
                 self.writeln(";");
             },
-            .Struct(struct_decl) -> self.format_struct(struct_decl),
-            .Func(func_decl) -> self.format_func(func_decl),
+            .Struct(&struct_decl) -> self.format_struct(struct_decl),
+            .Func(&func_decl) -> self.format_func(func_decl),
             .Field(field) -> {
                 self.format_comments(field.docs);
                 self.format_attributes(field.attributes);
@@ -70,7 +70,7 @@ extend Formatter {
         }
     }
 
-    func format_struct(mut self, struct_decl: ast.Decl.Struct) {
+    func format_struct(^mut self, struct_decl: &ast.Decl.Struct) {
         self.format_comments(struct_decl.docs);
         self.format_attributes(struct_decl.attributes);
         if struct_decl.is_public {
@@ -86,7 +86,7 @@ extend Formatter {
         }
     }
 
-    func format_func(mut self, func_decl: ast.Decl.Func) {
+    func format_func(^mut self, func_decl: &ast.Decl.Func) {
         self.format_comments(func_decl.docs);
         self.format_attributes(func_decl.attributes);
         if func_decl.is_public {

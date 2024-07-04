@@ -1,14 +1,16 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, token, report };
+import ../{ ast, token, utils/report };
 
 extend Checker {
-    func check_trait_impl(mut self, impltor: ast.TypeSym, trait_sym: ast.TypeSym, pos: token.Pos) {
+    func check_trait_impl(
+        ^mut self, impltor: ^mut ast.TypeSym, trait_sym: ^mut ast.TypeSym, pos: token.Pos
+    ) {
         mut impl_does_not_implemented := []string();
         for sym in trait_sym.scope.syms {
-            if sym is ast.Func(trait_func) {
+            if sym is ast.Func(mut trait_func) {
                 if impl := impltor.find_func(trait_func.name); !trait_func.has_body {
                     mut errors := []string();
                     if !impl.is_public {

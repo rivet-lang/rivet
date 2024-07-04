@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -45,7 +45,7 @@ pub func process_id() -> uint32 {
 
 /// Terminates current thread execution immediately after displaying a
 /// message, followed by a backtrace.
-pub func process_panic(s: string := "", args: ...Stringable) -> never {
+pub func process_panic(s: string := "", args: ...^Stringable) -> never {
     console_ewriteln("panic: {}", s.fmt(args));
     bt_print(2);
     process_exit(101);
@@ -61,7 +61,7 @@ pub func process_panic(s: string := "", args: ...Stringable) -> never {
 /// which typically means that the shell prints "Aborted".
 pub func process_abort() -> never {
     unsafe {
-        drop_globals();
+        destroy_globals();
         libc.abort();
     }
 }
@@ -73,7 +73,7 @@ pub func process_abort() -> never {
 /// OS and will be available for consumption by another process.
 pub func process_exit(code: int32 := 0) -> never {
     unsafe {
-        drop_globals();
+        destroy_globals();
         libc.exit(code);
     }
 }

@@ -1,19 +1,19 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import std/sys;
 
-import ../{ token, report };
+import ../{ token, utils/report };
 
 pub struct ComptimeIf {
     mut branches: []mut ComptimeIfBranch;
     pub mut branch_idx: ?uint;
     pub has_else: bool;
     pub pos: token.Pos;
-    pub mut type: Type;
+    pub mut type: ^mut Type;
 
-    pub func nodes(self) -> ?[]Node {
+    pub func nodes(self) -> ?[]^mut Node {
         if branch_idx := self.branch_idx {
             return self.branches[branch_idx].nodes;
         }
@@ -22,16 +22,16 @@ pub struct ComptimeIf {
 }
 
 pub struct ComptimeIfBranch {
-    pub mut cond: Expr;
+    pub mut cond: ^mut Expr;
     pub is_else: bool;
     pub is_else_if: bool;
-    pub mut nodes: []mut Node;
+    pub mut nodes: []^mut Node;
     pub pos: token.Pos;
-    pub mut type: Type;
+    pub mut type: ^mut Type;
 }
 
 extend Env {
-    pub func evalue_comptime_if(self, mut comptime_if: ComptimeIf) -> []mut Node {
+    pub func evalue_comptime_if(^self, comptime_if: &mut ComptimeIf) -> []^mut Node {
         if branch_idx := comptime_if.branch_idx {
             return comptime_if.branches[branch_idx].nodes;
         }
@@ -45,11 +45,11 @@ extend Env {
                 return comptime_if.branches[branch_idx].nodes;
             }
         }
-        return +[];
+        return ^[];
     }
 
-    func evalue_comptime_condition(self, cond: Expr) -> ?bool {
-        return match cond {
+    func evalue_comptime_condition(^self, cond: ^mut Expr) -> ?bool {
+        return match cond.^ {
             .Paren(paren) -> self.evalue_comptime_condition(paren.expr),
             .BoolLiteral(bool_lit) -> bool_lit.value,
             .Ident(ident) -> self.evalue_comptime_ident(ident.name, ident.pos),
@@ -84,7 +84,7 @@ extend Env {
         };
     }
 
-    func evalue_comptime_ident(self, name: string, pos: token.Pos) -> bool {
+    func evalue_comptime_ident(^self, name: string, pos: token.Pos) -> bool {
         match name {
             // operating systems
             "_LINUX_", "_WINDOWS_" -> {

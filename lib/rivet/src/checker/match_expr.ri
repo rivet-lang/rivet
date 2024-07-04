@@ -1,15 +1,15 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, utils, report, utils/maps };
+import ../{ ast, utils/{self, report, maps} };
 
 extend Checker {
     const MATCH_EXHAUSTIVE_CUTOFF_LIMIT := 12;
 
-    func check_match(mut self, mut match_expr: ast.Expr.Match) -> ast.Type {
+    func check_match(^mut self, match_expr: &mut ast.Expr.Match) -> ^mut ast.Type {
         old_expected_type := self.expected_type;
-        match_expr.type = .Void;
+        match_expr.type = ^mut .Void;
         if match_expr.branches.len == 1 && match_expr.has_else {
             report.error(
                 "`match` must have at least one non `else` branch",
@@ -29,21 +29,21 @@ extend Checker {
                     "invalid type `{}` used as `match` condition".fmt(expr_type),
                     match_expr.expr.position()
                 );
-                return .Void;
+                return ^mut .Void;
             }
-            ast.TypeSym()
+            ^mut ast.TypeSym()
         };
         if match_expr.expr is .Guard(guard_expr) {
             if guard_expr.vars.len == 1 {
                 expr_type = guard_expr.vars[0].type;
                 expr_sym = expr_type.symbol()?;
             } else {
-                mut types := []mut ast.Type();
+                mut types := []^mut ast.Type();
                 for var_ in guard_expr.vars {
                     types.push(var_.type);
                 }
                 expr_sym = self.env.universe.add_or_get_tuple(types);
-                expr_type = .Tuple(types, expr_sym);
+                expr_type = ^mut .Tuple(types, expr_sym);
             }
         } else {
             if match_expr.is_typematch && !(expr_sym.info is .Enum
@@ -62,10 +62,10 @@ extend Checker {
 
         mut branch_exprs := maps.MapStringUint();
         match_expr.expected_type = self.expected_type;
-        for ib, mut branch in match_expr.branches {
+        for ib, &mut branch in match_expr.branches {
             if !branch.is_else {
                 self.expected_type = expr_type;
-                for i, mut pattern in branch.patterns {
+                for i, pattern in branch.patterns {
                     pattern_t := self.check_expr(pattern);
                     if i == 0 {
                         branch.var_type = pattern_t;
@@ -88,7 +88,7 @@ extend Checker {
                         }
                     }
                 }
-                if mut branch_var := branch.branch_var {
+                if branch_var := branch.branch_var {
                     self.check_name_case(
                         .Snake, "branch variable", branch_var.name, branch_var.pos
                     );
@@ -109,7 +109,7 @@ extend Checker {
                                     } else if branch_var.type.is_boxed() {
                                         report.error("cannot take the address of a boxed value", branch_var.pos);
                                     }
-                                    branch_var.type = .Pointer(branch_var.type, branch_var.is_mut);
+                                    branch_var.type = ^mut .Pointer(branch_var.type, branch_var.is_mut);
                                 } else {
                                     branch.scope.update_is_hidden_ref(
                                         branch_var.name, branch_var.is_mut
@@ -137,7 +137,7 @@ extend Checker {
                 }
                 self.expected_type = old_expected_type;
             }
-            mut branch_t := ast.Type.Void;
+            mut branch_t := ^mut ast.Type.Void;
             if ib == 0 {
                 branch_t = self.check_expr(branch.expr);
                 if match_expr.expected_type is .Void {

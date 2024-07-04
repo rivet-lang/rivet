@@ -1,10 +1,11 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 const VER_MAJOR: uint := 0;
 const VER_MINOR: uint := 1;
 const VER_PATCH: uint := 2;
+
 var versions := [VER_MAJOR, VER_MINOR, VER_PATCH];
 
 struct RawVersion {
@@ -44,10 +45,10 @@ struct RawVersion {
         return typ >= self.raw_ints.len - 1;
     }
 
-    func coerce(&self) -> !Version {
+    func coerce(&self) -> !^Version {
         ver := self.complete();
         if !is_valid_number(self.raw_ints[VER_MAJOR]) {
-            throw InvalidVersionError("invalid major version: {}".fmt(self.raw_ints[VER_MAJOR]));
+            throw ^InvalidVersionError("invalid major version: {}".fmt(self.raw_ints[VER_MAJOR]));
         }
         return ver.to_version();
     }
@@ -60,7 +61,7 @@ struct RawVersion {
         return RawVersion(self.prerelease, self.metadata, raw_ints);
     }
 
-    func validate(&self) -> ?Version {
+    func validate(&self) -> ?^Version {
         if !self.is_valid() {
             return none;
         }
@@ -68,8 +69,8 @@ struct RawVersion {
     }
 
     #[inline]
-    func to_version(&self) -> Version {
-        return Version(
+    func to_version(&self) -> ^Version {
+        return ^Version(
             self.raw_ints[VER_MAJOR].to_uint() catch 0,
             self.raw_ints[VER_MINOR].to_uint() catch 0,
             self.raw_ints[VER_PATCH].to_uint() catch 0,

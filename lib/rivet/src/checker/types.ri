@@ -1,24 +1,24 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, token, report };
+import ../{ ast, token, utils/report };
 
 #[boxed]
 struct IncompatibleTypesError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
 
 extend Checker {
     func check_argument_type(
-        self, got: ast.Type, expected: ast.Type, pos: token.Pos, arg_name: string,
+        ^self, got: ^mut ast.Type, expected: ^mut ast.Type, pos: token.Pos, arg_name: string,
         func_kind: string, func_name: string
     ) {
-        if mut expected_sym := expected.symbol(); expected_sym.info is .Trait(mut trait_info)
+        if expected_sym := expected.symbol(); expected_sym.info is .Trait(&mut trait_info)
             && expected != got {
             got_t := self.env.comptime_number_to_type(got);
             if got_t.symbol()? in trait_info.implements {
@@ -45,7 +45,7 @@ extend Checker {
         }
     }
 
-    func check_types(self, got: ast.Type, expected: ast.Type) -> ! {
+    func check_types(^self, got: ^mut ast.Type, expected: ^mut ast.Type) -> ! {
         if !self.check_compatible_types(got, expected) {
             got_str := if got is .None {
                 if expected is .Option {
@@ -72,7 +72,7 @@ extend Checker {
         }
     }
 
-    func check_compatible_types(self, got: ast.Type, expected: ast.Type) -> bool {
+    func check_compatible_types(^self, got: ^mut ast.Type, expected: ^mut ast.Type) -> bool {
         if got is .Never {
             return true;
         } else if (expected is .Never && got is .Void)
@@ -112,7 +112,7 @@ extend Checker {
             return false;
         }
 
-        mut expected_sym := expected.symbol() ?? return false;
+        expected_sym := expected.symbol() ?? return false;
         got_sym := got.symbol() ?? return false;
 
         if expected is .Variadic {
@@ -145,34 +145,34 @@ extend Checker {
             }
         }
 
-        match expected_sym.info {
-            .Trait(mut trait_info) -> {
+        match expected_sym.info.^ {
+            .Trait(&mut trait_info) -> {
                 got_sym2 := self.env.comptime_number_to_type(got).symbol()?;
                 if got_sym2 in trait_info.implements {
                     trait_info.mark_has_objects();
                     return true;
                 }
             },
-            .Slice(slice_lhs) if got_sym.info is .Slice(slice_rhs) -> {
+            .Slice(&slice_lhs) if got_sym.info is .Slice(&slice_rhs) -> {
                 if slice_lhs.is_mut && !slice_rhs.is_mut {
                     return false;
                 }
                 return slice_lhs.elem_type == slice_rhs.elem_type;
             },
-            .Array(array_info) if got_sym.info is .Array(array_info2) -> {
+            .Array(&array_info) if got_sym.info is .Array(&array_info2) -> {
                 if array_info.is_mut && !array_info2.is_mut {
                     return false;
                 }
                 return array_info.elem_type == array_info2.elem_type
                     && array_info.size == array_info2.size;
             },
-            .DynArray(dyn_array_lhs) if got_sym.info is .DynArray(dyn_array_rhs) -> {
+            .DynArray(&dyn_array_lhs) if got_sym.info is .DynArray(&dyn_array_rhs) -> {
                 if dyn_array_lhs.is_mut && !dyn_array_rhs.is_mut {
                     return false;
                 }
                 return dyn_array_lhs.elem_type == dyn_array_rhs.elem_type;
             },
-            .Tuple(tuple_lhs) if got_sym.info is .Tuple(tuple_rhs) -> {
+            .Tuple(&tuple_lhs) if got_sym.info is .Tuple(&tuple_rhs) -> {
                 if tuple_lhs.types.len != tuple_rhs.types.len {
                     return false;
                 }
@@ -195,7 +195,7 @@ extend Checker {
         return expected == got;
     }
 
-    func check_pointer(expected: ast.Type, got: ast.Type) -> bool {
+    func check_pointer(expected: ^mut ast.Type, got: ^mut ast.Type) -> bool {
         if expected is .Rawptr {
             // rawptr == &T, is valid
             return got is .Rawptr || got is .Pointer || got is .Boxedptr;

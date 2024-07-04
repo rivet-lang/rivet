@@ -1,23 +1,15 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, token, report };
+import ../{ ast, token, utils/report };
 
 extend Checker {
-    func check_expr_is_mut(self, mut expr: ast.Expr, from_assign: bool := false) {
-        match expr {
-            .Paren(mut paren) -> self.check_expr_is_mut(paren.expr),
-            .SelfLiteral(mut self_lit) -> if self_lit.obj.is_mut {
-                self_lit.obj.is_changed = true;
-            } else {
-                mut err := report.error_builder(
-                    "cannot use `self` as mutable value", self_lit.pos
-                );
-                err.add_help("consider making `self` as mutable: `mut self`");
-                err.emit();
-            },
-            .Ident(mut ident) -> if ident.is_comptime {
+    func check_expr_is_mut(^self, expr: ^mut ast.Expr, from_assign: bool := false) {
+        match expr.^ {
+            .Paren(paren) -> self.check_expr_is_mut(paren.expr),
+            .SelfLiteral(self_lit) -> self_lit.obj.is_changed = true,
+            .Ident(ident) -> if ident.is_comptime {
                 report.error(
                     "cannot use constant `@{}` as mutable value".fmt(ident.name),
                     ident.pos
@@ -27,13 +19,19 @@ extend Checker {
             } else if ident.found && (ident.is_sym || ident.is_obj) {
                 check_sym_is_mut(ident.sym, ident.pos);
             },
-            .Selector(mut selector) -> if selector.is_path {
+            .Selector(selector) -> if selector.is_path {
                 check_sym_is_mut(selector.sym, selector.pos);
             } else {
                 if selector.left_type is .Pointer(ptr_t) {
                     if !ptr_t.is_mut {
                         report.error(
                             "cannot use a immutable pointer as mutable value", selector.pos
+                        );
+                    }
+                } else if selector.left_type is .Boxed(boxed_t) {
+                    if !boxed_t.is_mut {
+                        report.error(
+                            "cannot use a immutable boxed value as mutable value", selector.pos
                         );
                     }
                 } else {
@@ -50,13 +48,13 @@ extend Checker {
             .Indirect(indirect) -> if !indirect.is_mut {
                 report.error("cannot use a immutable pointer as mutable value", indirect.pos);
             },
-            .OptionCheck(mut option_check) -> self.check_expr_is_mut(option_check.left),
+            .OptionCheck(option_check) -> self.check_expr_is_mut(option_check.left),
             .NoneLiteral -> report.error("`none` cannot be modified", expr.position()),
             .StringLiteral -> report.error(
                 "string literals cannot be modified", expr.position()
             ),
-            .TupleLiteral(mut tuple_lit) -> if from_assign {
-                for mut value in tuple_lit.values {
+            .TupleLiteral(tuple_lit) -> if from_assign {
+                for value in tuple_lit.values {
                     self.check_expr_is_mut(value);
                 }
             } else {
@@ -65,17 +63,23 @@ extend Checker {
             .EnumLiteral(enum_lit) if !enum_lit.is_instance -> report.error(
                 "enum literals cannot be modified", enum_lit.pos
             ),
-            .BuiltinCall(mut builtin_call) -> {
-                for mut arg in builtin_call.args {
+            .BuiltinCall(builtin_call) -> {
+                for arg in builtin_call.args {
                     self.check_expr_is_mut(arg.expr);
                 }
             },
-            .Block(mut block) if block.is_expr -> self.check_expr_is_mut(block.expr),
+            .Block(block) if block.is_expr -> self.check_expr_is_mut(block.expr),
             .Index(&mut index) -> {
                 if index.left_type is .Pointer(ptr) {
                     if !ptr.is_mut {
                         report.error(
                             "cannot modify elements of an immutable pointer", index.pos
+                        );
+                    }
+                } else if index.left_type is .Boxed(boxed_t) {
+                    if !boxed_t.is_mut {
+                        report.error(
+                            "cannot use a immutable boxed value as mutable value", index.pos
                         );
                     }
                 } else {
@@ -88,18 +92,18 @@ extend Checker {
                     }
                 }
             },
-            .Unary(mut unary) -> self.check_expr_is_mut(unary.right),
-            .Binary(mut binary) -> {
+            .Unary(unary) -> self.check_expr_is_mut(unary.right),
+            .Binary(binary) -> {
                 self.check_expr_is_mut(binary.left);
                 self.check_expr_is_mut(binary.right);
             },
-            .If(mut if_expr) -> {
-                for mut branch in if_expr.branches {
+            .If(if_expr) -> {
+                for branch in if_expr.branches {
                     self.check_expr_is_mut(branch.expr);
                 }
             },
-            .Match(mut match_expr) -> {
-                for mut branch in match_expr.branches {
+            .Match(match_expr) -> {
+                for branch in match_expr.branches {
                     self.check_expr_is_mut(branch.expr);
                 }
             },
@@ -107,7 +111,7 @@ extend Checker {
         }
     }
 
-    func check_sym_is_mut(mut sym: ast.Sym, pos: token.Pos) {
+    func check_sym_is_mut(sym: ^mut ast.Sym, pos: token.Pos) {
         match sym is {
             ast.Const -> report.error(
                 "cannot use constant `{}` as mutable value".fmt(sym.name), pos

@@ -1,14 +1,16 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import ../token;
 
-#[boxed]
+pub var empty_source_file := ^mut SourceFile();
+
+#[boxed; default_value(empty_source_file)]
 pub struct SourceFile {
     pub path: string;
-    pub mut decls: []mut Decl;
-    pub mut mod: Module;
+    pub decls: []^mut Decl;
+    pub mut mod: ^mut Module := empty_module;
     pub mut imported_symbols: ImportedSymbols;
-    pub mut pos: token.Pos;
+    pub pos: token.Pos;
 }

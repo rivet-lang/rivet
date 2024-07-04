@@ -169,5 +169,5 @@ test "string.bytes_between()" {
 
 test "string.runes_between()" {
     str := "José Mend";
-    @assert(str.runes_between(2, 4) == +['s', 'é']);
+    @assert(str.runes_between(2, 4) == ^['s', 'é']);
 }

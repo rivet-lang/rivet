@@ -1,11 +1,11 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report };
+import ../{ ast, utils/report };
 
 extend Checker {
-    func check_builtin_call(mut self, mut builtin_call: ast.Expr.BuiltinCall) -> ast.Type {
+    func check_builtin_call(^mut self, builtin_call: &mut ast.Expr.BuiltinCall) -> ^mut ast.Type {
         builtin_call.type = if builtin_call.builtin is .Func(b_func) {
             if b_func.is_unsafe && !self.inside_unsafe() {
                 report.warn(
@@ -35,7 +35,7 @@ extend Checker {
                     err.emit();
                 }
             } else {
-                for i, mut arg in builtin_call.args {
+                for i, &mut arg in builtin_call.args {
                     arg_info := b_func.args[i];
                     arg.type = self.check_expr(arg.expr);
                     if arg_info.is_mut {
@@ -99,12 +99,12 @@ extend Checker {
             }
             return_type
         } else {
-            .Void
+            ^mut .Void
         };
         return builtin_call.type;
     }
 
-    func check_builtin_as(mut self, builtin_call: ast.Expr.BuiltinCall) {
+    func check_builtin_as(^mut self, builtin_call: &mut ast.Expr.BuiltinCall) {
         to_type := builtin_call.args[0].type;
         from_type := builtin_call.args[1].type;
         if to_type == from_type {
@@ -124,15 +124,15 @@ extend Checker {
                     ), builtin_call.pos
                 );
             }
-        } else if mut from_ts := from_type.symbol() {
-            match from_ts.info {
-                .Trait(mut trait_info) -> if to_ts := to_type.symbol() {
+        } else if from_ts := from_type.symbol() {
+            match from_ts.info.^ {
+                .Trait(&mut trait_info) -> if to_ts := to_type.symbol() {
                     if to_ts in trait_info.implements {
                         trait_info.mark_has_objects();
                         return;
                     }
                 },
-                .Enum(enum_info) -> {
+                .Enum(&enum_info) -> {
                     if enum_info.is_tagged && enum_info.get_variant_by_type(to_type) == none {
                         report.error(
                             "cannot cast type `{}` to `{}`".fmt(from_type, to_type),
@@ -159,8 +159,8 @@ extend Checker {
                             return; // Valid inside `core` module
                         }
                     }
-                    match to_ts.info {
-                        .Enum(enum_info2) if !enum_info2.is_tagged -> {
+                    match to_ts.info.^ {
+                        .Enum(&enum_info2) if !enum_info2.is_tagged -> {
                             if self.env.is_int(to_type) && !self.inside_unsafe() {
                                 report.warn(
                                     "casting numbers to enums should be done inside `unsafe` blocks",

@@ -1,16 +1,16 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import std/{ process, strings };
 
-import ../{ ast, token, utils, report, utils.{LF, CR} };
+import ../{ ast, token, utils/{self, report}, utils.{LF, CR} };
 
 const NUM_SEP := b'_';
 
 #[boxed]
 pub struct Tokenizer {
-    env: ast.Env;
+    env: ^ast.Env;
     file: string := "<internal-memory>";
     text: string;
     mut pos: uint;
@@ -22,14 +22,14 @@ pub struct Tokenizer {
     mut is_cr_lf: bool;
     mut eofs: uint;
 
-    pub func new(text: string, env: ast.Env) -> Tokenizer {
-        mut t := Tokenizer(env: env, text: text);
+    pub func new(text: string, env: ^ast.Env) -> ^mut Tokenizer {
+        t := ^mut Tokenizer(env: env, text: text);
         t.init();
         return t;
     }
 
-    pub func from_file(file: string, env: ast.Env) -> Tokenizer {
-        mut t := Tokenizer(
+    pub func from_file(file: string, env: ^ast.Env) -> ^mut Tokenizer {
+        t := ^mut Tokenizer(
             env: env, file: file, text: utils.read_file(file) catch |err| utils.error(
                 err.to_string()
             )
@@ -38,12 +38,12 @@ pub struct Tokenizer {
         return t;
     }
 
-    func init(mut self) {
+    func init(^mut self) {
         self.all_tokens = []token.Token(cap: self.text.len / 3);
         self.tokenize_remaining_text();
     }
 
-    func tokenize_remaining_text(mut self) {
+    func tokenize_remaining_text(^mut self) {
         while {
             t := self.internal_next();
             self.all_tokens.push(t);
@@ -54,7 +54,7 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    func new_token(self, kind: token.Kind, lit: string := "", len: uint := 1) -> token.Token {
+    func new_token(^self, kind: token.Kind, lit: string := "", len: uint := 1) -> token.Token {
         return token.Token(lit, kind, len, token.Pos(
             file: self.file,
             line: self.line,
@@ -66,7 +66,7 @@ pub struct Tokenizer {
 
     #[inline]
     func new_multiline_token(
-        self, kind: token.Kind, lit: string := "", len: uint := 1,
+        ^self, kind: token.Kind, lit: string := "", len: uint := 1,
         start_line: uint := 0, end_line: uint := 0, start_col: uint := 0
     ) -> token.Token {
         return token.Token(lit, kind, len, token.Pos(
@@ -82,7 +82,7 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    func new_eof_token(self) -> token.Token {
+    func new_eof_token(^self) -> token.Token {
         return token.Token(
             kind: .EndOfFile,
             pos: token.Pos(
@@ -95,7 +95,7 @@ pub struct Tokenizer {
         );
     }
 
-    func end_of_file(mut self) -> token.Token {
+    func end_of_file(^mut self) -> token.Token {
         self.eofs += 1;
         if self.eofs > 50 {
             self.line -= 1;
@@ -111,12 +111,12 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    func current_char(self) -> uint8 {
+    func current_char(^self) -> uint8 {
         return self.text[self.pos];
     }
 
     #[inline]
-    func current_pos(self) -> token.Pos {
+    func current_pos(^self) -> token.Pos {
         return token.Pos(
             file: self.file,
             line: self.line,
@@ -127,7 +127,7 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    func current_column(self) -> uint {
+    func current_column(^self) -> uint {
         return if self.line == 0 {
             self.pos + 1
         } else {
@@ -135,17 +135,17 @@ pub struct Tokenizer {
         };
     }
 
-    func ignore_line(mut self) {
+    func ignore_line(^mut self) {
         self.eat_to_end_of_line();
         self.inc_line_number();
     }
 
     #[inline]
-    func eat_to_end_of_line(mut self) {
+    func eat_to_end_of_line(^mut self) {
         while self.pos < self.text.len && self.current_char() != LF : self.pos += 1 {}
     }
 
-    func inc_line_number(mut self) {
+    func inc_line_number(^mut self) {
         self.last_nl_pos = utils.min(self.text.len - 1, self.pos);
         if self.is_cr_lf {
             self.last_nl_pos += 1;
@@ -154,7 +154,7 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    func skip_whitespace(mut self) {
+    func skip_whitespace(^mut self) {
         while self.pos < self.text.len : self.pos += 1 {
             c := self.current_char();
             if c == 8 {
@@ -174,7 +174,7 @@ pub struct Tokenizer {
         }
     }
 
-    func matches(self, want: string, start_pos: uint) -> bool {
+    func matches(^self, want: string, start_pos: uint) -> bool {
         end_pos := start_pos + want.len;
         if start_pos < 0 || end_pos < 0 || start_pos >= self.text.len
             || end_pos > self.text.len {
@@ -190,7 +190,7 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    pub func peek_token(self, n: uint) -> token.Token {
+    pub func peek_token(^self, n: uint) -> token.Token {
         idx := self.tidx + n;
         return if idx >= self.all_tokens.len {
             self.new_eof_token()
@@ -200,7 +200,7 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    func look_ahead(self, n: uint) -> uint8 {
+    func look_ahead(^self, n: uint) -> uint8 {
         return if self.pos + n < self.text.len {
             self.text[self.pos + n]
         } else {
@@ -208,7 +208,7 @@ pub struct Tokenizer {
         };
     }
 
-    func invalid_character(mut self) {
+    func invalid_character(^mut self) {
         len := self.text[self.pos].len_utf8();
         end := utils.min(self.pos + len, self.text.len);
         self.error("invalid character: `{}`".fmt(self.text.substr(self.pos, end)));
@@ -217,7 +217,7 @@ pub struct Tokenizer {
 
     // NOTE: this function doesn't do any decoding... it just replaces '\xc0' with
     // the byte 0xc0
-    func decode_h_escape_single(self, str: string, idx: uint) -> (uint, string) {
+    func decode_h_escape_single(^self, str: string, idx: uint) -> (uint, string) {
         end_idx := idx + 4; // "\xXX".len == 4
         if idx + 2 > str.len || end_idx > str.len {
             self.error("unfinished single hex escape started at");
@@ -230,7 +230,7 @@ pub struct Tokenizer {
     }
 
     // only handle single-byte inline escapes like '\xc0'
-    func decode_h_escapes(self, s: string, start: uint, escapes_pos: []uint) -> string {
+    func decode_h_escapes(^self, s: string, start: uint, escapes_pos: []uint) -> string {
         if escapes_pos.is_empty() {
             return s;
         }
@@ -250,22 +250,22 @@ pub struct Tokenizer {
     }
 
     #[inline]
-    func error(self, msg: string, pos: token.Pos := self.current_pos()) {
+    func error(^self, msg: string, pos: token.Pos := self.current_pos()) {
         report.error(msg, pos);
     }
 
     #[inline]
-    func warn(self, msg: string, pos: token.Pos := self.current_pos()) {
+    func warn(^self, msg: string, pos: token.Pos := self.current_pos()) {
         report.warn(msg, pos);
     }
 
     #[inline]
-    func error_builder(self, msg: string, pos: token.Pos := self.current_pos()) -> report.ReportBuilder {
+    func error_builder(^self, msg: string, pos: token.Pos := self.current_pos()) -> report.ReportBuilder {
         return report.error_builder(msg, pos);
     }
 
     #[inline]
-    func warn_builder(self, msg: string, pos: token.Pos := self.current_pos()) -> report.ReportBuilder {
+    func warn_builder(^self, msg: string, pos: token.Pos := self.current_pos()) -> report.ReportBuilder {
         return report.warn_builder(msg, pos);
     }
 }
@@ -318,8 +318,8 @@ func trim_slash_line_break(s: string) -> string {
     (mut start: uint, mut ret_str) := (0, s);
     while idx := ret_str.index_after_of("\\\n", start) {
         start = idx;
-        // Here, ret_str[idx] is '\', and ret_str[idx + 1] is newline. Depending on the number of 
-        // backslashes before the newline, we should either treat the last one and the whitespace 
+        // Here, ret_str[idx] is '\', and ret_str[idx + 1] is newline. Depending on the number of
+        // backslashes before the newline, we should either treat the last one and the whitespace
         // after it as line-break, or just ignore it:
         mut nbackslashes := 0;
         mut eidx := idx;

@@ -1,10 +1,10 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import std/strings;
 
-import ../{ utils, utils/maps };
+import ../{ self, maps };
 
 struct DepGraphNode {
     pub mut name: string;
@@ -14,27 +14,27 @@ struct DepGraphNode {
 #[boxed]
 pub struct DepGraph {
     pub mut acyclic: bool;
-    pub mut nodes: []DepGraphNode;
+    pub mut nodes: []^mut DepGraphNode;
 
     #[inline]
-    pub func new() -> Self {
-        return Self(true, []DepGraphNode(cap: 1024));
+    pub func new() -> ^mut Self {
+        return ^mut Self(true, []^mut DepGraphNode(cap: 1024));
     }
 
     #[inline]
-    pub func add(mut self, mod: string, deps: []string) {
-        self.nodes.push(DepGraphNode(mod, deps));
+    pub func add(^mut self, mod: string, deps: []string) {
+        self.nodes.push(^mut DepGraphNode(mod, deps));
     }
 
-    pub func resolve(self) -> Self {
-        mut node_names := OrderedDepMap.new();
-        mut node_deps := OrderedDepMap.new();
+    pub func resolve(^self) -> ^Self {
+        node_names := ^mut OrderedDepMap();
+        node_deps := ^mut OrderedDepMap();
         for node in self.nodes {
             node_names.add(node.name, node.deps);
             node_deps.add(node.name, node.deps);
         }
         mut iterations := 0;
-        mut resolved := Self.new();
+        resolved := Self.new();
         while node_deps.size() != 0 {
             iterations += 1;
             mut ready_set := []string();
@@ -45,7 +45,7 @@ pub struct DepGraph {
                 }
             }
             if ready_set.is_empty() {
-                mut g := DepGraph.new();
+                g := DepGraph.new();
                 g.acyclic = false;
                 for name in node_deps.keys {
                     g.add(name, node_names.get(name));
@@ -63,7 +63,7 @@ pub struct DepGraph {
         return resolved;
     }
 
-    pub func display(self) -> string {
+    pub func display(^self) -> string {
         mut out := strings.Builder.new();
         for node in self.nodes {
             for dep in node.deps {
@@ -73,7 +73,7 @@ pub struct DepGraph {
         return out.to_string();
     }
 
-    pub func display_cycles(self) -> string {
+    pub func display_cycles(^self) -> string {
         mut out := strings.Builder.new();
         mut seen := false;
         mut nn := NodeNames();
@@ -100,7 +100,7 @@ struct NodeNames {
     mut is_cycle: maps.MapStringBool;
     mut names: maps.MapStringArrayOfStrings;
 
-    func is_part_of_cycle(mut self, name: string, already_seen: []string) -> (bool, []string) {
+    func is_part_of_cycle(&mut self, name: string, already_seen: []string) -> (bool, []string) {
         mut seen := false;
         mut new_already_seen := already_seen.clone();
         if val := self.is_cycle.get(name) {

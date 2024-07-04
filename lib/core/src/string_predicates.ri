@@ -1,16 +1,16 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 extend string {
     /// Returns `true` if the string contains `substr`.
     #[inline]
-    pub func contains(self, substr: Self) -> bool {
+    pub func contains(&self, substr: Self) -> bool {
         return substr.len == 0 || self.index_of(substr) != none;
     }
 
     /// Returns `true` if the string starts with `p`.
-    pub func starts_with(self, p: Self) -> bool {
+    pub func starts_with(&self, p: Self) -> bool {
         if p.len > self.len {
             return false;
         }
@@ -24,7 +24,7 @@ extend string {
     }
 
     /// Returns `true` if the string ends with `p`.
-    pub func ends_with(self, p: Self) -> bool {
+    pub func ends_with(&self, p: Self) -> bool {
         if p.len > self.len {
             return false;
         }
@@ -39,7 +39,7 @@ extend string {
 
     /// Returns the number of occurrences of `substr` in the string or 0 if no
     /// `substr` could be found.
-    pub func count(self, substr: Self) -> uint {
+    pub func count(&self, substr: Self) -> uint {
         if self.len == 0 || substr.len == 0 {
             return 0;
         }
@@ -66,45 +66,45 @@ extend string {
 
     /// Returns the contents before `sub` in the string.
     /// If the substring is not found, it returns the full input string.
-    pub func all_before_of(self, sub: Self) -> Self {
+    pub func all_before_of(&self, sub: Self) -> Self {
         return if pos := self.index_of(sub) {
             self.substr(end: pos)
         } else {
-            self
+            self.*
         };
     }
 
     /// Returns the contents before the last occurrence of `sub` in the string.
-    pub func all_before_of_last(self, sub: Self) -> Self {
+    pub func all_before_of_last(&self, sub: Self) -> Self {
         return if pos := self.last_index_of(sub) {
             self.substr(end: pos)
         } else {
-            self
+            self.*
         };
     }
 
     /// Returns the contents after `sub` in the string. If the substring is
     /// not found, it returns the full input string.
-    pub func all_after_of(self, sub: Self) -> Self {
+    pub func all_after_of(&self, sub: Self) -> Self {
         return if pos := self.index_of(sub) {
             self.substr(pos + sub.len)
         } else {
-            self
+            self.*
         };
     }
 
     /// Returns the contents after the last occurrence of `sub` in the string.
     /// If the substring is not found, it returns the full input string.
-    pub func all_after_of_last(self, sub: Self) -> Self {
+    pub func all_after_of_last(&self, sub: Self) -> Self {
         return if pos := self.last_index_of(sub) {
             self.substr(pos + sub.len)
         } else {
-            self
+            self.*
         };
     }
 
     /// Returns the index of byte `b` if found in the string.
-    pub func index_of_byte(self, b: uint8) -> ?uint {
+    pub func index_of_byte(&self, b: uint8) -> ?uint {
         mut i: uint := 0;
         while i < self.len : i += 1 {
             if unsafe { self.ptr[i] == b } {
@@ -116,7 +116,7 @@ extend string {
 
     /// Returns the position of the first character of the input string.
     /// It will return `none` if the input string can't be found.
-    pub func index_of(self, p: Self) -> ?uint {
+    pub func index_of(&self, p: Self) -> ?uint {
         if p.len > self.len || p.len == 0 {
             return none;
         }
@@ -132,7 +132,7 @@ extend string {
     }
 
     /// Returns the position of the input string, starting search from `start` position.
-    pub func index_after_of(self, p: Self, start: uint) -> ?uint {
+    pub func index_after_of(&self, p: Self, start: uint) -> ?uint {
         if p.len > self.len {
             return none;
         }
@@ -155,7 +155,7 @@ extend string {
     }
 
     /// Returns the position of any of the characters in the input string if found.
-    pub func index_of_any(self, chars: Self) -> ?uint {
+    pub func index_of_any(&self, chars: Self) -> ?uint {
         for i, b in self.as_bytes() {
             for c in chars.as_bytes() {
                 if b == c {
@@ -167,7 +167,7 @@ extend string {
     }
 
     /// Linear search for the last index of `byte` inside a string.
-    pub func last_index_of_byte(self, byte: uint8) -> ?uint {
+    pub func last_index_of_byte(&self, byte: uint8) -> ?uint {
         mut i: uint := self.len - 1;
         while i >= 0 : i -= 1 {
             if unsafe { self.ptr[i] == byte } {
@@ -184,7 +184,7 @@ extend string {
     }
 
     /// Returns the position of the last occurence of the input string.
-    pub func last_index_of(self, p: Self) -> ?uint {
+    pub func last_index_of(&self, p: Self) -> ?uint {
         if p.len > self.len || p.len == 0 {
             return none;
         }
@@ -203,7 +203,7 @@ extend string {
     }
 
     /// Returns the string found between `start` string and `end` string.
-    pub func find_between(self, start: Self, end: Self) -> Self {
+    pub func find_between(&self, start: Self, end: Self) -> Self {
         start_pos := self.index_of(start) ?? return empty_string;
         val := self.substr(start_pos + start.len, self.len);
         end_pos := val.index_of(end) ?? return val;
@@ -212,9 +212,9 @@ extend string {
 
     /// Strips any of the characters given in `cutset` from the start and end of
     /// the string.
-    pub func trim(self, cutset: Self) -> Self {
+    pub func trim(&self, cutset: Self) -> Self {
         if self.len < 1 || cutset.len < 1 {
-            return self;
+            return self.*;
         }
         (pos_left, pos_right) := self.trim_indexes(cutset);
         return self.substr(pos_left, pos_right);
@@ -224,7 +224,7 @@ extend string {
     /// given in `cutset` were stripped from the start and end of the string. Should
     /// be used as an input to `substr()`. If the string contains only the characters
     /// in `cutset`, both values returned are zero.
-    pub func trim_indexes(self, cutset: Self) -> (uint, uint) {
+    pub func trim_indexes(&self, cutset: Self) -> (uint, uint) {
         mut pos_left: uint := 0;
         mut pos_right: uint := if self.len == 0 { 0 } else { self.len - 1 };
         mut cs_match := true;
@@ -254,9 +254,9 @@ extend string {
 
     /// Strips any of the characters given in `cutset` from the left of the
     /// string.
-    pub func trim_left(self, cutset: Self) -> Self {
+    pub func trim_left(&self, cutset: Self) -> Self {
         if self.len < 1 || cutset.len < 1 {
-            return self;
+            return self.*;
         }
         mut pos: uint := 0;
         cutset_bytes := cutset.as_bytes();
@@ -277,9 +277,9 @@ extend string {
 
     /// Strips any of the characters given in `cutset` from the right of the
     /// string.
-    pub func trim_right(self, cutset: Self) -> Self {
+    pub func trim_right(&self, cutset: Self) -> Self {
         if self.len < 1 || cutset.len < 1 {
-            return self;
+            return self.*;
         }
         mut pos := self.len - 1;
         cutset_bytes := cutset.as_bytes();
@@ -303,14 +303,14 @@ extend string {
     /// Strips any of ` `, `\n`, `\t`, `\v`, `\f`, `\r` from the start and end of
     /// the string.
     #[inline]
-    pub func trim_space(self) -> Self {
+    pub func trim_space(&self) -> Self {
         return self.trim(" \n\t\v\f\r");
     }
 
     /// Replaces all occurences of `old_value` with the string passed in `new_value`.
-    pub func replace(self, old_value: Self, new_value: Self) -> Self {
+    pub func replace(&self, old_value: Self, new_value: Self) -> Self {
         if self.len == 0 || new_value.len == 0 || new_value.len > self.len {
-            return self;
+            return self.*;
         }
         if mut occurrence_idx := self.index_of(old_value) {
             search_step := old_value.len;
@@ -337,14 +337,14 @@ extend string {
             }
             return sb.to_string();
         }
-        return self;
+        return self.*;
     }
 
     /// Splits the string based on the passed `delim` substring. It returns the
     /// first `nth` parts. When `nth` == 0, return all the splits.
     /// The last returned element has the remainder of the string, even if the
     /// remainder contains more `delim` substrings.
-    pub func split(self, delim: Self, nth: uint := 0) -> []Self {
+    pub func split(&self, delim: Self, nth: uint := 0) -> []Self {
         mut i: uint := 0;
         mut res := []Self();
         match delim.len {
@@ -404,7 +404,7 @@ extend string {
 
     /// Splits a string using the chars in the delimiter string as delimiters chars.
     /// If the delimiter string is empty then `.split()` is used.
-    pub func split_any(self, delim: Self) -> []Self {
+    pub func split_any(&self, delim: Self) -> []Self {
         mut i: uint := 0;
         mut res := []Self();
         // check empty source string
@@ -432,7 +432,7 @@ extend string {
     /// and `\r\n` (Windows) line endings are all supported (including mixed line endings).
     /// NOTE: algorithm is "greedy", consuming '\r\n' as a single line ending with higher
     /// priority than '\r' and '\n' as multiple endings
-    pub func split_into_lines(self) -> []Self {
+    pub func split_into_lines(&self) -> []Self {
         mut res := []Self();
         if self.len == 0 {
             return res;

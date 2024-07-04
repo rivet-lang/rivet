@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -17,7 +17,7 @@ var return_trace := ReturnTrace();
 pub trait Throwable < Stringable { }
 
 #[inline]
-func uncatched_error(err: Throwable) {
+func uncatched_error(err: ^Throwable) {
     console_ewriteln("uncatched error: {}", err.to_string());
     return_trace.print();
     process_exit(102);
@@ -37,7 +37,7 @@ struct ReturnTrace {
     mut cur_idx: uint;
 
     #[inline]
-    func add(mut self, trace: CallTrace) {
+    func add(&mut self, trace: CallTrace) {
         if self.cur_idx == RETURN_TRACE_MAX_SIZE {
             runtime_error("maximum return trace size exceeded");
         }
@@ -45,18 +45,18 @@ struct ReturnTrace {
         self.cur_idx += 1;
     }
 
-    func print(self) {
+    func print(&self) {
         mut i: uint := 0;
         while i < self.cur_idx : i += 1 {
             trace := self.traces[i];
             console_ewriteln(
-                "   from {} in \"{}\":{}", demangle_symbol(trace.name),
+                "   from {} in {}:{}", demangle_symbol(trace.name),
                 trace.file, trace.line
             );
         }
     }
 
-    func clear(mut self) {
+    func clear(&mut self) {
         self.cur_idx = 0;
     }
 }
@@ -66,7 +66,7 @@ pub struct InvalidArgumentError < Throwable {
     msg: string;
 
     #[inline]
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -76,7 +76,7 @@ pub struct OutOfMemoryError < Throwable {
     msg: string;
 
     #[inline]
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -86,7 +86,7 @@ pub struct ReadFailedError < Throwable {
     msg: string;
 
     #[inline]
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -95,7 +95,7 @@ pub struct ReadFailedError < Throwable {
 pub struct InvalidSyntaxError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -104,7 +104,7 @@ pub struct InvalidSyntaxError < Throwable {
 pub struct InvalidBaseError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -113,7 +113,7 @@ pub struct InvalidBaseError < Throwable {
 pub struct InvalidBitSizeError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -122,7 +122,7 @@ pub struct InvalidBitSizeError < Throwable {
 pub struct ValueOutOfRangeError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }

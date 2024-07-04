@@ -1,12 +1,12 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import std/{ traits, strings, console };
 
-import ../{ prefs, token, utils };
+import ../../{ prefs, token, utils };
 
-pub var mut report_table := ReportTable();
+pub var report_table := ^mut ReportTable();
 
 #[inline]
 pub func error(msg: string, pos: token.Pos) {
@@ -40,7 +40,7 @@ pub func total_warns() -> uint {
 
 #[boxed]
 struct ReportTable {
-    pub mut prefs: prefs.Prefs;
+    pub prefs: ^mut prefs.Prefs;
     pub mut errors: uint;
     pub mut warns: uint;
 
@@ -67,16 +67,16 @@ pub struct ReportBuilder {
     mut attributes: []Attribute;
 
     #[inline]
-    pub func add_note(mut self, msg: string, args: ...traits.Stringable) {
+    pub func add_note(&mut self, msg: string, args: ...^traits.Stringable) {
         self.attributes.push(Attribute(.Note, msg.fmt(args)));
     }
 
     #[inline]
-    pub func add_help(mut self, msg: string, args: ...traits.Stringable) {
+    pub func add_help(&mut self, msg: string, args: ...^traits.Stringable) {
         self.attributes.push(Attribute(.Help, msg.fmt(args)));
     }
 
-    pub func emit(mut self) {
+    pub func emit(&mut self) {
         if self.kind == .Warn {
             if report_table.prefs.hide_all_warns {
                 return;
@@ -130,7 +130,7 @@ func formatted_single_line(pos: token.Pos) {
         start_column := utils.max(0, utils.min(pos.col, line.len));
         end_column := utils.max(0, utils.min(pos.col + utils.max(0, pos.len), line.len));
         mut sb := strings.Builder.new(line.len);
-        write_spaces(sb, start_column, line);
+        write_spaces(&mut sb, start_column, line);
         sb.write(utils.bold(utils.blue("^")));
         if pos.len > 1 {
             sb.write(
@@ -151,7 +151,7 @@ func formatted_multi_line(pos: token.Pos) {
             if line_nr + pos.line == pos.line {
                 mut sb := strings.Builder.new(line.len);
                 sb.write(utils.bold(utils.blue("      | ")));
-                write_spaces(sb, utils.max(0, utils.min(pos.col, line.len)), line);
+                write_spaces(&mut sb, utils.max(0, utils.min(pos.col, line.len)), line);
                 sb.write(utils.bold(utils.blue("/~~ from here")));
                 console.ewriteln(sb.to_string());
             }
@@ -167,7 +167,7 @@ func formatted_multi_line(pos: token.Pos) {
             if line_nr + pos.line == pos.end_line {
                 mut sb := strings.Builder.new(line.len);
                 sb.write(utils.bold(utils.blue("      | ")));
-                write_spaces(sb, utils.max(0, utils.min(pos.end_col, line.len)), line);
+                write_spaces(&mut sb, utils.max(0, utils.min(pos.end_col, line.len)), line);
                 sb.write(utils.bold(utils.blue("^~~ to here")));
                 console.ewriteln(sb.to_string());
             }
@@ -175,7 +175,7 @@ func formatted_multi_line(pos: token.Pos) {
     }
 }
 
-func write_spaces(mut sb: strings.Builder, start_column: uint, line: string) {
+func write_spaces(sb: &mut strings.Builder, start_column: uint, line: string) {
     mut i: uint := 0;
     while i < start_column {
         b := line[i];

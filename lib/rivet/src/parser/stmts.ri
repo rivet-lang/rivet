@@ -1,29 +1,29 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report };
+import ../{ ast, utils/report };
 
 extend Parser {
-    func parse_stmt(mut self) -> ast.Stmt {
+    func parse_stmt(^mut self) -> ^mut ast.Stmt {
         return match {
             self.tok.kind == .Comment -> .Comment(self.parse_comment()),
             self.accept(.Dollar) -> match self.tok.kind {
-                .KwIf -> .ComptimeIf(self.parse_comptime_if(.Stmt)),
+                .KwIf -> ^mut .ComptimeIf(self.parse_comptime_if(.Stmt)),
                 else -> {
                     report.error("invalid comptime construction", self.tok.pos);
-                    .Empty(self.tok.pos)
+                    ^mut .Empty(self.tok.pos)
                 }
             },
             self.accept(.KwWhile) -> {
                 pos := self.prev_tok.pos;
                 mut is_inf := false;
-                mut cond := ast.Expr.Empty(self.tok.pos);
+                mut cond := ^mut ast.Expr.Empty(self.tok.pos);
                 mut has_continue_expr := false;
-                mut continue_expr := ast.Expr.Empty(self.tok.pos);
+                mut continue_expr := ^mut ast.Expr.Empty(self.tok.pos);
                 if self.tok.kind == .Lbrace {
                     is_inf = true;
-                    cond = .BoolLiteral(true, self.prev_tok.pos);
+                    cond = ^mut .BoolLiteral(true, self.prev_tok.pos);
                 } else {
                     cond = if self.decl_operator_is_used() {
                         self.open_scope();
@@ -44,11 +44,11 @@ extend Parser {
                 mut has_else_stmt := false;
                 else_stmt := if self.accept(.KwElse) {
                     has_else_stmt = true;
-                    self.parse_stmt()
+                    self.parse_block_stmt()
                 } else {
-                    .Empty(self.tok.pos)
+                    ^mut .Empty(self.tok.pos)
                 };
-                .While(
+                ^mut .While(
                     cond, continue_expr, has_continue_expr, stmt, else_stmt,
                     has_else_stmt, is_inf, pos + self.prev_tok.pos
                 )
@@ -59,13 +59,13 @@ extend Parser {
                 sc := self.scope;
                 // single or 2 variables
                 mut has_index := false;
-                mut index := ast.ObjectData();
+                mut index := ^mut ast.ObjectData();
                 if self.peek_token(1).kind == .Comma {
                     has_index = true;
                     index = self.parse_var_decl(support_mut: false, support_type: false);
                     self.expect(.Comma);
                 }
-                mut values := []mut ast.ObjectData();
+                mut values := []^mut ast.ObjectData();
                 if self.accept(.Lparen) {
                     while {
                         values.push(
@@ -81,9 +81,9 @@ extend Parser {
                 }
                 self.expect(.KwIn);
                 iterable := self.parse_expr();
-                stmt := self.parse_stmt();
+                stmt := self.parse_block_stmt();
                 self.close_scope();
-                .For(
+                ^mut .For(
                     index: index, has_index: has_index, values: values,
                     iterable: iterable, stmt: stmt, pos: pos + self.prev_tok.pos,
                     scope: sc
@@ -108,18 +108,22 @@ extend Parser {
                     self.expect(.Rparen);
                 }
                 pos := self.prev_tok.pos;
-                expr := self.parse_expr();
+                expr := if self.tok.kind == .Lbrace {
+                    self.parse_block_expr(false)
+                } else {
+                    self.parse_expr() 
+                };
                 if !(expr is .If || expr is .Match || expr is .Block) {
                     self.expect(.Semicolon);
                 }
-                .Defer(expr, defer_mode, pos)
+                ^mut .Defer(expr, defer_mode, pos)
             },
             self.tok.kind in [.Lparen, .KwMut, .Name]
                 && self.peek_tok.kind !in [.Dot, .Lbracket, .Lparen]
                 && self.decl_operator_is_used() -> {
                 // variable declarations
                 mut pos := self.tok.pos;
-                mut lefts := []mut ast.ObjectData();
+                mut lefts := []^mut ast.ObjectData();
                 if self.accept(.Lparen) {
                     // multiple variables
                     while {
@@ -136,7 +140,7 @@ extend Parser {
                 right := self.parse_expr();
                 pos += self.prev_tok.pos;
                 self.expect(.Semicolon);
-                .VarDecl(lefts, right, self.scope, pos)
+                ^mut .VarDecl(lefts, right, self.scope, pos)
             },
             else -> {
                 expr := self.parse_expr();
@@ -144,8 +148,13 @@ extend Parser {
                     || (expr is .If || expr is .Match || expr is .Block)) {
                     self.expect(.Semicolon);
                 }
-                .Expr(expr)
+                ^mut .Expr(expr)
             }
         };
+    }
+
+    func parse_block_stmt(^mut self) -> ^mut ast.Stmt {
+        expr := self.parse_block_expr(false);
+        return ^mut .Expr(expr, expr.position());
     }
 }

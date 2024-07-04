@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -59,7 +59,7 @@ pub struct Prefs {
     pub mut is_docs: bool;
     pub mut is_test: bool;
 
-    pub mut library_path: []string := +[rivetc_lib_dir, lib_dir];
+    pub mut library_path: []string := ^[rivetc_lib_dir, lib_dir];
     pub mut libraries_to_link: []string;
     pub mut objects_to_link: []string;
 
@@ -78,9 +78,9 @@ pub struct Prefs {
     pub mut run_output: bool;
     pub mut run_output_args: []string;
 
-    pub func from_args(args: [:]string, is_test: bool, run_output: bool, is_check: bool) -> !Self {
-        mut prefs := Prefs(is_test: is_test, run_output: run_output, check: is_check);
-        mut fp := flag.FlagParser.new(args);
+    pub func from_args(args: [:]string, is_test: bool, run_output: bool, is_check: bool) -> !^mut Self {
+        prefs := ^mut Self(is_test: is_test, run_output: run_output, check: is_check);
+        fp := flag.FlagParser.new(args);
         fp.set_application_name(if is_test {
             "rivet test"
         } else if run_output {
@@ -277,7 +277,7 @@ pub struct Prefs {
         return prefs;
     }
 
-    pub func set_input(mut self, input: string) {
+    pub func set_input(^mut self, input: string) {
         if !self.input.is_empty() {
             utils.error("the compiler can only receive one module");
         } else if !Path.exists(input) {
@@ -296,7 +296,7 @@ pub struct Prefs {
         }
     }
 
-    pub func load_module_info(mut self) -> ! {
+    pub func load_module_info(^mut self) -> ! {
         if self.is_test {
             self.mod_output = "_rivet_tests_runner_";
         } else if self.mod_output.is_empty() {

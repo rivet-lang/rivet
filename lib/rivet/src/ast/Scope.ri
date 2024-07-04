@@ -1,21 +1,23 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
 import std/process;
 
-#[boxed]
+pub var empty_scope := ^mut Scope();
+
+#[boxed; default_value(empty_scope)]
 pub struct Scope {
     pub start: uint;
     pub mut end: uint;
-    pub mut owner: ?Sym;
-    pub mut parent: ?Scope;
+    pub mut owner: ?^mut Sym;
+    pub mut parent: ?^mut Scope;
     pub mut detached_from_parent: bool;
-    pub mut childrens: []mut Scope;
-    pub mut syms: []mut Sym;
+    pub mut childrens: []^mut Scope;
+    pub mut syms: []^mut Sym;
     pub mut is_local: bool;
 
-    pub func add(mut self, sym: Sym) -> ! {
+    pub func add(^mut self, sym: ^mut Sym) -> ! {
         if _ := self.find(sym.name) {
             throw DuplicateSymbolError(
                 "duplicate symbol `{}` in {} `{}`".fmt(
@@ -26,7 +28,7 @@ pub struct Scope {
         self.syms.push(sym);
     }
 
-    pub func add_or_get(mut self, sym: Sym) -> !Sym {
+    pub func add_or_get(^mut self, sym: ^mut Sym) -> !^mut Sym {
         if mut old_sym := self.find(sym.name) {
             if sym is TypeSym(type_sym) && old_sym is TypeSym(mut old_type_sym) {
                 if old_type_sym.update(type_sym)! {
@@ -43,7 +45,7 @@ pub struct Scope {
         return sym;
     }
 
-    pub func add_local(mut self, sym: Sym) -> ! {
+    pub func add_local(^mut self, sym: ^mut Sym) -> ! {
         if self.is_local {
             if sym is Var && sym.name == "_" {
                 return; // ignore blank variable
@@ -57,11 +59,11 @@ pub struct Scope {
     }
 
     #[inline]
-    pub func exists(self, name: string) -> bool {
+    pub func exists(^self, name: string) -> bool {
         return self.find(name) != none;
     }
 
-    pub func find(self, name: string) -> ?Sym {
+    pub func find(^self, name: string) -> ?^mut Sym {
         for sym in self.syms {
             if sym.name == name {
                 return sym;
@@ -70,14 +72,14 @@ pub struct Scope {
         return none;
     }
 
-    pub func find_or_panic(self, name: string) -> Sym {
+    pub func find_or_panic(^self, name: string) -> ^mut Sym {
         if x := self.find(name) {
             return x;
         }
         process.panic("cannot found symbol `{}`", name);
     }
 
-    pub func find_by_index_or_panic(self, idx: uint) -> Sym {
+    pub func find_by_index_or_panic(^self, idx: uint) -> ^mut Sym {
         if idx >= self.syms.len {
             process.panic("symbol index out of range `{}`", idx);
         }
@@ -85,18 +87,18 @@ pub struct Scope {
     }
 
     #[inline]
-    pub func find_type_symbol_or_panic(self, name: string) -> TypeSym {
-        return @as(TypeSym, self.find_or_panic(name));
+    pub func find_type_symbol_or_panic(^self, name: string) -> ^mut TypeSym {
+        return @as(^mut TypeSym, self.find_or_panic(name));
     }
 
     #[inline]
-    pub func find_type_symbol_by_index_or_panic(self, idx: uint) -> TypeSym {
-        return @as(TypeSym, self.find_by_index_or_panic(idx));
+    pub func find_type_symbol_by_index_or_panic(^self, idx: uint) -> ^mut TypeSym {
+        return @as(^mut TypeSym, self.find_by_index_or_panic(idx));
     }
 
-    pub func lookup(self, name: string) -> ?Sym {
+    pub func lookup(^self, name: string) -> ?^mut Sym {
         if self.is_local {
-            mut sc_: ?Scope := self;
+            mut sc_: ?^Scope := self;
             while sc := sc_ {
                 if sym := sc.find(name) {
                     return sym;
@@ -111,11 +113,11 @@ pub struct Scope {
     }
 
     #[inline]
-    func dont_lookup_parent(self) -> bool {
+    func dont_lookup_parent(^self) -> bool {
         return self.parent == none || self.detached_from_parent;
     }
 
-    pub func update_type(self, name: string, type: Type) {
+    pub func update_type(^self, name: string, type: ^mut Type) {
         if mut sym := self.lookup(name) {
             if sym is Var(mut var_info) {
                 var_info.type = type;
@@ -123,7 +125,7 @@ pub struct Scope {
         }
     }
 
-    pub func update_is_hidden_ref(self, name: string, is_hidden_ref: bool) {
+    pub func update_is_hidden_ref(^self, name: string, is_hidden_ref: bool) {
         if mut sym := self.lookup(name) {
             if sym is Var(mut var_info) {
                 var_info.is_hidden_ref = is_hidden_ref;
@@ -131,7 +133,7 @@ pub struct Scope {
         }
     }
 
-    pub func update_is_used(self, name: string, is_used: bool) {
+    pub func update_is_used(^self, name: string, is_used: bool) {
         if mut sym := self.lookup(name) {
             if sym is Var(mut var_info) {
                 var_info.is_used = is_used;

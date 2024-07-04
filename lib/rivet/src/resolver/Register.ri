@@ -1,21 +1,21 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
-import ../{ ast, report, token };
+import ../{ ast, utils/report, token };
 
 #[boxed]
 pub struct Register {
-    mut env: ast.Env;
+    env: ^mut ast.Env;
 
     mut core_is_set: bool;
     mut is_core_mod: bool;
 
     mut abi: ast.ABI;
-    mut sym: ast.Sym := ast.InvalidSym();
-    mut source_file: ast.SourceFile;
+    sym: ^mut ast.Sym := ast.invalid_sym;
+    source_file: ^mut ast.SourceFile;
 
-    pub func walk_files(mut self, source_files: []ast.SourceFile) {
+    pub func walk_files(^mut self, source_files: []^mut ast.SourceFile) {
         for sf in source_files {
             self.is_core_mod = sf.mod.is_core();
             if !self.core_is_set && self.is_core_mod {
@@ -26,11 +26,11 @@ pub struct Register {
             self.source_file = sf;
             self.walk_decls(self.source_file.decls);
         }
-        self.env.throwable_t = .Basic(self.env.throwable_sym);
+        self.env.throwable_t = ^mut .Basic(self.env.throwable_sym);
     }
 
-    func walk_decls(mut self, mut decls: []mut ast.Decl) {
-        for mut decl in decls {
+    func walk_decls(^mut self, decls: []^mut ast.Decl) {
+        for decl in decls {
             old_abi := self.abi;
             old_sym := self.sym;
             self.sym.scope.owner = self.sym;
@@ -40,25 +40,25 @@ pub struct Register {
         }
     }
 
-    func walk_decl(mut self, mut decl: ast.Decl) {
-        match decl {
-            .ComptimeIf(mut comptime_if_decl) -> self.comptime_if(comptime_if_decl),
-            .Import(import_decl) -> self.import_decl(&import_decl),
-            .Extern(mut extern_decl) -> {
+    func walk_decl(^mut self, decl: ^mut ast.Decl) {
+        match decl.^ {
+            .ComptimeIf(&mut comptime_if_decl) -> self.comptime_if(comptime_if_decl),
+            .Import(&mut import_decl) -> self.import_decl(import_decl),
+            .Extern(&mut extern_decl) -> {
                 self.abi = extern_decl.abi;
                 self.walk_decls(extern_decl.decls);
             },
-            .Alias(mut alias_decl) -> alias_decl.sym = self.add_sym(
+            .Alias(&mut alias_decl) -> alias_decl.sym = self.add_sym(
                 if alias_decl.is_typealias {
-                    ast.TypeSym(
+                    ^mut ast.TypeSym(
                         parent: self.sym,
                         is_public: alias_decl.is_public,
                         name: alias_decl.name,
-                        info: .Alias(alias_decl.parent_type)
+                        info: ^mut .Alias(alias_decl.parent_type)
                     )
                 } else {
                     // updated later
-                    ast.SymRef(
+                    ^mut ast.SymRef(
                         parent: self.sym,
                         is_public: alias_decl.is_public,
                         name: alias_decl.name,
@@ -66,50 +66,50 @@ pub struct Register {
                     )
                 }, alias_decl.pos
             ),
-            .Trait(mut trait_decl) -> {
+            .Trait(&mut trait_decl) -> {
                 trait_decl.sym = self.add_sym(
-                    ast.TypeSym(
+                    ^mut ast.TypeSym(
                         parent: self.sym,
                         is_public: trait_decl.is_public,
                         name: trait_decl.name,
-                        info: .Trait()
+                        info: ^mut .Trait()
                     ), trait_decl.pos
                 );
                 if self.is_core_mod && trait_decl.name == "Throwable" && !self.env.throwable_sym_is_set {
                     self.env.throwable_sym_is_set = true;
-                    self.env.throwable_sym = @as(ast.TypeSym, trait_decl.sym);
+                    self.env.throwable_sym = @as(^mut ast.TypeSym, trait_decl.sym);
                 }
                 self.sym = trait_decl.sym;
                 self.walk_decls(trait_decl.decls);
             },
-            .Struct(mut struct_decl) -> {
+            .Struct(&mut struct_decl) -> {
                 struct_decl.sym = if self.is_core_mod && struct_decl.name == "string" {
-                    @as(ast.Type.Basic, self.env.string_t).sym
+                    @as(^ast.Type.Basic, self.env.string_t).sym
                 } else {
-                    self.add_sym(ast.TypeSym(
+                    self.add_sym(^mut ast.TypeSym(
                         parent: self.sym,
                         is_public: struct_decl.is_public,
                         name: struct_decl.name,
-                        info: .Struct(
+                        info: ^mut .Struct(
                             is_opaque: struct_decl.is_opaque,
                             is_boxed: struct_decl.attributes.has("boxed")
                         )
                     ), struct_decl.pos)
                 };
                 if self.is_core_mod && struct_decl.name == "DynArray" {
-                    self.env.dyn_array_sym = @as(ast.TypeSym, struct_decl.sym);
+                    self.env.dyn_array_sym = @as(^mut ast.TypeSym, struct_decl.sym);
                 }
                 self.sym = struct_decl.sym;
                 self.walk_decls(struct_decl.decls);
             },
-            .Enum(mut enum_decl) -> {
-                info := ast.TypeInfo.Enum(
+            .Enum(&mut enum_decl) -> {
+                info := ^mut ast.TypeInfo.Enum(
                     underlying_type: enum_decl.underlying_type,
                     is_tagged: enum_decl.is_tagged,
                     is_boxed: enum_decl.attributes.has("boxed")
                 );
                 enum_decl.sym = self.add_sym(
-                    ast.TypeSym(
+                    ^mut ast.TypeSym(
                         parent: self.sym,
                         is_public: enum_decl.is_public,
                         name: enum_decl.name,
@@ -117,7 +117,7 @@ pub struct Register {
                     ), enum_decl.pos
                 );
                 mut enum_info := @as(ast.TypeInfo.Enum, info);
-                for mut variant in enum_decl.variants {
+                for &mut variant in enum_decl.variants {
                     if enum_info.has_variant(variant.name) {
                         report.error("enum `{}` has duplicate variant `{}`".fmt(
                             enum_decl.name, variant.name
@@ -126,13 +126,13 @@ pub struct Register {
                     }
                     fields := ast.filter_field_decl(variant.decls);
                     if !variant.decls.is_empty() {
-                        variant_sym := ast.TypeSym(
+                        variant_sym := ^mut ast.TypeSym(
                             parent: enum_decl.sym,
                             is_public: enum_decl.is_public,
                             name: variant.name,
-                            info: .Struct(
+                            info: ^mut .Struct(
                                 false, true, true,
-                                parent: @as(ast.TypeSym, enum_decl.sym)
+                                parent: @as(^mut ast.TypeSym, enum_decl.sym)
                             )
                         );
                         enum_decl.sym.scope.add(variant_sym) catch |err| {
@@ -142,10 +142,10 @@ pub struct Register {
                         self.sym = variant_sym;
                         self.walk_decls(variant.decls);
                         self.sym = old_v_sym;
-                        variant.type = .Basic(variant_sym);
+                        variant.type = ^mut .Basic(variant_sym);
                     }
                     enum_info.add_variant(
-                        ast.EnumVariant(
+                        ^mut ast.EnumVariant(
                             name: variant.name,
                             has_type: variant.has_type,
                             type: variant.type,
@@ -153,12 +153,12 @@ pub struct Register {
                         )
                     );
                 }
-                @as(ast.TypeSym, enum_decl.sym).info = info;
+                @as(^mut ast.TypeSym, enum_decl.sym).info = info;
                 self.sym = enum_decl.sym;
                 self.walk_decls(enum_decl.decls);
             },
-            .Field(field_decl) -> {
-                mut type_sym := @as(ast.TypeSym, self.sym);
+            .Field(&mut field_decl) -> {
+                type_sym := @as(^mut ast.TypeSym, self.sym);
                 if type_sym.has_field(field_decl.name) {
                     report.error(
                         "{} `{}` has duplicate field `{}`".fmt(
@@ -167,7 +167,7 @@ pub struct Register {
                     );
                     return;
                 }
-                type_sym.fields.push(ast.Field(
+                type_sym.fields.push(^mut ast.Field(
                     name: field_decl.name,
                     is_mut: field_decl.is_mut,
                     is_public: field_decl.is_public,
@@ -177,7 +177,7 @@ pub struct Register {
                     is_required: field_decl.attributes.has("required")
                 ));
             },
-            .Const(mut const_decl) -> const_decl.sym = self.add_sym(ast.Const(
+            .Const(&mut const_decl) -> const_decl.sym = self.add_sym(^mut ast.Const(
                 parent: self.sym,
                 is_public: const_decl.is_public,
                 abi: self.abi,
@@ -185,9 +185,9 @@ pub struct Register {
                 expr: const_decl.expr,
                 type: const_decl.type
             ), const_decl.pos),
-            .Var(mut var_decl) -> {
-                for mut left in var_decl.lefts {
-                    left.sym = ast.Var(
+            .Var(&mut var_decl) -> {
+                for left in var_decl.lefts {
+                    left.sym = ^mut ast.Var(
                         parent: self.sym,
                         is_public: var_decl.is_public,
                         is_extern: var_decl.is_extern,
@@ -202,7 +202,7 @@ pub struct Register {
                     };
                 }
             },
-            .Extend(mut extend_decl) -> if extend_decl.type is .Basic(mut basic_type) {
+            .Extend(&mut extend_decl) -> if extend_decl.type is .Basic(&mut basic_type) {
                 if type_sym := basic_type.sym {
                     self.sym = type_sym;
                     if type_sym.is_primitive()
@@ -210,20 +210,20 @@ pub struct Register {
                         report.error("cannot extend primitive types", extend_decl.pos);
                     }
                 } else {
-                    if basic_type.expr is .Ident(mut ident) {
+                    if basic_type.expr is .Ident(&mut ident) {
                         self.sym = if type_sym := self.sym.scope.find(ident.name) {
                             type_sym
                         } else {
-                            self.add_sym(ast.TypeSym(
+                            self.add_sym(^mut ast.TypeSym(
                                 parent: self.sym,
                                 name: ident.name,
-                                info: .Placeholder
+                                info: ^mut .Placeholder
                             ), ident.pos)
                         };
                         ident.found = true;
                         ident.sym = self.sym;
                         basic_type.is_unresolved = false;
-                        basic_type.sym = @as(ast.TypeSym, self.sym);
+                        basic_type.sym = @as(^mut ast.TypeSym, self.sym);
                     } else {
                         report.error(
                             "invalid type `{}` to extend".fmt(extend_decl.type),
@@ -239,7 +239,7 @@ pub struct Register {
                     extend_decl.pos
                 );
             },
-            .Func(mut func_decl) -> func_decl.sym = self.add_sym(ast.Func(
+            .Func(&mut func_decl) -> func_decl.sym = self.add_sym(^mut ast.Func(
                 parent: self.sym,
                 abi: func_decl.abi,
                 is_public: func_decl.is_public,
@@ -254,8 +254,9 @@ pub struct Register {
                 has_named_args: func_decl.has_named_args,
                 ret_type: func_decl.ret_type,
                 has_body: func_decl.has_body,
-                self_is_mut: func_decl.self_is_mut,
                 self_is_ptr: func_decl.self_is_ptr,
+                self_is_boxed: func_decl.self_is_boxed,
+                self_is_mut: func_decl.self_is_mut,
                 self_pos: func_decl.self_pos,
                 pos: func_decl.pos
             ), func_decl.pos),
@@ -263,12 +264,12 @@ pub struct Register {
         }
     }
 
-    func comptime_if(mut self, mut comptime_if_decl: ast.ComptimeIf) {
+    func comptime_if(^mut self, comptime_if_decl: &mut ast.ComptimeIf) {
         nodes := self.env.evalue_comptime_if(comptime_if_decl);
         self.walk_decls(ast.nodes_to_decls(nodes));
     }
 
-    func import_decl(mut self, import_decl: &ast.ImportDecl) {
+    func import_decl(^mut self, import_decl: &ast.ImportDecl) {
         if !import_decl.subimports.is_empty() {
             for &subimport in import_decl.subimports {
                 self.import_decl(subimport);
@@ -283,7 +284,7 @@ pub struct Register {
                 }
                 if self.check_imported_symbol(sym.name, import_decl.pos, true) {
                     if import_decl.is_public {
-                        self.sym.scope.add(ast.SymRef(
+                        self.sym.scope.add(^mut ast.SymRef(
                             is_public: true,
                             name: sym.name,
                             ref: sym,
@@ -300,7 +301,7 @@ pub struct Register {
             // `import module/path`
             if self.check_imported_symbol(import_decl.alias_name, import_decl.pos, true) {
                 if import_decl.is_public {
-                    self.sym.scope.add(ast.SymRef(
+                    self.sym.scope.add(^mut ast.SymRef(
                         is_public: true,
                         name: import_decl.alias_name,
                         ref: import_decl.info.mod,
@@ -318,7 +319,7 @@ pub struct Register {
             for import_info in import_decl.import_list {
                 if import_info.name == "self" {
                     if import_decl.is_public {
-                        self.sym.scope.add(ast.SymRef(
+                        self.sym.scope.add(^mut ast.SymRef(
                             is_public: true,
                             name: import_info.alias_name,
                             ref: import_decl.info.mod,
@@ -334,7 +335,7 @@ pub struct Register {
                     self.check_vis(sym, import_info.pos);
                     if self.check_imported_symbol(sym.name, import_info.pos, true) {
                         if import_decl.is_public {
-                            self.sym.scope.add(ast.SymRef(
+                            self.sym.scope.add(^mut ast.SymRef(
                                 is_public: true,
                                 name: import_info.alias_name,
                                 ref: sym,
@@ -357,7 +358,7 @@ pub struct Register {
         }
     }
 
-    func add_sym(mut self, sym: ast.Sym, pos: token.Pos) -> ast.Sym {
+    func add_sym(^mut self, sym: ^mut ast.Sym, pos: token.Pos) -> ^mut ast.Sym {
         if self.check_imported_symbol(sym.name, pos, false) {
             return self.sym.scope.add_or_get(sym) catch |err| {
                 report.error(err.to_string(), pos);
@@ -367,7 +368,7 @@ pub struct Register {
         return sym;
     }
 
-    func check_imported_symbol(self, name: string, pos: token.Pos, is_import: bool) -> bool {
+    func check_imported_symbol(^self, name: string, pos: token.Pos, is_import: bool) -> bool {
         if self.source_file.imported_symbols.exists(name) {
             if is_import {
                 mut err := report.error_builder(
@@ -396,7 +397,7 @@ pub struct Register {
         return true;
     }
 
-    func check_vis(self, sym: ast.Sym, pos: token.Pos) {
+    func check_vis(^self, sym: ^mut ast.Sym, pos: token.Pos) {
         if !sym.is_public && !self.sym.has_access_to(sym) {
             report.error("{} `{}` is private".fmt(sym.type_of(), sym.name), pos);
         }

@@ -1,4 +1,4 @@
-// Copyright (C) 2023-present Jose Mendoza - All rights reserved. Use of this
+// Copyright (C) 2023-2024 Jose Mendoza - All rights reserved. Use of this
 // source code is governed by an MIT license that can be found in the LICENSE
 // file.
 
@@ -22,7 +22,7 @@ pub var executable_dir := Path.dir_name(executable() catch wd_at_startup);
 pub struct NotADirectoryError < Throwable {
     msg: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return self.msg;
     }
 }
@@ -43,7 +43,7 @@ struct Result {
 struct ExecutionFailedError < Throwable {
     cmd: string;
 
-    pub func to_string(self) -> string {
+    pub func to_string(^self) -> string {
         return "execution failed for `{}`".fmt(self.cmd);
     }
 }
