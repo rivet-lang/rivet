@@ -1,11 +1,12 @@
 // Copyright (C) 2024-present The Rivet programming language. Use of this source code
 // is governed by an MIT license that can be found in the LICENSE file.
 
+@[has_globals]
 module context
 
 import compiler.ast
 
-const stack = []&CContext{}
+__global stack = []&CContext{}
 
 pub fn push(ctx &CContext) {
 	unsafe {

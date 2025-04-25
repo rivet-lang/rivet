@@ -104,7 +104,7 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 			node: unsafe { stmt }
 		}
 		sema.sym = stmt.sym
-		stmt.scope = ast.Scope.new(sema.scope, ?ast.Symbol(sema.sym))
+		stmt.scope = ast.Scope.new(sema.scope, sema.sym)
 		sema.scope.add_symbol(stmt.sym) or { context.error(err.msg(), stmt.name_pos) }
 		sema.scope = stmt.scope
 		for arg in stmt.args {
