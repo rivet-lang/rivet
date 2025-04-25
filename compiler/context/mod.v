@@ -10,8 +10,7 @@ __global stack = []&CContext{}
 
 pub fn push(ctx &CContext) {
 	unsafe {
-		mut s := &stack
-		s << ctx
+		stack << ctx
 	}
 }
 
@@ -27,8 +26,7 @@ pub fn pop() {
 		panic('context.pop: empty CContext stack')
 	}
 	unsafe {
-		mut s := &stack
-		_ = s.pop()
+		stack.pop()
 	}
 }
 
