@@ -3,10 +3,13 @@
 
 module ast
 
-pub type Symbol = Function | Variable | Constant | TypeSym
+pub type Symbol = Module | Function | Variable | Constant | TypeSym
 
 pub fn (sym Symbol) type_of() string {
 	return match sym {
+		Module {
+			'module'
+		}
 		Function {
 			'function'
 		}
@@ -26,11 +29,19 @@ pub fn (sym Symbol) type_of() string {
 	}
 }
 
+pub struct Module {
+pub:
+	name string
+pub mut:
+	scope &Scope = unsafe { nil }
+}
+
 pub struct TypeSym {
 pub:
 	name   string
 	kind   TypeKind
 	fields []Field
+	scope  &Scope = unsafe { nil }
 }
 
 pub enum TypeKind {
@@ -72,9 +83,10 @@ pub:
 
 pub struct Function {
 pub:
-	name string
-	args []FnArg
-	node &FnStmt = unsafe { nil }
+	name  string
+	args  []FnArg
+	node  &FnStmt = unsafe { nil }
+	scope &Scope  = unsafe { nil }
 }
 
 pub struct Constant {
@@ -82,6 +94,7 @@ pub:
 	name   string
 	is_pub bool
 	type   Type
+	scope  &Scope = unsafe { nil }
 }
 
 pub struct Variable {
@@ -94,4 +107,5 @@ pub:
 	is_ref   bool
 	type     Type
 	pos      FilePos
+	scope    &Scope = unsafe { nil }
 }

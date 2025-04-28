@@ -3,6 +3,13 @@
 
 module util
 
+import os
+
+@[inline]
+pub fn get_rivet_files(from string) []string {
+	return os.walk_ext(from, '.ri')
+}
+
 @[inline]
 pub fn is_valid_name(c u8) bool {
 	return c == `_` || c.is_letter()

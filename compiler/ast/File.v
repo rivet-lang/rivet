@@ -21,7 +21,7 @@ mut:
 
 @[inline]
 pub fn (f File) == (f2 File) bool {
-	return f.filename == f2.filename && f.content == f2.content && f.mod_name == f2.mod_name
+	return f.filename == f2.filename && f.mod_name == f2.mod_name && f.content == f2.content
 }
 
 pub fn File.new(filename string) &File {

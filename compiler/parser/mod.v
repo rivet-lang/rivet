@@ -36,7 +36,11 @@ pub fn new(ctx &context.CContext) &Parser {
 
 @[inline]
 pub fn (mut p Parser) parse() {
-	_ = p.parse_file(p.ctx.options.input, true)
+	for i, input in p.ctx.options.input_files {
+		if file := p.parse_file(input, i == 0) {
+			p.ctx.files << file
+		}
+	}
 }
 
 fn (mut p Parser) parse_file(filename string, is_root bool) ?&ast.File {

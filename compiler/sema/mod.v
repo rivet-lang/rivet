@@ -30,16 +30,9 @@ pub fn (mut sema Sema) analyze(ctx &context.CContext) {
 
 fn (mut sema Sema) check_file(mut file ast.File) {
 	sema.file = file
-	sema.sym = ast.TypeSym{
-		name: sema.file.mod_name
-		kind: .struct
-	}
+	sema.sym = sema.ctx.universe.find_or_add_module(file.mod_name)
 
-	sema.ctx.universe.add_symbol(sema.sym) or {
-		context.ic_error('cannot load module `${file.mod_name}`, there is another symbol with the same name')
-	}
-
-	sema.file.scope = ast.Scope.new(sema.ctx.universe, sema.sym)
+	sema.file.scope = sema.sym.scope
 	sema.scope = sema.file.scope
 
 	sema.file_stmts(true)

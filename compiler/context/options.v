@@ -5,6 +5,7 @@ module context
 
 import os
 import flag
+import compiler.util
 
 @[footer: 'The compiler expects an input, either file or directory (if directory, it must contain a file entry `src/main.ri`).']
 @[xdoc: 'The Rivet programming language compiler']
@@ -12,7 +13,8 @@ import flag
 @[version: '0.1.0']
 pub struct Options {
 pub mut:
-	input string @[ignore]
+	input_dir   string   @[ignore]
+	input_files []string @[ignore]
 
 	show_help    bool @[long: help; short: h; xdoc: 'Print help information.']
 	check_syntax bool @[xdoc: 'Only parse the files, but then stop.']
@@ -31,23 +33,19 @@ pub fn parse_args(args []string) Options {
 		input := remaining[0]
 		match true {
 			os.is_file(input) {
-				options.input = input
+				options.input_dir = os.dir(input)
+				options.input_files = [input]
 			}
 			os.is_dir(input) {
-				mut main_ri := os.join_path(input, 'main.ri')
-				if os.exists(main_ri) {
-					options.input = main_ri
-				} else {
-					main_ri = os.join_path(input, 'src', 'main.ri')
-					if os.exists(main_ri) {
-						options.input = main_ri
-					} else {
-						ic_error('`${input}` is not a valid input, no file `${main_ri}` found')
-					}
+				files := util.get_rivet_files(input)
+				if files == [] {
+					ic_error('the directory does not contain any Rivet source code files')
 				}
+				options.input_dir = input
+				options.input_files = files
 			}
 			else {
-				ic_error('`${input}` is not a valid input, expected file')
+				ic_error('`${input}` is not a valid input, expected directory')
 			}
 		}
 	} else if remaining.len == 0 {
