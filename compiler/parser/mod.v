@@ -52,6 +52,11 @@ fn (mut p Parser) parse_file(filename string, root_dir string) ?&ast.File {
 		p.ctx.root_file = p.file
 	}
 
+	// empty file
+	if p.file.content == '' {
+		return p.file
+	}
+
 	p.tokenizer = tokenizer.from_file(p.ctx, p.file)
 	if p.file.errors > 0 {
 		// if the tokenizer found errors in the file, let's skip it

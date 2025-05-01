@@ -41,7 +41,11 @@ pub fn File.from_memory(content string) &File {
 }
 
 pub fn (mut file File) set_mod_name(root_dir string) {
-	pkg_name := os.base(root_dir)
+	pkg_name := if root_dir == '.' {
+		os.base(os.abs_path(root_dir))
+	} else {
+		os.base(root_dir)
+	}
 	full_dir := os.dir(os.abs_path(file.filename))
 	if index := full_dir.index(pkg_name) {
 		file.mod_name = full_dir[index..].replace(os.path_separator, '.')
