@@ -92,6 +92,7 @@ pub enum Kind {
 	kw_for
 	kw_fn
 	kw_if
+	kw_import
 	kw_in
 	kw_is
 	kw_let
@@ -192,6 +193,7 @@ fn build_token_str() []string {
 	s[Kind.kw_fn] = 'fn'
 	s[Kind.kw_for] = 'for'
 	s[Kind.kw_if] = 'if'
+	s[Kind.kw_import] = 'import'
 	s[Kind.kw_in] = 'in'
 	s[Kind.kw_is] = 'is'
 	s[Kind.kw_let] = 'let'

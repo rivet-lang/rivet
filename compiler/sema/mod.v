@@ -9,9 +9,9 @@ import compiler.context
 
 pub struct Sema {
 pub:
-	// Because other files can be imported using the builtin
-	// function `import`, we need to have access to the parser
-	// to generate the corresponding AST of each imported file.
+	// Since modules can be imported using the `import` statement,
+	// we need access to the parser to generate the corresponding
+	// AST for each imported file.
 	parser &parser.Parser
 mut:
 	ctx &context.CContext = unsafe { nil }
