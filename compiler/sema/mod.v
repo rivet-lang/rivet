@@ -7,6 +7,14 @@ import compiler.ast
 import compiler.parser
 import compiler.context
 
+enum Stage {
+	quiet
+	symbol_reg      // sr_
+	module_import   // mi_
+	name_resolution // nr_
+	type_checking   // tc_
+}
+
 pub struct Sema {
 pub:
 	// Since modules can be imported using the `import` statement,
@@ -14,43 +22,43 @@ pub:
 	// AST for each imported file.
 	parser &parser.Parser
 mut:
-	ctx &context.CContext = unsafe { nil }
+	ctx   &context.CContext = unsafe { nil }
+	stage Stage
 
-	file       &ast.File = unsafe { nil }
-	sym        ast.Symbol
-	scope      &ast.Scope = unsafe { nil }
-	first_pass bool
+	file  &ast.File = unsafe { nil }
+	sym   ast.Symbol
+	scope &ast.Scope = unsafe { nil }
 }
 
 pub fn (mut sema Sema) analyze(ctx &context.CContext) {
 	sema.ctx = ctx
 	sema.ctx.load_builtin_symbols()
-	sema.check_file(mut sema.ctx.root_file)
+
+	for i in int(Stage.quiet) + 1 .. int(Stage.type_checking) + 1 {
+		sema.stage = unsafe { Stage(i) }
+		for mut file in sema.ctx.files {
+			sema.check_file(mut *file)
+		}
+	}
 }
 
 fn (mut sema Sema) check_file(mut file ast.File) {
 	sema.file = file
-	sema.sym = sema.ctx.universe.find_or_add_module(file.mod_name)
+
+	if sema.stage == .symbol_reg {
+		sema.sym = sema.ctx.universe.find_or_add_module(file.mod_name) or {
+			context.ic_error(err.msg())
+		}
+	}
 
 	sema.file.scope = sema.sym.scope
 	sema.scope = sema.file.scope
 
-	sema.file_stmts(true)
-	if sema.ctx.code_has_errors() {
-		return
-	}
-
-	sema.file_stmts(false)
-	if sema.ctx.code_has_errors() {
-		return
-	}
-
-	sema.ctx.files << sema.file
-}
-
-fn (mut sema Sema) file_stmts(first_pass bool) {
-	sema.first_pass = first_pass
 	sema.stmts(mut sema.file.stmts)
+
+	if sema.ctx.code_has_errors() {
+		return
+	}
 }
 
 fn (mut sema Sema) stmts(mut stmts []ast.Stmt) {
@@ -90,7 +98,7 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 		sema.sym = old_sym
 	}
 
-	if sema.first_pass {
+	if sema.stage == .symbol_reg {
 		stmt.sym = &ast.Function{
 			name: stmt.name
 			args: stmt.args
@@ -136,7 +144,7 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 }
 
 fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
-	if sema.first_pass {
+	if sema.stage == .symbol_reg {
 		for var in stmt.lefts {
 			sema.scope.add_symbol(var, lookup: var.is_local) or {
 				context.error(err.msg(), var.pos, context.note('inside ${sema.sym.type_of()} `${sema.sym.name}`'))
