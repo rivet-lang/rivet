@@ -9,10 +9,10 @@ import compiler.context
 
 enum Stage {
 	quiet
-	symbol_reg      // sr_
-	module_import   // mi_
-	name_resolution // nr_
-	type_checking   // tc_
+	symbol_reg    // sr_
+	module_import // mi_
+	type_checking // tc_
+	_end_
 }
 
 pub struct Sema {
@@ -34,7 +34,7 @@ pub fn (mut sema Sema) analyze(ctx &context.CContext) {
 	sema.ctx = ctx
 	sema.ctx.load_builtin_symbols()
 
-	for i in int(Stage.quiet) + 1 .. int(Stage.type_checking) + 1 {
+	for i in int(Stage.quiet) + 1 .. int(Stage._end_) {
 		sema.stage = unsafe { Stage(i) }
 		for mut file in sema.ctx.files {
 			sema.check_file(mut *file)
@@ -98,34 +98,15 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 		sema.sym = old_sym
 	}
 
-	if sema.stage == .symbol_reg {
-		stmt.sym = &ast.Function{
-			name: stmt.name
-			args: stmt.args
-			node: unsafe { stmt }
+	match sema.stage {
+		.symbol_reg {
+			sema.sr_fn_stmt(mut stmt)
 		}
-		sema.sym = stmt.sym
-		stmt.scope = ast.Scope.new(sema.scope, sema.sym)
-		sema.scope.add_symbol(stmt.sym) or { context.error(err.msg(), stmt.name_pos) }
-		sema.scope = stmt.scope
-		for arg in stmt.args {
-			sema.scope.add_symbol(ast.Variable{
-				name:     arg.name
-				is_local: true
-				is_arg:   true
-				is_mut:   arg.is_mut
-				is_ref:   arg.is_ref
-				type:     arg.type
-			}) or {
-				context.error(err.msg(), arg.pos, context.note('inside function `${stmt.name}`'))
-			}
+		else {
+			sema.scope = stmt.scope
+			sema.stmts(mut stmt.stmts)
 		}
-		sema.stmts(mut stmt.stmts)
-		return
 	}
-
-	sema.scope = stmt.scope
-	sema.stmts(mut stmt.stmts)
 }
 
 fn (mut sema Sema) expr_stmt(mut stmt ast.ExprStmt) {
@@ -144,11 +125,12 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 }
 
 fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
-	if sema.stage == .symbol_reg {
-		for var in stmt.lefts {
-			sema.scope.add_symbol(var, lookup: var.is_local) or {
-				context.error(err.msg(), var.pos, context.note('inside ${sema.sym.type_of()} `${sema.sym.name}`'))
-			}
+	match sema.stage {
+		.symbol_reg {
+			sema.sr_let_stmt(mut stmt)
+		}
+		else {
+			// TODO
 		}
 	}
 }
