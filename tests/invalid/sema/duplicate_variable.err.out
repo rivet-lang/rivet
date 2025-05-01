@@ -13,4 +13,4 @@ tests/invalid/sema/duplicate_variable.err.ri:11:13: error: duplicate variable `b
    11 |         let b = 1; // fail
       |             ^             
       = note: inside function `function`
-error: could not compile `duplicate_variable` module, aborting due to 3 previous errors
+error: could not compile `sema` module, aborting due to 3 previous errors

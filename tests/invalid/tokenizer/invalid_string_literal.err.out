@@ -2,4 +2,4 @@ tests/invalid/tokenizer/invalid_string_literal.err.ri:1:1: error: unfinished str
       | 
     1 | "unfinished string literal
       | ^                         
-error: could not compile `invalid_string_literal` module, aborting due to previous error
+error: could not compile `tokenizer` module, aborting due to previous error

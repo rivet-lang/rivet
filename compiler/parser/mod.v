@@ -20,6 +20,7 @@ mut:
 	file &ast.File = unsafe { nil }
 	tags ast.Tags
 
+	inside_root_file   bool
 	inside_expr        bool
 	inside_block_expr  bool
 	inside_local_scope bool
@@ -37,15 +38,17 @@ pub fn new(ctx &context.CContext) &Parser {
 @[inline]
 pub fn (mut p Parser) parse() {
 	for i, input in p.ctx.options.input_files {
-		if file := p.parse_file(input, i == 0) {
+		p.inside_root_file = i == 0
+		if file := p.parse_file(input, p.ctx.options.input_dir) {
 			p.ctx.files << file
 		}
 	}
 }
 
-fn (mut p Parser) parse_file(filename string, is_root bool) ?&ast.File {
+fn (mut p Parser) parse_file(filename string, root_dir string) ?&ast.File {
 	p.file = ast.File.new(filename)
-	if is_root {
+	p.file.set_mod_name(root_dir)
+	if p.inside_root_file && isnil(p.ctx.root_file) {
 		p.ctx.root_file = p.file
 	}
 

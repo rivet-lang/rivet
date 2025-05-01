@@ -2,4 +2,4 @@ tests/invalid/parser/unexpected_token.err.ri:1:12: error: expected `;`, but foun
       | 
     1 | fn main() { ] abc
       |            ^     
-error: could not compile `unexpected_token` module, aborting due to previous error
+error: could not compile `parser` module, aborting due to previous error
