@@ -95,8 +95,8 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.kw_fn {
 			stmt = p.parse_fn_stmt(is_pub)
 		}
-		.kw_let {
-			stmt = p.parse_let_stmt(is_pub)
+		.kw_var {
+			stmt = p.parse_var_stmt(is_pub)
 		}
 		.semicolon {
 			// an orphaned semicolon indicates that `p.stmt()` is not properly
@@ -190,8 +190,8 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 	}
 }
 
-fn (mut p Parser) parse_let_stmt(is_pub bool) ast.LetStmt {
-	p.expect(.kw_let)
+fn (mut p Parser) parse_var_stmt(is_pub bool) ast.LetStmt {
+	p.expect(.kw_var)
 	mut lefts := []ast.Variable{}
 	for {
 		mut left_pos := p.tok.pos
@@ -230,8 +230,8 @@ fn (mut p Parser) parse_while_stmt() ast.WhileStmt {
 	p.expect(.kw_while)
 	p.expect(.lparen)
 	mut init_stmt := ?ast.LetStmt(none)
-	if p.tok.kind == .kw_let {
-		init_stmt = p.parse_let_stmt(false)
+	if p.tok.kind == .kw_var {
+		init_stmt = p.parse_var_stmt(false)
 		p.expect(.semicolon)
 	}
 	cond := p.parse_expr()

@@ -1,13 +1,13 @@
 fn main() {
-    let a = 1;
-    let a = 1; // fail
+    var a = 1;
+    var a = 1; // fail
 }
 
 fn function(x: int) {
-    let x = 1; // fail
+    var x = 1; // fail
 
-    let b = 1;
+    var b = 1;
     {
-        let b = 1; // fail
+        var b = 1; // fail
     }
 }

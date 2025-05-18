@@ -79,7 +79,7 @@ fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 			sema.while_stmt(mut stmt)
 		}
 		ast.LetStmt {
-			sema.let_stmt(mut stmt)
+			sema.var_stmt(mut stmt)
 		}
 		ast.DeferStmt {
 			sema.defer_stmt(mut stmt)
@@ -115,7 +115,7 @@ fn (mut sema Sema) expr_stmt(mut stmt ast.ExprStmt) {
 
 fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 	if stmt.init_stmt != none {
-		sema.let_stmt(mut stmt.init_stmt)
+		sema.var_stmt(mut stmt.init_stmt)
 	}
 	sema.expr(mut stmt.cond)
 	if stmt.continue_expr != none {
@@ -124,10 +124,10 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 	sema.stmts(mut stmt.stmts)
 }
 
-fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
+fn (mut sema Sema) var_stmt(mut stmt ast.LetStmt) {
 	match sema.stage {
 		.symbol_reg {
-			sema.sr_let_stmt(mut stmt)
+			sema.sr_var_stmt(mut stmt)
 		}
 		else {
 			// TODO

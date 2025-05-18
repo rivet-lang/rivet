@@ -1,5 +1,5 @@
 fn main() {
-    let x = abc();
+    var x = abc();
 }
 
 fn abc() int {

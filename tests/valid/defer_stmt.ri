@@ -1,6 +1,6 @@
 fn main() {
-    let x = 0;
-    
+    var x = 0;
+
     defer {
         x;
     }
@@ -8,7 +8,7 @@ fn main() {
     defer(success) {
         x;
     }
-    
+
     defer(error) {
         x;
     }
