@@ -1,11 +1,10 @@
-/*
-extern (C) {
-    fn printf(s: *uint8, sz: uint);
-}
-*/
+#[extern_c]
+fn printf(s: *uint8, sz: uint);
 
 fn main() {
     var x = 1;
-    if (x == 1):
+    if (x != 1):
         return;
+    //var y = x;
+    //y = 5; // y.* = 5 .. x = 5
 }
