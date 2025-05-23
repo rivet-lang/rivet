@@ -30,6 +30,7 @@ pub:
 	name_pos    FilePos
 	args        []FnArg
 	return_type Type
+	has_body    bool
 pub mut:
 	stmts []Stmt
 	sym   &Function = unsafe { nil }

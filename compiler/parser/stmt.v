@@ -173,12 +173,16 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 		}
 		p.expect(.rparen)
 	}
-	return_type := if p.tok.kind != .lbrace {
+	return_type := if p.tok.kind !in [.lbrace, .semicolon] {
 		p.parse_type()
 	} else {
 		p.ctx.void_type
 	}
-	stmts := p.parse_stmts()
+	has_body := !p.accept(.semicolon)
+	mut stmts := []ast.Stmt{}
+	if has_body {
+		stmts = p.parse_stmts()
+	}
 	return ast.FnStmt{
 		tags:        p.tags
 		is_pub:      is_pub
@@ -186,6 +190,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 		name_pos:    name_pos
 		args:        args
 		return_type: return_type
+		has_body:    has_body
 		stmts:       stmts
 	}
 }

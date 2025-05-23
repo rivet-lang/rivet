@@ -1,4 +1,4 @@
-#[extern_c]
+#[extern_c(variadic= true)]
 fn printf(s: *uint8, sz: uint);
 
 fn main() {
