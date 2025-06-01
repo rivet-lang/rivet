@@ -43,7 +43,7 @@ pub:
 	name_pos     FilePos
 	type         Type
 	default_expr ?Expr
-	is_mut       bool
+	is_var       bool
 	is_ref       bool
 	pos          FilePos
 }

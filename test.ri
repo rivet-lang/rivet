@@ -1,10 +1,11 @@
-#[extern_c(variadic= true)]
-fn printf(s: *uint8, sz: uint);
+#[extern_c(variadic: true)]
+fn printf(s: *uint8);
+
+val AGE = 2004;
+val MAGIC = 0xA2BFF;
 
 fn main() {
     var x = 1;
     if (x != 1):
         return;
-    //var y = x;
-    //y = 5; // y.* = 5 .. x = 5
 }

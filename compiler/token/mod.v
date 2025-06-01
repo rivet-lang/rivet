@@ -96,7 +96,6 @@ pub enum Kind {
 	kw_in
 	kw_is
 	kw_match
-	kw_mut
 	kw_pub
 	kw_return
 	kw_struct
@@ -197,7 +196,6 @@ fn build_token_str() []string {
 	s[Kind.kw_in] = 'in'
 	s[Kind.kw_is] = 'is'
 	s[Kind.kw_match] = 'match'
-	s[Kind.kw_mut] = 'mut'
 	s[Kind.kw_pub] = 'pub'
 	s[Kind.kw_return] = 'return'
 	s[Kind.kw_struct] = 'struct'

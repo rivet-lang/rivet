@@ -101,7 +101,7 @@ pub struct Variable {
 pub:
 	name     string
 	is_local bool
-	is_mut   bool
+	is_val   bool
 	is_pub   bool
 	is_arg   bool
 	is_ref   bool
