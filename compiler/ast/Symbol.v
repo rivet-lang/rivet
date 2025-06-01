@@ -3,7 +3,7 @@
 
 module ast
 
-pub type Symbol = Module | Function | Variable | Constant | TypeSym
+pub type Symbol = Module | Function | Variable | TypeSym
 
 pub fn (sym Symbol) type_of() string {
 	return match sym {
@@ -17,11 +17,12 @@ pub fn (sym Symbol) type_of() string {
 			if sym.is_arg {
 				'argument'
 			} else {
-				'variable'
+				if sym.is_val {
+					'constant'
+				} else {
+					'variable'
+				}
 			}
-		}
-		Constant {
-			'constant'
 		}
 		TypeSym {
 			'type'
@@ -87,14 +88,6 @@ pub:
 	args  []FnArg
 	node  &FnStmt = unsafe { nil }
 	scope &Scope  = unsafe { nil }
-}
-
-pub struct Constant {
-pub:
-	name   string
-	is_pub bool
-	type   Type
-	scope  &Scope = unsafe { nil }
 }
 
 pub struct Variable {

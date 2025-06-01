@@ -78,7 +78,7 @@ fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 		ast.WhileStmt {
 			sema.while_stmt(mut stmt)
 		}
-		ast.LetStmt {
+		ast.VarStmt {
 			sema.var_stmt(mut stmt)
 		}
 		ast.DeferStmt {
@@ -124,7 +124,7 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 	sema.stmts(mut stmt.stmts)
 }
 
-fn (mut sema Sema) var_stmt(mut stmt ast.LetStmt) {
+fn (mut sema Sema) var_stmt(mut stmt ast.VarStmt) {
 	match sema.stage {
 		.symbol_reg {
 			sema.sr_var_stmt(mut stmt)

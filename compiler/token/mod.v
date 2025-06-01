@@ -84,7 +84,6 @@ pub enum Kind {
 
 	keyword_beg
 	kw_break
-	kw_const
 	kw_continue
 	kw_defer
 	kw_else
@@ -100,6 +99,7 @@ pub enum Kind {
 	kw_return
 	kw_struct
 	kw_trait
+	kw_val
 	kw_var
 	kw_while
 	keyword_end
@@ -184,7 +184,6 @@ fn build_token_str() []string {
 	s[Kind.at] = '@'
 
 	s[Kind.kw_break] = 'break'
-	s[Kind.kw_const] = 'const'
 	s[Kind.kw_continue] = 'continue'
 	s[Kind.kw_defer] = 'defer'
 	s[Kind.kw_else] = 'else'
@@ -200,6 +199,7 @@ fn build_token_str() []string {
 	s[Kind.kw_return] = 'return'
 	s[Kind.kw_struct] = 'struct'
 	s[Kind.kw_trait] = 'trait'
+	s[Kind.kw_val] = 'val'
 	s[Kind.kw_var] = 'var'
 	s[Kind.kw_while] = 'while'
 

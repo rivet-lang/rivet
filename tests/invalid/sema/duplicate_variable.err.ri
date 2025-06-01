@@ -1,7 +1,13 @@
 fn main() {
     var a = 1;
     var a = 1; // fail
+
+    val b = 1;
+    val b = 1; // fail
 }
+
+val X = 1;
+val X = 1; // fail
 
 fn function(x: int) {
     var x = 1; // fail

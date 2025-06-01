@@ -3,14 +3,24 @@ tests/invalid/sema/duplicate_variable.err.ri:3:9: error: duplicate variable `a`
     3 |     var a = 1; // fail
       |         ^             
       = note: inside function `main`
-tests/invalid/sema/duplicate_variable.err.ri:7:9: error: variable `x` has the same name as an argument
+tests/invalid/sema/duplicate_variable.err.ri:6:9: error: duplicate constant `b`
       | 
-    7 |     var x = 1; // fail
+    6 |     val b = 1; // fail
+      |         ^             
+      = note: inside function `main`
+tests/invalid/sema/duplicate_variable.err.ri:10:5: error: duplicate constant `X`
+      | 
+   10 | val X = 1; // fail
+      |     ^             
+      = note: inside module `sema`
+tests/invalid/sema/duplicate_variable.err.ri:13:9: error: variable `x` has the same name as an argument
+      | 
+   13 |     var x = 1; // fail
       |         ^             
       = note: inside function `function`
-tests/invalid/sema/duplicate_variable.err.ri:11:13: error: duplicate variable `b`
+tests/invalid/sema/duplicate_variable.err.ri:17:13: error: duplicate variable `b`
       | 
-   11 |         var b = 1; // fail
+   17 |         var b = 1; // fail
       |             ^             
       = note: inside function `function`
-error: could not compile `sema` module, aborting due to 3 previous errors
+error: could not compile `sema` module, aborting due to 5 previous errors

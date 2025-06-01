@@ -88,14 +88,14 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 
 	p.tags = p.parse_tags()
 
-	// module stmts: fns, consts, vars, etc.
+	// module stmts: fns, vars, etc.
 	is_pub := !p.inside_local_scope && p.accept(.kw_pub)
 	mut stmt := ast.empty_stmt(p.tok.pos)
 	match p.tok.kind {
 		.kw_fn {
 			stmt = p.parse_fn_stmt(is_pub)
 		}
-		.kw_var {
+		.kw_var, .kw_val {
 			stmt = p.parse_var_stmt(is_pub)
 		}
 		.semicolon {
@@ -195,8 +195,11 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 	}
 }
 
-fn (mut p Parser) parse_var_stmt(is_pub bool) ast.LetStmt {
-	p.expect(.kw_var)
+fn (mut p Parser) parse_var_stmt(is_pub bool) ast.VarStmt {
+	is_val := p.accept(.kw_val)
+	if !is_val {
+		p.expect(.kw_var)
+	}
 	mut lefts := []ast.Variable{}
 	for {
 		mut left_pos := p.tok.pos
@@ -211,6 +214,7 @@ fn (mut p Parser) parse_var_stmt(is_pub bool) ast.LetStmt {
 			name:     name
 			is_local: p.inside_local_scope
 			is_pub:   is_pub
+			is_val:   is_val
 			type:     type
 			pos:      left_pos
 		}
@@ -221,7 +225,7 @@ fn (mut p Parser) parse_var_stmt(is_pub bool) ast.LetStmt {
 	p.expect(.assign)
 	right := p.parse_expr()
 	p.expect_semicolon = true
-	return ast.LetStmt{
+	return ast.VarStmt{
 		tags:   p.tags
 		lefts:  lefts
 		right:  right
@@ -232,7 +236,7 @@ fn (mut p Parser) parse_var_stmt(is_pub bool) ast.LetStmt {
 fn (mut p Parser) parse_while_stmt() ast.WhileStmt {
 	p.expect(.kw_while)
 	p.expect(.lparen)
-	mut init_stmt := ?ast.LetStmt(none)
+	mut init_stmt := ?ast.VarStmt(none)
 	if p.tok.kind == .kw_var {
 		init_stmt = p.parse_var_stmt(false)
 		p.expect(.semicolon)
