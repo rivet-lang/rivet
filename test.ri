@@ -4,8 +4,8 @@ fn printf(s: *uint8);
 val AGE = 2004;
 val MAGIC = 0xA2BFF;
 
+#[inline(always: true, always: true)]
 fn main() {
     var x = 1;
-    if (x != 1):
-        return;
+    if (x != 1): return;
 }

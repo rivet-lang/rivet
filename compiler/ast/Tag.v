@@ -20,7 +20,17 @@ mut:
 	tags []Tag
 }
 
-pub fn (mut tags Tags) add(name string, args []TagArg) {
+pub fn (mut tags Tags) add(name string, args []TagArg) ! {
+	if _ := tags.find(name) {
+		return error('duplicate tag `${name}`')
+	}
+	for arg in args {
+		if arg.name != none {
+			if args.count(it.name or { '' } == arg.name) != 1 {
+				return error('`${name}` tag has duplicate `${arg.name}` argument')
+			}
+		}
+	}
 	tags.tags << Tag{name, args}
 }
 

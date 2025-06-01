@@ -4,31 +4,38 @@
 module parser
 
 import compiler.ast
+import compiler.context
 
 fn (mut p Parser) parse_tags() ast.Tags {
 	mut tags := ast.Tags{}
 
 	for p.accept(.hash) {
 		p.expect(.lbracket)
-		name := p.parse_ident()
-		mut args := []ast.TagArg{}
-		if p.accept(.lparen) {
-			for {
-				mut arg_name := ?string(none)
-				if p.tok.kind == .ident && p.next_tok.kind == .colon {
-					arg_name = p.tok.lit
-					p.advance(2)
+		for {
+			name_pos := p.tok.pos
+			name := p.parse_ident()
+			mut args := []ast.TagArg{}
+			if p.accept(.lparen) {
+				for {
+					mut arg_name := ?string(none)
+					if p.tok.kind == .ident && p.next_tok.kind == .colon {
+						arg_name = p.tok.lit
+						p.advance(2)
+					}
+					arg_value := p.parse_expr()
+					args << ast.TagArg{arg_name, arg_value}
+					if !p.accept(.comma) || p.should_abort() {
+						break
+					}
 				}
-				arg_value := p.parse_expr()
-				args << ast.TagArg{arg_name, arg_value}
-				if !p.accept(.comma) || p.should_abort() {
-					break
-				}
+				p.expect(.rparen)
 			}
-			p.expect(.rparen)
+			tags.add(name, args) or { context.error(err.msg(), name_pos + p.prev_tok.pos) }
+			if !p.accept(.semicolon) {
+				break
+			}
 		}
 		p.expect(.rbracket)
-		tags.add(name, args)
 	}
 
 	return tags

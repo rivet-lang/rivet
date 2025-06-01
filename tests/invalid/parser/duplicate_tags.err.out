@@ -1,0 +1,13 @@
+tests/invalid/parser/duplicate_tags.err.ri:1:10: error: duplicate tag `unsafe`
+      | 
+    1 | #[unsafe; unsafe]
+      |          ^~~~~~  
+tests/invalid/parser/duplicate_tags.err.ri:5:3: error: duplicate tag `unsafe`
+      | 
+    5 | #[unsafe] // fail
+      |   ^~~~~~         
+tests/invalid/parser/duplicate_tags.err.ri:8:3: error: `c_extern` tag has duplicate `link_name` argument
+      | 
+    8 | #[c_extern(link_name: "", link_name: "")]
+      |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+error: could not compile `parser` module, aborting due to 3 previous errors

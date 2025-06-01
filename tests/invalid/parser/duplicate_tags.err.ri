@@ -1,0 +1,9 @@
+#[unsafe; unsafe]
+fn main() {}
+
+#[unsafe]
+#[unsafe] // fail
+fn another() {}
+
+#[c_extern(link_name: "", link_name: "")]
+fn duplicate_arg();
