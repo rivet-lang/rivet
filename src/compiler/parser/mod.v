@@ -10,7 +10,7 @@ import compiler.token.tokenizer
 
 pub struct Parser {
 mut:
-	ctx &context.CContext
+	ctx &context.Context
 
 	tokenizer tokenizer.Tokenizer
 	prev_tok  token.Token
@@ -29,7 +29,7 @@ mut:
 }
 
 @[inline]
-pub fn new(ctx &context.CContext) &Parser {
+pub fn new(ctx &context.Context) &Parser {
 	return &Parser{
 		ctx: ctx
 	}

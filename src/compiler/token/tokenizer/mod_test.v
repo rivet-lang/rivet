@@ -51,7 +51,7 @@ const expected_tokens = [
 ]
 
 fn test_tokenizer_next() {
-	mut c_ctx := &context.CContext{}
+	mut c_ctx := &context.Context{}
 	context.push(c_ctx)
 	defer { context.pop() }
 

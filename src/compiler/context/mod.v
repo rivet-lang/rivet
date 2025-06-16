@@ -7,24 +7,24 @@ module context
 import term
 import compiler.ast
 
-__global stack = []&CContext{}
+__global stack = []&Context{}
 
-pub fn push(ctx &CContext) {
+pub fn push(ctx &Context) {
 	unsafe {
 		stack << ctx
 	}
 }
 
-pub fn get() &CContext {
+pub fn get() &Context {
 	if stack == [] {
-		panic('context.get: empty CContext stack')
+		panic('context.get: empty Context stack')
 	}
 	return stack.last()
 }
 
 pub fn pop() {
 	if stack == [] {
-		panic('context.pop: empty CContext stack')
+		panic('context.pop: empty Context stack')
 	}
 	unsafe {
 		stack.pop()
@@ -32,7 +32,7 @@ pub fn pop() {
 }
 
 @[heap]
-pub struct CContext {
+pub struct Context {
 pub mut:
 	options Options
 	report  Report
@@ -68,12 +68,12 @@ pub mut:
 	rune_type ast.Type
 }
 
-pub fn (mut ctx CContext) load_builtin_symbols() {
+pub fn (mut ctx Context) load_builtin_symbols() {
 	ctx.load_universe()
 	ctx.load_primitive_types()
 }
 
-pub fn (mut ctx CContext) load_universe() {
+pub fn (mut ctx Context) load_universe() {
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'i8'
 		kind: .i8
@@ -135,7 +135,7 @@ pub fn (mut ctx CContext) load_universe() {
 	}) or { ic_error(err.msg()) }
 }
 
-pub fn (mut ctx CContext) load_primitive_types() {
+pub fn (mut ctx Context) load_primitive_types() {
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
 	ctx.none_type = ast.NoneType{}
@@ -188,17 +188,17 @@ pub fn (mut ctx CContext) load_primitive_types() {
 }
 
 @[inline]
-pub fn (ctx &CContext) code_has_errors() bool {
+pub fn (ctx &Context) code_has_errors() bool {
 	return ctx.report.errors > 0
 }
 
-pub fn (ctx &CContext) log(msg string) {
+pub fn (ctx &Context) log(msg string) {
 	if ctx.options.is_verbose {
 		println(term.bold(term.green('>> ')) + msg)
 	}
 }
 
-pub fn (ctx &CContext) abort_if_errors() {
+pub fn (ctx &Context) abort_if_errors() {
 	if ctx.code_has_errors() {
 		reason := if ctx.report.errors == 1 {
 			'aborting due to previous error'

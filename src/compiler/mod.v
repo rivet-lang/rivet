@@ -8,7 +8,7 @@ import compiler.parser
 import compiler.sema
 
 pub fn run(args []string) {
-	mut ctx := &context.CContext{}
+	mut ctx := &context.Context{}
 
 	context.push(ctx)
 	defer { context.pop() }

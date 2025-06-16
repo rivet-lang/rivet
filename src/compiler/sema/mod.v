@@ -23,7 +23,7 @@ pub:
 	// AST for each imported file.
 	parser &parser.Parser
 mut:
-	ctx   &context.CContext = unsafe { nil }
+	ctx   &context.Context = unsafe { nil }
 	stage Stage
 
 	file  &ast.File = unsafe { nil }
@@ -31,7 +31,7 @@ mut:
 	scope &ast.Scope = unsafe { nil }
 }
 
-pub fn (mut sema Sema) analyze(ctx &context.CContext) {
+pub fn (mut sema Sema) analyze(ctx &context.Context) {
 	sema.ctx = ctx
 	sema.ctx.log(@METHOD)
 	sema.ctx.load_builtin_symbols()

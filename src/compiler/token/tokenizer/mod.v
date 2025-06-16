@@ -20,7 +20,7 @@ fn is_new_line(ch u8) bool {
 
 @[minify]
 pub struct Tokenizer {
-	ctx &context.CContext = unsafe { nil }
+	ctx &context.Context = unsafe { nil }
 mut:
 	file        &ast.File = unsafe { nil }
 	text        string
@@ -36,7 +36,7 @@ mut:
 	tidx       int
 }
 
-pub fn from_file(ctx &context.CContext, file &ast.File) &Tokenizer {
+pub fn from_file(ctx &context.Context, file &ast.File) &Tokenizer {
 	mut t := &Tokenizer{
 		ctx:        ctx
 		file:       file
@@ -47,7 +47,7 @@ pub fn from_file(ctx &context.CContext, file &ast.File) &Tokenizer {
 	return t
 }
 
-pub fn from_memory(ctx &context.CContext, text string) &Tokenizer {
+pub fn from_memory(ctx &context.Context, text string) &Tokenizer {
 	mut t := &Tokenizer{
 		ctx:        ctx
 		file:       ast.File.from_memory(text)
