@@ -94,12 +94,12 @@ pub enum Kind {
 	kw_import
 	kw_in
 	kw_is
+	kw_let
 	kw_match
 	kw_pub
 	kw_return
 	kw_struct
 	kw_trait
-	kw_val
 	kw_var
 	kw_while
 	keyword_end
@@ -194,12 +194,12 @@ fn build_token_str() []string {
 	s[Kind.kw_import] = 'import'
 	s[Kind.kw_in] = 'in'
 	s[Kind.kw_is] = 'is'
+	s[Kind.kw_let] = 'let'
 	s[Kind.kw_match] = 'match'
 	s[Kind.kw_pub] = 'pub'
 	s[Kind.kw_return] = 'return'
 	s[Kind.kw_struct] = 'struct'
 	s[Kind.kw_trait] = 'trait'
-	s[Kind.kw_val] = 'val'
 	s[Kind.kw_var] = 'var'
 	s[Kind.kw_while] = 'while'
 

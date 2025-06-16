@@ -5,12 +5,12 @@ tests/invalid/sema/duplicate_variable.err.ri:3:9: error: duplicate variable `a`
       = note: inside function `main`
 tests/invalid/sema/duplicate_variable.err.ri:6:9: error: duplicate constant `b`
       | 
-    6 |     val b = 1; // fail
+    6 |     let b = 1; // fail
       |         ^             
       = note: inside function `main`
 tests/invalid/sema/duplicate_variable.err.ri:10:5: error: duplicate constant `X`
       | 
-   10 | val X = 1; // fail
+   10 | let X = 1; // fail
       |     ^             
       = note: inside module `sema`
 tests/invalid/sema/duplicate_variable.err.ri:13:9: error: variable `x` has the same name as an argument

@@ -3,7 +3,7 @@ fn other_fn() {
 }
 
 var x = 1;
-val ABC = 1; // immutable
+let ABC = 1; // immutable
 
 fn main() {
     var y = 1;

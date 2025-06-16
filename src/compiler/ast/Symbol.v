@@ -17,7 +17,7 @@ pub fn (sym Symbol) type_of() string {
 			if sym.is_arg {
 				'argument'
 			} else {
-				if sym.is_val {
+				if sym.is_let {
 					'constant'
 				} else {
 					'variable'
@@ -94,7 +94,7 @@ pub struct Variable {
 pub:
 	name     string
 	is_local bool
-	is_val   bool
+	is_let   bool
 	is_pub   bool
 	is_arg   bool
 	is_ref   bool

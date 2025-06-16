@@ -95,7 +95,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.kw_fn {
 			stmt = p.parse_fn_stmt(is_pub)
 		}
-		.kw_var, .kw_val {
+		.kw_var, .kw_let {
 			stmt = p.parse_var_stmt(is_pub)
 		}
 		.semicolon {
@@ -196,8 +196,8 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 }
 
 fn (mut p Parser) parse_var_stmt(is_pub bool) ast.VarStmt {
-	is_val := p.accept(.kw_val)
-	if !is_val {
+	is_let := p.accept(.kw_let)
+	if !is_let {
 		p.expect(.kw_var)
 	}
 	mut lefts := []ast.Variable{}
@@ -214,7 +214,7 @@ fn (mut p Parser) parse_var_stmt(is_pub bool) ast.VarStmt {
 			name:     name
 			is_local: p.inside_local_scope
 			is_pub:   is_pub
-			is_val:   is_val
+			is_let:   is_let
 			type:     type
 			pos:      left_pos
 		}
