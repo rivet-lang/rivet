@@ -30,9 +30,7 @@ fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 }
 
 fn (mut sema Sema) sr_var_stmt(mut stmt ast.VarStmt) {
-	for var in stmt.lefts {
-		sema.scope.add_symbol(var, lookup: var.is_local) or {
-			context.error(err.msg(), var.pos, context.note('inside ${sema.sym.type_of()} `${sema.sym.name}`'))
-		}
+	sema.scope.add_symbol(stmt.left, lookup: stmt.left.is_local) or {
+		context.error(err.msg(), stmt.left.pos, context.note('inside ${sema.sym.type_of()} `${sema.sym.name}`'))
 	}
 }

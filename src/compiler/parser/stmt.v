@@ -200,34 +200,28 @@ fn (mut p Parser) parse_var_stmt(is_pub bool) ast.VarStmt {
 	if !is_let {
 		p.expect(.kw_var)
 	}
-	mut lefts := []ast.Variable{}
-	for {
-		mut left_pos := p.tok.pos
-		name := p.parse_ident()
-		type := if p.accept(.colon) {
-			p.parse_type()
-		} else {
-			p.ctx.void_type
-		}
-		left_pos += p.prev_tok.pos
-		lefts << ast.Variable{
-			name:     name
-			is_local: p.inside_local_scope
-			is_pub:   is_pub
-			is_let:   is_let
-			type:     type
-			pos:      left_pos
-		}
-		if !p.accept(.comma) || p.should_abort() {
-			break
-		}
+	mut left_pos := p.tok.pos
+	name := p.parse_ident()
+	type := if p.accept(.colon) {
+		p.parse_type()
+	} else {
+		p.ctx.void_type
+	}
+	left_pos += p.prev_tok.pos
+	left := ast.Variable{
+		name:     name
+		is_local: p.inside_local_scope
+		is_pub:   is_pub
+		is_let:   is_let
+		type:     type
+		pos:      left_pos
 	}
 	p.expect(.assign)
 	right := p.parse_expr()
 	p.expect_semicolon = true
 	return ast.VarStmt{
 		tags:   p.tags
-		lefts:  lefts
+		left:   left
 		right:  right
 		is_pub: is_pub
 	}
@@ -237,7 +231,7 @@ fn (mut p Parser) parse_while_stmt() ast.WhileStmt {
 	p.expect(.kw_while)
 	p.expect(.lparen)
 	mut init_stmt := ?ast.VarStmt(none)
-	if p.tok.kind == .kw_var {
+	if p.tok.kind in [.kw_var, .kw_let] {
 		init_stmt = p.parse_var_stmt(false)
 		p.expect(.semicolon)
 	}

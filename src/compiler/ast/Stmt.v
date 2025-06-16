@@ -61,7 +61,7 @@ pub mut:
 pub struct VarStmt {
 pub:
 	tags   Tags
-	lefts  []Variable
+	left   Variable
 	right  Expr
 	is_pub bool
 }

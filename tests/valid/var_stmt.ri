@@ -7,7 +7,7 @@ let ABC = 1; // immutable
 
 fn main() {
     var y = 1;
-    var abc, def = (11 + 15) / 99;
+    var abc = (11 + 15) / 99;
 
     fn inside() {
         var inside_var = false;
