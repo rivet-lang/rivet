@@ -4,6 +4,7 @@
 @[has_globals]
 module context
 
+import term
 import compiler.ast
 
 __global stack = []&CContext{}
@@ -189,6 +190,12 @@ pub fn (mut ctx CContext) load_primitive_types() {
 @[inline]
 pub fn (ctx &CContext) code_has_errors() bool {
 	return ctx.report.errors > 0
+}
+
+pub fn (ctx &CContext) log(msg string) {
+	if ctx.options.is_verbose {
+		println(term.bold(term.green('>> ')) + msg)
+	}
 }
 
 pub fn (ctx &CContext) abort_if_errors() {

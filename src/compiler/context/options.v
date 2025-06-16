@@ -18,6 +18,8 @@ pub mut:
 
 	show_help    bool @[long: help; short: h; xdoc: 'Print help information.']
 	check_syntax bool @[xdoc: 'Only parse the files, but then stop.']
+
+	is_verbose bool @[long: verbose; short: v; xdoc: 'Enable verbosity in the compiler while compiling.']
 }
 
 @[inline]

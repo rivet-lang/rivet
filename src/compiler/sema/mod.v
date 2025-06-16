@@ -33,10 +33,12 @@ mut:
 
 pub fn (mut sema Sema) analyze(ctx &context.CContext) {
 	sema.ctx = ctx
+	sema.ctx.log(@METHOD)
 	sema.ctx.load_builtin_symbols()
 
 	for i in int(Stage.quiet) + 1 .. int(Stage._end_) {
 		sema.stage = unsafe { Stage(i) }
+		sema.ctx.log('>> Stage: ${sema.stage}')
 		for mut file in sema.ctx.files {
 			sema.check_file(mut *file)
 		}

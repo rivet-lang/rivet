@@ -37,6 +37,7 @@ pub fn new(ctx &context.CContext) &Parser {
 
 @[inline]
 pub fn (mut p Parser) parse() {
+	p.ctx.log(@METHOD)
 	for i, input in p.ctx.options.input_files {
 		p.inside_root_file = i == 0
 		if file := p.parse_file(input, p.ctx.options.input_dir) {
