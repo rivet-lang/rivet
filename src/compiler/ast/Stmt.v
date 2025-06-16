@@ -64,6 +64,7 @@ pub:
 	left   Variable
 	right  Expr
 	is_pub bool
+	pos    FilePos
 }
 
 pub enum DeferMode {

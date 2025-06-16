@@ -3,7 +3,15 @@
 
 module ast
 
-pub type Type = VoidType | NoneType | NeverType | UnresolvedType | SimpleType | PointerType
+pub type Type = NoType
+	| VoidType
+	| NoneType
+	| NeverType
+	| UnresolvedType
+	| SimpleType
+	| PointerType
+
+pub struct NoType {}
 
 pub struct UnresolvedType {
 pub:

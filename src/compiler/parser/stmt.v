@@ -196,34 +196,40 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 }
 
 fn (mut p Parser) parse_var_stmt(is_pub bool) ast.VarStmt {
+	mut left_pos := p.tok.pos
 	is_let := p.accept(.kw_let)
 	if !is_let {
 		p.expect(.kw_var)
 	}
-	mut left_pos := p.tok.pos
+	name_pos := p.tok.pos
 	name := p.parse_ident()
-	type := if p.accept(.colon) {
+	mut type := if p.accept(.colon) {
 		p.parse_type()
 	} else {
 		p.ctx.void_type
 	}
-	left_pos += p.prev_tok.pos
 	left := ast.Variable{
 		name:     name
 		is_local: p.inside_local_scope
 		is_pub:   is_pub
 		is_let:   is_let
 		type:     type
-		pos:      left_pos
+		pos:      name_pos
 	}
-	p.expect(.assign)
-	right := p.parse_expr()
+	mut right := ast.empty_expr
+	if p.accept(.assign) {
+		right = p.parse_expr()
+		left_pos += p.prev_tok.pos
+	} else {
+		type = ast.Type(ast.NoType{})
+	}
 	p.expect_semicolon = true
 	return ast.VarStmt{
 		tags:   p.tags
 		left:   left
 		right:  right
 		is_pub: is_pub
+		pos:    left_pos
 	}
 }
 

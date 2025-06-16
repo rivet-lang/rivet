@@ -9,8 +9,9 @@ import compiler.context
 
 enum Stage {
 	quiet
-	symbol_reg    // sr_
+	symbol_reg    // srg_
 	module_import // mi_
+	symbol_res
 	type_checking // tc_
 	_end_
 }
