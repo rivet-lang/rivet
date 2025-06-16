@@ -3,9 +3,8 @@
 
 module main
 
-import os
 import compiler
 
 fn main() {
-	compiler.run(os.args[1..])
+	compiler.run(arguments()[1..])
 }
