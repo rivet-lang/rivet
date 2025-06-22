@@ -95,8 +95,8 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.kw_fn {
 			stmt = p.parse_fn_stmt(is_pub)
 		}
-		.kw_var, .kw_let {
-			stmt = p.parse_var_stmt(is_pub)
+		.kw_let {
+			stmt = p.parse_let_stmt(is_pub)
 		}
 		.semicolon {
 			// an orphaned semicolon indicates that `p.stmt()` is not properly
@@ -156,7 +156,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 		for {
 			mut arg_pos := p.tok.pos
 			arg_is_ref := p.accept(.amp)
-			arg_is_var := p.accept(.kw_var)
+			arg_is_mut := p.accept(.kw_mut)
 			arg_name := p.parse_ident()
 			arg_name_pos := p.prev_tok.pos
 			p.expect(.colon)
@@ -166,7 +166,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 				arg_default_expr = p.parse_expr()
 			}
 			arg_pos += p.prev_tok.pos
-			args << ast.FnArg{arg_name, arg_name_pos, arg_type, arg_default_expr, arg_is_var, arg_is_ref, arg_pos}
+			args << ast.FnArg{arg_name, arg_name_pos, arg_type, arg_default_expr, arg_is_mut, arg_is_ref, arg_pos}
 			if !p.accept(.comma) || p.should_abort() {
 				break
 			}
@@ -195,38 +195,40 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 	}
 }
 
-fn (mut p Parser) parse_var_stmt(is_pub bool) ast.VarStmt {
+fn (mut p Parser) parse_let_stmt(is_pub bool) ast.LetStmt {
 	mut left_pos := p.tok.pos
-	is_let := p.accept(.kw_let)
-	if !is_let {
-		p.expect(.kw_var)
-	}
-	name_pos := p.tok.pos
-	name := p.parse_ident()
-	mut type := if p.accept(.colon) {
-		p.parse_type()
-	} else {
-		p.ctx.void_type
-	}
-	left := ast.Variable{
-		name:     name
-		is_local: p.inside_local_scope
-		is_pub:   is_pub
-		is_let:   is_let
-		type:     type
-		pos:      name_pos
+	p.expect(.kw_let)
+	mut lefts := []ast.Variable{}
+	for {
+		is_mut := p.accept(.kw_mut)
+		name_pos := p.tok.pos
+		name := p.parse_ident()
+		mut type := if p.accept(.colon) {
+			p.parse_type()
+		} else {
+			p.ctx.no_type
+		}
+		lefts << ast.Variable{
+			name:     name
+			is_local: p.inside_local_scope
+			is_pub:   is_pub
+			is_mut:   is_mut
+			type:     type
+			pos:      name_pos
+		}
+		left_pos += p.prev_tok.pos
+		if !p.accept(.comma) {
+			break
+		}
 	}
 	mut right := ast.empty_expr
 	if p.accept(.assign) {
 		right = p.parse_expr()
-		left_pos += p.prev_tok.pos
-	} else {
-		type = ast.Type(ast.NoType{})
 	}
 	p.expect_semicolon = true
-	return ast.VarStmt{
+	return ast.LetStmt{
 		tags:   p.tags
-		left:   left
+		lefts:  lefts
 		right:  right
 		is_pub: is_pub
 		pos:    left_pos
@@ -236,9 +238,9 @@ fn (mut p Parser) parse_var_stmt(is_pub bool) ast.VarStmt {
 fn (mut p Parser) parse_while_stmt() ast.WhileStmt {
 	p.expect(.kw_while)
 	p.expect(.lparen)
-	mut init_stmt := ?ast.VarStmt(none)
-	if p.tok.kind in [.kw_var, .kw_let] {
-		init_stmt = p.parse_var_stmt(false)
+	mut init_stmt := ?ast.LetStmt(none)
+	if p.tok.kind == .kw_let {
+		init_stmt = p.parse_let_stmt(false)
 		p.expect(.semicolon)
 	}
 	cond := p.parse_expr()

@@ -1,6 +1,6 @@
 fn main() {
-    var a = 1;
-    var a = 1; // fail
+    let a = 1;
+    let a = 1; // fail
 
     let b = 1;
     let b = 1; // fail
@@ -10,10 +10,10 @@ let X = 1;
 let X = 1; // fail
 
 fn function(x: int) {
-    var x = 1; // fail
+    let x = 1; // fail
 
-    var b = 1;
+    let b = 1;
     {
-        var b = 1; // fail
+        let b = 1; // fail
     }
 }

@@ -1,11 +1,11 @@
 fn main() {
-    var b = if (true) {
+    let b = if (true) {
         y
     } else {
         x
     };
 
-    var add = 0;
+    let add = 0;
     if (1 + 2 == 3) {
         add = 1;
     } else {
@@ -15,8 +15,8 @@ fn main() {
     if (true): x,
     else: y;
 
-    var test0 = if (true): x,
-    else: y;
+    let test0 = if (true): x,
+        else: y;
 
     if (1 == 1): true;
 }

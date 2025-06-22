@@ -1,0 +1,23 @@
+fn other_fn() {
+    let bc = true;
+}
+
+let mut x = 1;
+let ABC = 1; // immutable
+
+fn main() {
+    let j = 1;
+    let abc = (11 + 15) / 99;
+
+    fn inside() {
+        let inside_var = false;
+    }
+
+    let a9; // initted later
+    a9 = 1;
+
+    let some;
+    some = "";
+
+    let t, mut y, z;
+}

@@ -2,8 +2,8 @@ fn main() {}
 
 fn default_argument(x: int = 100) {}
 
-fn mutable_argument(var x: int) {}
+fn mutable_argument(mut x: int) {}
 
 fn ref_argument(&x: int) {}
 
-fn mutable_ref_argument(&var x: int) {}
+fn mutable_ref_argument(&mut x: int) {}

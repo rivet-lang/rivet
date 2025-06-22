@@ -3,7 +3,7 @@
 
 module ast
 
-pub type Stmt = EmptyStmt | FnStmt | ExprStmt | VarStmt | WhileStmt | DeferStmt
+pub type Stmt = EmptyStmt | FnStmt | ExprStmt | LetStmt | WhileStmt | DeferStmt
 
 pub struct EmptyStmt {
 pub:
@@ -43,7 +43,7 @@ pub:
 	name_pos     FilePos
 	type         Type
 	default_expr ?Expr
-	is_var       bool
+	is_mut       bool
 	is_ref       bool
 	pos          FilePos
 }
@@ -52,16 +52,16 @@ pub struct WhileStmt {
 pub:
 	tags Tags
 pub mut:
-	init_stmt     ?VarStmt
+	init_stmt     ?LetStmt
 	cond          Expr
 	continue_expr ?Expr
 	stmts         []Stmt
 }
 
-pub struct VarStmt {
+pub struct LetStmt {
 pub:
 	tags   Tags
-	left   Variable
+	lefts  []Variable
 	right  Expr
 	is_pub bool
 	pos    FilePos

@@ -45,6 +45,7 @@ pub mut:
 	// Types.
 	// NOTE: All of these types are initialized in the semantic analyzer,
 	// see `Sema.analyze`.
+	no_type    ast.Type
 	void_type  ast.Type
 	none_type  ast.Type
 	never_type ast.Type
@@ -136,6 +137,7 @@ pub fn (mut ctx Context) load_universe() {
 }
 
 pub fn (mut ctx Context) load_primitive_types() {
+	ctx.no_type = ast.NoType{}
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
 	ctx.none_type = ast.NoneType{}

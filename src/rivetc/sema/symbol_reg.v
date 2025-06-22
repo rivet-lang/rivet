@@ -21,7 +21,7 @@ fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 			name:     arg.name
 			is_local: true
 			is_arg:   true
-			is_let:   !arg.is_var
+			is_mut:   arg.is_mut
 			is_ref:   arg.is_ref
 			type:     arg.type
 		}) or { context.error(err.msg(), arg.pos, context.note('inside function `${stmt.name}`')) }
@@ -29,8 +29,10 @@ fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 	sema.stmts(mut stmt.stmts)
 }
 
-fn (mut sema Sema) sr_var_stmt(mut stmt ast.VarStmt) {
-	sema.scope.add_symbol(stmt.left, lookup: stmt.left.is_local) or {
-		context.error(err.msg(), stmt.left.pos, context.note('inside ${sema.sym.type_of()} `${sema.sym.name}`'))
+fn (mut sema Sema) sr_let_stmt(mut stmt ast.LetStmt) {
+	for mut left in stmt.lefts {
+		sema.scope.add_symbol(left, lookup: left.is_local) or {
+			context.error(err.msg(), left.pos, context.note('inside ${sema.sym.type_of()} `${sema.sym.name}`'))
+		}
 	}
 }
