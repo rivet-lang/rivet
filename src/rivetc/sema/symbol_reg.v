@@ -3,8 +3,8 @@
 
 module sema
 
-import compiler.ast
-import compiler.context
+import rivetc.ast
+import rivetc.context
 
 fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 	stmt.sym = &ast.Function{

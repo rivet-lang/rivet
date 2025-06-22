@@ -1,11 +1,11 @@
 // Copyright (C) 2024-present The Rivet programming language. Use of this source code
 // is governed by an MIT license that can be found in the LICENSE file.
 
-module compiler
+module rivetc
 
-import compiler.context
-import compiler.parser
-import compiler.sema
+import rivetc.context
+import rivetc.parser
+import rivetc.sema
 
 pub fn run(args []string) {
 	mut ctx := &context.Context{}

@@ -5,7 +5,7 @@ module context
 
 import term
 import strings
-import compiler.ast
+import rivetc.ast
 
 pub struct Report {
 mut:

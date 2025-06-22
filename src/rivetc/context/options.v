@@ -5,7 +5,7 @@ module context
 
 import os
 import flag
-import compiler.util
+import rivetc.util
 
 @[footer: 'The compiler expects an input, either file or directory (if directory, it must contain a file entry `src/main.ri`).']
 @[xdoc: 'The Rivet programming language compiler']

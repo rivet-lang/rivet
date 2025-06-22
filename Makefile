@@ -2,10 +2,10 @@
 # is governed by an MIT license that can be found in the LICENSE file.
 
 build:
-	v -o bin/rivetc src/rivetc
+	v -o bin/rivetc src/cmd
 
 test: build
-	v test src/compiler
+	v test src/cmd
 	v tests/run_tests.vsh
 
 fmt:

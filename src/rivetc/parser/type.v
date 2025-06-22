@@ -3,8 +3,8 @@
 
 module parser
 
-import compiler.ast
-import compiler.context as _
+import rivetc.ast
+import rivetc.context as _
 
 fn (mut p Parser) parse_type() ast.Type {
 	expr := p.parse_expr()

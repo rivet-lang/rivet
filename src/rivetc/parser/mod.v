@@ -3,10 +3,10 @@
 
 module parser
 
-import compiler.ast
-import compiler.context
-import compiler.token
-import compiler.token.tokenizer
+import rivetc.ast
+import rivetc.context
+import rivetc.token
+import rivetc.token.tokenizer
 
 pub struct Parser {
 mut:

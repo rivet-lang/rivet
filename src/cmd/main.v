@@ -3,8 +3,8 @@
 
 module main
 
-import compiler
+import rivetc
 
 fn main() {
-	compiler.run(arguments()[1..])
+	rivetc.run(arguments()[1..])
 }

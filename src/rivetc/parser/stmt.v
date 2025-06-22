@@ -3,8 +3,8 @@
 
 module parser
 
-import compiler.ast
-import compiler.context
+import rivetc.ast
+import rivetc.context
 
 // parses a list of statements that are enclosed in `{` `}`, it can also parse a
 // single-statement if the form `: <stmt>` is used.

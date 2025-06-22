@@ -3,8 +3,8 @@
 
 module tokenizer
 
-import compiler.util
-import compiler.context
+import rivetc.util
+import rivetc.context
 
 fn (mut t Tokenizer) read_ident() string {
 	start := t.pos

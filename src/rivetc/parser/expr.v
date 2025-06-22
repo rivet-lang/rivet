@@ -3,9 +3,9 @@
 
 module parser
 
-import compiler.ast
-import compiler.util
-import compiler.context
+import rivetc.ast
+import rivetc.util
+import rivetc.context
 
 fn (mut p Parser) parse_surrounded_expr() ast.Expr {
 	p.expect(.lparen)

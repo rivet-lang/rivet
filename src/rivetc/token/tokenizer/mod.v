@@ -3,10 +3,10 @@
 
 module tokenizer
 
-import compiler.ast
-import compiler.context
-import compiler.util
-import compiler.token { Token, lookup }
+import rivetc.ast
+import rivetc.context
+import rivetc.util
+import rivetc.token { Token, lookup }
 
 const lf = 10
 const cr = 13

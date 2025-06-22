@@ -1,8 +1,8 @@
 // Copyright (C) 2024-present The Rivet programming language. Use of this source code
 // is governed by an MIT license that can be found in the LICENSE file.
-import compiler.context
-import compiler.token
-import compiler.token.tokenizer
+import rivetc.context
+import rivetc.token
+import rivetc.token.tokenizer
 
 struct ExpectedToken {
 	kind token.Kind

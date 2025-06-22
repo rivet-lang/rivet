@@ -5,7 +5,7 @@
 module context
 
 import term
-import compiler.ast
+import rivetc.ast
 
 __global stack = []&Context{}
 

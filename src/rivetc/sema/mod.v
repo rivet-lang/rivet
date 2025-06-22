@@ -3,9 +3,9 @@
 
 module sema
 
-import compiler.ast
-import compiler.parser
-import compiler.context
+import rivetc.ast
+import rivetc.parser
+import rivetc.context
 
 enum Stage {
 	quiet

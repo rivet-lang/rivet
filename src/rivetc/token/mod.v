@@ -3,8 +3,8 @@
 
 module token
 
-import compiler.ast
-import compiler.context
+import rivetc.ast
+import rivetc.context
 
 @[minify]
 pub struct Token {

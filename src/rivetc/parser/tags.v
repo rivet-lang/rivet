@@ -3,8 +3,8 @@
 
 module parser
 
-import compiler.ast
-import compiler.context
+import rivetc.ast
+import rivetc.context
 
 fn (mut p Parser) parse_tags() ast.Tags {
 	mut tags := ast.Tags{}
