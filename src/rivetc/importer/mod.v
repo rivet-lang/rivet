@@ -21,6 +21,12 @@ pub:
 	files  []&ast.File
 }
 
+pub fn new(ctx &context.Context) &Importer {
+	return &Importer{
+		ctx: ctx
+	}
+}
+
 pub fn (mut imp Importer) import_root_pkg() ImportedMod {
 	return imp.import_module(imp.ctx.options.input, true)
 }
@@ -43,7 +49,7 @@ pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool) ImportedMo
 		mut f := ast.File.new(filename)
 		f.mod_name = mod_name
 		f.is_pkg = is_pkg
-		f.priority = match filename {
+		f.priority = match os.base(filename) {
 			'pkg.ri' { 2 }
 			'mod.ri' { 1 }
 			else { 0 }
@@ -65,9 +71,9 @@ pub fn get_mod_name(dir_name string) string {
 		_, mod_name, _ := os.split_path(dir_name)
 		return mod_name.all_before('.')
 	}
-	return if dir_name == '.' {
-		os.base(os.abs_path(dir_name))
+	return os.base(if dir_name == '.' {
+		os.abs_path(dir_name)
 	} else {
-		os.base(dir_name)
-	}
+		dir_name
+	})
 }

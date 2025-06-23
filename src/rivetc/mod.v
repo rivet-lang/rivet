@@ -16,9 +16,7 @@ pub fn run(args []string) {
 
 	ctx.options = context.parse_args(args)
 
-	mut imp := &importer.Importer{
-		ctx: ctx
-	}
+	mut imp := importer.new(ctx)
 	mut root_pkg := imp.import_root_pkg()
 	ctx.root_name = root_pkg.name
 
