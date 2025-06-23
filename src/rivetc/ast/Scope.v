@@ -37,7 +37,7 @@ pub:
 	lookup bool
 }
 
-pub fn (mut sc Scope) find_or_add_module(mod_name string) !Symbol {
+pub fn (mut sc Scope) find_or_add_module(mod_name string, is_pkg bool) !Symbol {
 	if existing_sym := sc.find(mod_name) {
 		if existing_sym is Module {
 			return existing_sym
@@ -45,7 +45,8 @@ pub fn (mut sc Scope) find_or_add_module(mod_name string) !Symbol {
 		return error('cannot register module `${mod_name}` because a ${existing_sym.type_of()} with that name exists')
 	}
 	mut sym := &Module{
-		name: mod_name
+		name:   mod_name
+		is_pkg: is_pkg
 	}
 	sym.scope = Scope.new(sc, Symbol(sym))
 	sc.syms << sym

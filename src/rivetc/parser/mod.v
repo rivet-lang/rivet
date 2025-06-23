@@ -4,8 +4,9 @@
 module parser
 
 import rivetc.ast
-import rivetc.context
 import rivetc.token
+import rivetc.context
+import rivetc.importer
 import rivetc.token.tokenizer
 
 pub struct Parser {
@@ -20,12 +21,12 @@ mut:
 	file &ast.File = unsafe { nil }
 	tags ast.Tags
 
-	inside_root_file   bool
 	inside_expr        bool
 	inside_block_expr  bool
 	inside_local_scope bool
 	expect_semicolon   bool
-	abort              bool
+
+	abort bool
 }
 
 @[inline]
@@ -36,32 +37,27 @@ pub fn new(ctx &context.Context) &Parser {
 }
 
 @[inline]
-pub fn (mut p Parser) parse() {
+pub fn (mut p Parser) parse(mut imp importer.ImportedMod) {
 	p.ctx.log(@METHOD)
-	for i, input in p.ctx.options.input_files {
-		p.inside_root_file = i == 0
-		if file := p.parse_file(input, p.ctx.options.input_dir) {
-			p.ctx.files << file
+	for mut file in imp.files {
+		if p.parse_file(mut *file) {
+			p.ctx.files << *file
 		}
 	}
 }
 
-fn (mut p Parser) parse_file(filename string, root_dir string) ?&ast.File {
-	p.file = ast.File.new(filename)
-	p.file.set_mod_name(root_dir)
-	if p.inside_root_file && isnil(p.ctx.root_file) {
-		p.ctx.root_file = p.file
-	}
+fn (mut p Parser) parse_file(mut file ast.File) bool {
+	p.file = file
 
 	p.tokenizer = tokenizer.from_file(p.ctx, p.file)
 	if p.file.errors > 0 {
 		// if the tokenizer found errors in the file, let's skip it
-		return none
+		return false
 	}
 
 	p.advance(2)
 	if p.tok.kind == .eof {
-		return p.file
+		return true
 	}
 
 	for {
@@ -70,8 +66,7 @@ fn (mut p Parser) parse_file(filename string, root_dir string) ?&ast.File {
 			break
 		}
 	}
-
-	return p.file
+	return true
 }
 
 fn (mut p Parser) next() {

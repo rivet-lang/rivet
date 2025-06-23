@@ -6,33 +6,43 @@ module sema
 import rivetc.ast
 import rivetc.parser
 import rivetc.context
+import rivetc.importer
 
 enum Stage {
 	quiet
-	symbol_reg    // srg_
-	module_import // mi_
+	symbol_reg // srg_
 	symbol_res
 	type_checking // tc_
 	_end_
 }
 
 pub struct Sema {
-pub:
-	// Since modules can be imported using the `import` statement,
-	// we need access to the parser to generate the corresponding
-	// AST for each imported file.
-	parser &parser.Parser
 mut:
 	ctx   &context.Context = unsafe { nil }
 	stage Stage
+
+	// Since modules can be imported using the `mod` expression,
+	// we need access to the parser to generate the corresponding
+	// AST for each imported file.
+	parser &parser.Parser     = unsafe { nil }
+	imp    &importer.Importer = unsafe { nil }
 
 	file  &ast.File = unsafe { nil }
 	sym   ast.Symbol
 	scope &ast.Scope = unsafe { nil }
 }
 
-pub fn (mut sema Sema) analyze(ctx &context.Context) {
-	sema.ctx = ctx
+@[inline]
+pub fn new(ctx &context.Context) &Sema {
+	return &Sema{
+		ctx: ctx
+	}
+}
+
+pub fn (mut sema Sema) analyze(p &parser.Parser, imp &importer.Importer) {
+	sema.parser = unsafe { p }
+	sema.imp = unsafe { imp }
+
 	sema.ctx.log(@METHOD)
 	sema.ctx.load_builtin_symbols()
 
@@ -49,7 +59,7 @@ fn (mut sema Sema) check_file(mut file ast.File) {
 	sema.file = file
 
 	if sema.stage == .symbol_reg {
-		sema.sym = sema.ctx.universe.find_or_add_module(file.mod_name) or {
+		sema.sym = sema.ctx.universe.find_or_add_module(file.mod_name, file.is_pkg) or {
 			context.ic_error(err.msg())
 		}
 	}

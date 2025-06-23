@@ -7,7 +7,10 @@ import os
 
 @[inline]
 pub fn get_rivet_files(from string) []string {
-	return os.walk_ext(from, '.ri')
+	if os.is_file(from) {
+		return [from]
+	}
+	return os.ls(from) or { [] }.filter(it.ends_with('.ri'))
 }
 
 @[inline]

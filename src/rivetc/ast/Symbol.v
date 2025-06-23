@@ -16,12 +16,10 @@ pub fn (sym Symbol) type_of() string {
 		Variable {
 			if sym.is_arg {
 				'argument'
+			} else if sym.is_mut {
+				'variable'
 			} else {
-				if sym.is_mut {
-					'variable'
-				} else {
-					'constant'
-				}
+				'constant'
 			}
 		}
 		TypeSym {
@@ -32,7 +30,8 @@ pub fn (sym Symbol) type_of() string {
 
 pub struct Module {
 pub:
-	name string
+	name   string
+	is_pkg bool
 pub mut:
 	scope &Scope = unsafe { nil }
 }

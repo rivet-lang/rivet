@@ -47,9 +47,13 @@ for i, file in files {
 	} else {
 		println(term.bold(term.red(' .. FAILED')))
 		failed++
-		if is_err_out && out_is_diff {
+		if is_err_out {
 			println('Expected:\n${out_content}\n')
-			println('Got:\n${res_out}')
+			if out_is_diff {
+				println('Got:\n${res_out}')
+			} else if res_out == '' {
+				println('Got empty result')
+			}
 		} else {
 			println('Expected clean compilation, got:\n${res_out}')
 		}

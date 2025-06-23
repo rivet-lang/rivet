@@ -37,10 +37,14 @@ pub mut:
 	options Options
 	report  Report
 
+	// Universe is the main scope of all symbols that both the user and the compiler define.
 	universe &ast.Scope = ast.Scope.new(unsafe { nil }, none)
 
-	root_file &ast.File = unsafe { nil }
-	files     []&ast.File
+	// Name of the main package with which the compiler was called.
+	root_name string
+
+	// Rivet source code files, sorted by package.
+	files []&ast.File
 
 	// Types.
 	// NOTE: All of these types are initialized in the semantic analyzer,
@@ -207,6 +211,6 @@ pub fn (ctx &Context) abort_if_errors() {
 		} else {
 			'aborting due to ${ctx.report.errors} previous errors'
 		}
-		ic_error('could not compile `${ctx.root_file.mod_name}` module, ${reason}')
+		ic_error('could not compile `${ctx.root_name}` module, ${reason}')
 	}
 }

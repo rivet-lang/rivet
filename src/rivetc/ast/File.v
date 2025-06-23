@@ -12,6 +12,8 @@ pub:
 	content  string
 pub mut:
 	mod_name string
+	priority int
+	is_pkg   bool
 	stmts    []Stmt
 	scope    &Scope = unsafe { nil }
 	errors   int
@@ -37,21 +39,6 @@ pub fn File.from_memory(content string) &File {
 		filename: '<memory>'
 		content:  content
 		mod_name: '<memory>'
-	}
-}
-
-pub fn (mut file File) set_mod_name(root_dir string) {
-	pkg_name := if root_dir == '.' {
-		os.base(os.abs_path(root_dir))
-	} else {
-		os.base(root_dir)
-	}
-	full_dir := os.dir(os.abs_path(file.filename))
-	if index := full_dir.index(pkg_name) {
-		file.mod_name = full_dir[index..].replace(os.path_separator, '.')
-	} else {
-		// this should never happen
-		panic('package name could not be found in the path of the file currently being processed')
 	}
 }
 

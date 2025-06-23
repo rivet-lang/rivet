@@ -2,4 +2,4 @@ tests/invalid/tokenizer/unterminated_multiline_comment.err.ri:2:1: error: unterm
       | 
     2 | unterminated multiline comment :(
       | ^                                
-error: could not compile `tokenizer` module, aborting due to previous error
+error: could not compile `unterminated_multiline_comment` module, aborting due to previous error

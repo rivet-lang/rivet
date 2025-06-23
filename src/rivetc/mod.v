@@ -5,6 +5,7 @@ module rivetc
 
 import rivetc.context
 import rivetc.parser
+import rivetc.importer
 import rivetc.sema
 
 pub fn run(args []string) {
@@ -15,15 +16,19 @@ pub fn run(args []string) {
 
 	ctx.options = context.parse_args(args)
 
+	mut imp := &importer.Importer{
+		ctx: ctx
+	}
+	mut root_pkg := imp.import_root_pkg()
+	ctx.root_name = root_pkg.name
+
 	mut p := parser.new(ctx)
-	p.parse()
+	p.parse(mut root_pkg)
 	ctx.abort_if_errors()
 
 	if !ctx.options.check_syntax {
-		mut s := &sema.Sema{
-			parser: p
-		}
-		s.analyze(ctx)
+		mut s := sema.new(ctx)
+		s.analyze(p, imp)
 		ctx.abort_if_errors()
 	}
 }
