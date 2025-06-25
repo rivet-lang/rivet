@@ -13,7 +13,7 @@ pub struct Parser {
 mut:
 	ctx &context.Context
 
-	tokenizer tokenizer.Tokenizer
+	tokenizer &tokenizer.Tokenizer = unsafe { nil }
 	prev_tok  token.Token
 	tok       token.Token
 	next_tok  token.Token
@@ -46,8 +46,11 @@ pub fn (mut p Parser) parse(mut imp importer.ImportedMod) {
 	}
 }
 
-fn (mut p Parser) parse_file(mut file ast.File) bool {
+pub fn (mut p Parser) parse_file(mut file ast.File) bool {
 	p.file = file
+	file.stage = .parsed
+
+	defer { p.reset() }
 
 	p.tokenizer = tokenizer.from_file(p.ctx, p.file)
 	if p.file.errors > 0 {
@@ -67,6 +70,15 @@ fn (mut p Parser) parse_file(mut file ast.File) bool {
 		}
 	}
 	return true
+}
+
+fn (mut p Parser) reset() {
+	p.inside_expr = false
+	p.inside_block_expr = false
+	p.inside_local_scope = false
+	p.expect_semicolon = false
+
+	p.abort = false
 }
 
 fn (mut p Parser) next() {

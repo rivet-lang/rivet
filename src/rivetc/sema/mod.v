@@ -46,16 +46,27 @@ pub fn (mut sema Sema) analyze(p &parser.Parser, imp &importer.Importer) {
 	sema.ctx.log(@METHOD)
 	sema.ctx.load_builtin_symbols()
 
+	sema.check_files(mut sema.ctx.files)
+}
+
+fn (mut sema Sema) check_files(mut files []&ast.File) {
 	for i in int(Stage.quiet) + 1 .. int(Stage._end_) {
 		sema.stage = unsafe { Stage(i) }
 		sema.ctx.log('>> Stage: ${sema.stage}')
-		for mut file in sema.ctx.files {
+		for mut file in files {
 			sema.check_file(mut *file)
 		}
 	}
 }
 
 fn (mut sema Sema) check_file(mut file ast.File) {
+	if file.stage == .new {
+		// the file was added during semantic analysis, so we parse the file
+		if !sema.parser.parse_file(mut file) {
+			return
+		}
+	}
+
 	sema.file = file
 
 	if sema.stage == .symbol_reg {
@@ -69,6 +80,7 @@ fn (mut sema Sema) check_file(mut file ast.File) {
 
 	sema.stmts(mut sema.file.stmts)
 
+	file.stage = .checked
 	if sema.ctx.code_has_errors() {
 		return
 	}

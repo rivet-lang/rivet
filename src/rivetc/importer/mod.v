@@ -10,8 +10,7 @@ import rivetc.context
 
 pub struct Importer {
 pub mut:
-	ctx           &context.Context
-	imported_mods []ImportedMod
+	ctx &context.Context
 }
 
 pub struct ImportedMod {
@@ -27,6 +26,7 @@ pub fn new(ctx &context.Context) &Importer {
 	}
 }
 
+@[inline]
 pub fn (mut imp Importer) import_root_pkg() ImportedMod {
 	return imp.import_module(imp.ctx.options.input, true)
 }

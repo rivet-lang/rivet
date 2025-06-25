@@ -5,6 +5,12 @@ module ast
 
 import os
 
+pub enum FileStage {
+	new
+	parsed
+	checked
+}
+
 @[heap]
 pub struct File {
 pub:
@@ -12,10 +18,11 @@ pub:
 	content  string
 pub mut:
 	mod_name string
-	priority int
 	is_pkg   bool
 	stmts    []Stmt
 	scope    &Scope = unsafe { nil }
+	priority int
+	stage    FileStage
 	errors   int
 mut:
 	lines ?[]string
