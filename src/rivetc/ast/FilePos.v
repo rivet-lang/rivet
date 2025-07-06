@@ -63,9 +63,11 @@ pub fn (fp &FilePos) contains(loc &FileLoc) bool {
 }
 
 pub fn (fp &FilePos) str() string {
+	begin_col := int_max(1, fp.begin.col)
 	filename := if isnil(fp.file) { '<unknown-file>' } else { fp.file.filename }
 	if fp.begin.line == fp.end.line {
-		return '${filename}:${fp.begin.line + 1}:${fp.begin.col}'
+		return '${filename}:${fp.begin.line + 1}:${begin_col}'
 	}
-	return '${filename}:${fp.begin.line + 1}:${fp.begin.col}-${fp.end.line + 1}:${fp.end.col}'
+	end_col := int_max(1, fp.end.col)
+	return '${filename}:${fp.begin.line + 1}:${begin_col}-${fp.end.line + 1}:${end_col}'
 }

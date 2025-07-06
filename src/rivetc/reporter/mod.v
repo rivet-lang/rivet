@@ -110,6 +110,14 @@ pub fn warn(msg string, pos ast.FilePos) Diagnostic {
 
 @[inline]
 pub fn (d Diagnostic) report() {
+	unsafe {
+		if d.pos != none {
+			mut pos := &d.pos
+			if d.severity == .err {
+				pos.file.errors++
+			}
+		}
+	}
 	report(d)
 }
 
@@ -178,9 +186,13 @@ fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 			if is_embed {
 				sb.write_string(margin)
 			}
+
 			sb.write_string(bold(blue('  ${pos.begin.line + 1:6d} | ')))
 			sb.writeln(offending_line)
+
 			sb.write_string(border)
+			start_column := int_max(0, int_min(pos.begin.col - 1, offending_line.len))
+			end_column := int_max(0, int_min(pos.end.col, offending_line.len))
 			for jdx in 0 .. offending_line.len {
 				if offending_line[jdx] == `\t` {
 					sb.write_u8(`\t`)
@@ -189,22 +201,22 @@ fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 
 				mut caret := false
 				if pos.begin.line == idx && pos.end.line == idx {
-					if pos.begin.col <= jdx + 1 && jdx + 1 <= pos.end.col {
+					if start_column <= jdx && jdx <= end_column {
 						caret = true
 					}
-				} else if pos.begin.line == idx && pos.begin.col <= jdx + 1 {
+				} else if pos.begin.line == idx && start_column <= jdx {
 					caret = true
 				} else if pos.begin.line < idx && idx < pos.end.line {
 					caret = true
-				} else if pos.end.line == idx && pos.end.col >= jdx + 1 {
+				} else if pos.end.line == idx && end_column >= jdx {
 					caret = true
 				}
 
 				if caret {
-					if idx == pos.end.line && jdx == pos.end.col {
+					if idx == pos.end.line && jdx == end_column {
 						break
 					}
-					if pos.begin.line == idx && pos.begin.col == jdx + 1 {
+					if pos.begin.line == idx && start_column == jdx {
 						sb.write_string(green(bold('^')))
 					} else {
 						sb.write_string(green(bold('~')))

@@ -26,7 +26,7 @@ mut:
 	file        &ast.File = unsafe { nil }
 	text        string
 	line        int
-	last_nl_pos int
+	last_nl_pos int = -1
 	pos         int = -1
 	eofs        int
 
@@ -79,9 +79,9 @@ fn (t &Tokenizer) current_pos() ast.FilePos {
 	}
 }
 
+@[inline]
 fn (t &Tokenizer) current_loc() ast.FileLoc {
-	mut col := t.current_column()
-	return ast.FileLoc{t.pos, t.line, if t.line == 0 { col + 1 } else { col }}
+	return ast.FileLoc{t.pos, t.line, t.current_column()}
 }
 
 @[inline]
@@ -116,7 +116,7 @@ fn (mut t Tokenizer) inc_line_number() {
 fn (mut t Tokenizer) skip_whitespace() {
 	for t.pos < t.text.len {
 		c := t.text[t.pos]
-		if c == 8 {
+		if c == 9 {
 			t.pos++
 			continue
 		}
@@ -126,7 +126,7 @@ fn (mut t Tokenizer) skip_whitespace() {
 		if t.pos + 1 < t.text.len && c == cr && t.text[t.pos + 1] == lf {
 			t.is_cr_lf = true
 		}
-		if is_new_line(c) && !(t.pos > 0 && t.text[t.pos - 1] == cr && c == lf) {
+		if c in [cr, lf] && !(t.pos > 0 && t.text[t.pos - 1] == cr && c == lf) {
 			t.inc_line_number()
 		}
 		t.pos++
@@ -449,9 +449,10 @@ fn (mut t Tokenizer) internal_next() Token {
 					pos:  pos
 				}
 			}
-			else {}
+			else {
+				t.invalid_character()
+			}
 		}
-		t.invalid_character()
 		break
 	}
 	return t.end_of_file()
