@@ -81,10 +81,7 @@ fn (t &Tokenizer) current_pos() ast.FilePos {
 
 fn (t &Tokenizer) current_loc() ast.FileLoc {
 	mut col := t.current_column()
-	if col < 1 {
-		col = 1
-	}
-	return ast.FileLoc{t.pos, t.line, col}
+	return ast.FileLoc{t.pos, t.line, if t.line == 0 { col + 1 } else { col }}
 }
 
 @[inline]

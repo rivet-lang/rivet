@@ -1,8 +1,8 @@
 error: duplicate tag `unsafe`
-   in tests/invalid/parser/duplicate_tags.err.ri:1:10
+   in tests/invalid/parser/duplicate_tags.err.ri:1:11
          | 
        1 | #[unsafe; unsafe]
-         |          ^~~~~~  
+         |           ^~~~~~ 
 error: duplicate tag `unsafe`
    in tests/invalid/parser/duplicate_tags.err.ri:5:3
          | 

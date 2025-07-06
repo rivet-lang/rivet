@@ -79,5 +79,5 @@ error: invalid declaration: unexpected number `0b010101`
    in tests/invalid/tokenizer/invalid_number_literal.err.ri:1:1
          | 
        1 | 0b010101 // ok
-         | ^~~~~~~       
+         | ^~~~~~~~      
 error: could not compile `invalid_number_literal` module, aborting due to 16 previous errors
