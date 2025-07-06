@@ -6,6 +6,7 @@ module parser
 import rivetc.ast
 import rivetc.token
 import rivetc.context
+import rivetc.reporter
 import rivetc.importer
 import rivetc.token.tokenizer
 
@@ -95,7 +96,7 @@ fn (mut p Parser) advance(n int) {
 
 fn (mut p Parser) expect(kind token.Kind) {
 	if !p.accept(kind) {
-		context.error('expected `${kind}`, but found ${p.tok}', p.tok.pos)
+		reporter.err('expected `${kind}`, but found ${p.tok}', p.tok.pos).report()
 		p.abort = true
 	}
 }
@@ -115,7 +116,7 @@ fn (mut p Parser) parse_ident() string {
 		return ident
 	}
 	p.abort = true
-	context.error('expected identifier, but found ${p.tok}', p.tok.pos)
+	reporter.err('expected identifier, but found ${p.tok}', p.tok.pos).report()
 	p.next()
 	return ''
 }

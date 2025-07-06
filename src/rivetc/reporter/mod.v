@@ -13,8 +13,9 @@ __global reporter_ = Reporter{}
 const margin = '   '
 
 struct Reporter {
+pub mut:
+	errors int
 mut:
-	errors          int
 	warnings        int
 	diagnostics     []Diagnostic
 	colorize_output bool = term.can_show_color_on_stderr()
@@ -81,20 +82,35 @@ mut:
 }
 
 @[inline]
-pub fn diagnostic(severity Severity, msg string) Diagnostic {
-	return Diagnostic{
-		severity: severity
-		msg:      msg
-	}
-}
-
-@[inline]
-pub fn diagnostic_with_pos(severity Severity, msg string, pos ast.FilePos) Diagnostic {
+pub fn diagnostic(severity Severity, msg string, pos ast.FilePos) Diagnostic {
 	return Diagnostic{
 		severity: severity
 		msg:      msg
 		pos:      pos
 	}
+}
+
+@[inline]
+pub fn err(msg string, pos ast.FilePos) Diagnostic {
+	return Diagnostic{
+		severity: .err
+		msg:      msg
+		pos:      pos
+	}
+}
+
+@[inline]
+pub fn warn(msg string, pos ast.FilePos) Diagnostic {
+	return Diagnostic{
+		severity: .warn
+		msg:      msg
+		pos:      pos
+	}
+}
+
+@[inline]
+pub fn (d Diagnostic) report() {
+	report(d)
 }
 
 @[params]
@@ -237,4 +253,30 @@ fn highlighted_message(msg string, mut sb strings.Builder, bold_s bool) {
 	} else {
 		sb2.str()
 	})
+}
+
+@[inline]
+pub fn ic_warn(msg string) {
+	eprint(Diagnostic{
+		severity: .warn
+		msg:      msg
+	}.renderize())
+}
+
+@[noreturn]
+pub fn ic_error(msg string) {
+	eprint(Diagnostic{
+		severity: .err
+		msg:      msg
+	}.renderize())
+	exit(101)
+}
+
+@[noreturn]
+pub fn ic_fatal(msg string) {
+	eprint(Diagnostic{
+		severity: .err
+		msg:      msg
+	}.renderize())
+	exit(102)
 }

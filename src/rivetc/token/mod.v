@@ -4,7 +4,7 @@
 module token
 
 import rivetc.ast
-import rivetc.context
+import rivetc.reporter
 
 @[minify]
 pub struct Token {
@@ -239,7 +239,7 @@ pub fn (t Kind) str() string {
 pub fn (t Token) str() string {
 	mut s := t.kind.str()
 	if s.len == 0 {
-		context.ic_fatal('Token.str(): missing token kind string - at ${t.pos}')
+		reporter.ic_fatal('Token.str(): missing token kind string - at ${t.pos}')
 	} else if !s[0].is_letter() {
 		// punctuation, operators
 		return 'token `${s}`'

@@ -1,5 +1,11 @@
-tests/invalid/tokenizer/invalid_string_literal.err.ri:1:1: error: unfinished string literal
-      | 
-    1 | "unfinished string literal
-      | ^                         
-error: could not compile `invalid_string_literal` module, aborting due to previous error
+error: unfinished string literal
+   in tests/invalid/tokenizer/invalid_string_literal.err.ri:1:1
+         | 
+       1 | "unfinished string literal
+         | ^                         
+error: invalid declaration: unexpected string
+   in tests/invalid/tokenizer/invalid_string_literal.err.ri:1:1
+         | 
+       1 | "unfinished string literal
+         | ^                         
+error: could not compile `invalid_string_literal` module, aborting due to 2 previous errors

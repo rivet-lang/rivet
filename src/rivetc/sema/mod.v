@@ -7,6 +7,7 @@ import rivetc.ast
 import rivetc.parser
 import rivetc.context
 import rivetc.importer
+import rivetc.reporter
 
 enum Stage {
 	quiet
@@ -71,7 +72,7 @@ fn (mut sema Sema) check_file(mut file ast.File) {
 
 	if sema.stage == .symbol_reg {
 		sema.sym = sema.ctx.universe.find_or_add_module(file.mod_name, file.is_pkg) or {
-			context.ic_error(err.msg())
+			reporter.ic_error(err.msg())
 		}
 	}
 
@@ -110,7 +111,7 @@ fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 			sema.defer_stmt(mut stmt)
 		}
 		ast.EmptyStmt {
-			context.error('empty statement detected', stmt.pos)
+			reporter.err('empty statement detected', stmt.pos)
 		}
 	}
 }

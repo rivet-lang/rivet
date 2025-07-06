@@ -6,7 +6,7 @@ module context
 
 import term
 import rivetc.ast
-import rivetc.reporter as _
+import rivetc.reporter
 
 __global stack = []&Context{}
 
@@ -36,7 +36,6 @@ pub fn pop() {
 pub struct Context {
 pub mut:
 	options Options
-	report  Report
 
 	// Universe is the main scope of all symbols that both the user and the compiler define.
 	universe &ast.Scope = ast.Scope.new(unsafe { nil }, none)
@@ -83,62 +82,62 @@ pub fn (mut ctx Context) load_universe() {
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'i8'
 		kind: .i8
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'i16'
 		kind: .i16
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'i32'
 		kind: .i32
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'i64'
 		kind: .i64
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'int'
 		kind: .int
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'u8'
 		kind: .u8
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'u16'
 		kind: .u16
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'u32'
 		kind: .u32
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'u64'
 		kind: .u64
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'uint'
 		kind: .uint
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'f32'
 		kind: .f32
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'f64'
 		kind: .f64
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'bool'
 		kind: .bool
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'rune'
 		kind: .rune
-	}) or { ic_error(err.msg()) }
+	}) or { reporter.ic_error(err.msg()) }
 }
 
 pub fn (mut ctx Context) load_primitive_types() {
@@ -148,55 +147,55 @@ pub fn (mut ctx Context) load_primitive_types() {
 	ctx.none_type = ast.NoneType{}
 
 	ctx.i8_type = ast.SimpleType{
-		sym: ctx.universe.find('i8') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('i8') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.i16_type = ast.SimpleType{
-		sym: ctx.universe.find('i16') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('i16') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.i32_type = ast.SimpleType{
-		sym: ctx.universe.find('i32') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('i32') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.i64_type = ast.SimpleType{
-		sym: ctx.universe.find('i64') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('i64') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.int_type = ast.SimpleType{
-		sym: ctx.universe.find('int') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('int') or { reporter.ic_error(err.msg()) }
 	}
 
 	ctx.u8_type = ast.SimpleType{
-		sym: ctx.universe.find('u8') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('u8') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.u16_type = ast.SimpleType{
-		sym: ctx.universe.find('u16') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('u16') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.u32_type = ast.SimpleType{
-		sym: ctx.universe.find('u32') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('u32') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.u64_type = ast.SimpleType{
-		sym: ctx.universe.find('u64') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('u64') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.uint_type = ast.SimpleType{
-		sym: ctx.universe.find('uint') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('uint') or { reporter.ic_error(err.msg()) }
 	}
 
 	ctx.f32_type = ast.SimpleType{
-		sym: ctx.universe.find('f32') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('f32') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.f64_type = ast.SimpleType{
-		sym: ctx.universe.find('f64') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('f64') or { reporter.ic_error(err.msg()) }
 	}
 
 	ctx.bool_type = ast.SimpleType{
-		sym: ctx.universe.find('bool') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('bool') or { reporter.ic_error(err.msg()) }
 	}
 	ctx.rune_type = ast.SimpleType{
-		sym: ctx.universe.find('rune') or { ic_error(err.msg()) }
+		sym: ctx.universe.find('rune') or { reporter.ic_error(err.msg()) }
 	}
 }
 
 @[inline]
 pub fn (ctx &Context) code_has_errors() bool {
-	return ctx.report.errors > 0
+	return reporter_.errors > 0
 }
 
 pub fn (ctx &Context) log(msg string) {
@@ -207,11 +206,12 @@ pub fn (ctx &Context) log(msg string) {
 
 pub fn (ctx &Context) abort_if_errors() {
 	if ctx.code_has_errors() {
-		reason := if ctx.report.errors == 1 {
+		reporter.print()
+		reason := if reporter_.errors == 1 {
 			'aborting due to previous error'
 		} else {
-			'aborting due to ${ctx.report.errors} previous errors'
+			'aborting due to ${reporter_.errors} previous errors'
 		}
-		ic_error('could not compile `${ctx.root_name}` module, ${reason}')
+		reporter.ic_error('could not compile `${ctx.root_name}` module, ${reason}')
 	}
 }

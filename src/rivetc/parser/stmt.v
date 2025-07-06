@@ -4,7 +4,7 @@
 module parser
 
 import rivetc.ast
-import rivetc.context
+import rivetc.reporter
 
 // parses a list of statements that are enclosed in `{` `}`, it can also parse a
 // single-statement if the form `: <stmt>` is used.
@@ -23,7 +23,9 @@ fn (mut p Parser) parse_stmts() []ast.Stmt {
 	p.expect_semicolon = false
 	if p.tok.kind != .lbrace {
 		p.abort = true
-		context.error('expected block, found ${p.tok}', p.tok.pos, context.help('if you want to write a single-statement, use `:`: `if (is_online): player.kick()`'))
+		mut d := reporter.err('expected block, found ${p.tok}', p.tok.pos)
+		d.add_help('if you want to write a single-statement, use `:`: `if (is_online): player.kick()`')
+		d.report()
 		return []
 	}
 
@@ -67,7 +69,8 @@ fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
 	if !is_finished && !p.abort {
 		// we give an error because the block has not been finished (`}` was not found),
 		// but it has not been aborted (due to poor formation of expressions or statements)
-		context.error('unfinished block, expected `}` and found ${p.tok}', lbrace_pos)
+
+		reporter.err('unfinished block, expected `}` and found ${p.tok}', lbrace_pos).report()
 		p.abort = true
 	}
 
@@ -101,7 +104,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.semicolon {
 			// an orphaned semicolon indicates that `p.stmt()` is not properly
 			// handling the `;`
-			context.error('orphan semicolon detected', p.tok.pos)
+			reporter.err('orphan semicolon detected', p.tok.pos).report()
 			p.abort = true
 		}
 		else {
@@ -129,7 +132,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 					}
 				}
 			} else {
-				context.error('invalid declaration: unexpected ${p.tok}', p.tok.pos)
+				reporter.err('invalid declaration: unexpected ${p.tok}', p.tok.pos).report()
 				p.abort = true
 			}
 		}
@@ -267,7 +270,9 @@ fn (mut p Parser) parse_defer_stmt() ast.DeferStmt {
 				defer_mode = .error
 			}
 			else {
-				context.error('unknown `defer` mode', mode_pos, context.note('valid `defer` modes are `success` and `error`'))
+				mut d := reporter.err('unknown `defer` mode', mode_pos)
+				d.add_note('valid `defer` modes are `success` and `error`')
+				d.report()
 			}
 		}
 		p.expect(.rparen)

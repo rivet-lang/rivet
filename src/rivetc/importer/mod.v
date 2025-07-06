@@ -7,6 +7,7 @@ import os
 import rivetc.ast
 import rivetc.util
 import rivetc.context
+import rivetc.reporter
 
 pub struct Importer {
 pub mut:
@@ -41,7 +42,7 @@ pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool) ImportedMo
 
 	input_files := util.get_rivet_files(dir_name)
 	if input_files == [] {
-		context.ic_error('the directory does not contain any Rivet source code files')
+		reporter.ic_error('the directory does not contain any Rivet source code files')
 	}
 
 	mut files := []&ast.File{}

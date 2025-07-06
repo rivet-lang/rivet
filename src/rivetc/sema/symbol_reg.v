@@ -4,7 +4,6 @@
 module sema
 
 import rivetc.ast
-import rivetc.context
 import rivetc.reporter
 
 fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
@@ -15,7 +14,7 @@ fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 	}
 	sema.sym = stmt.sym
 	stmt.scope = ast.Scope.new(sema.scope, sema.sym)
-	sema.scope.add_symbol(stmt.sym) or { context.error(err.msg(), stmt.name_pos) }
+	sema.scope.add_symbol(stmt.sym) or { reporter.err(err.msg(), stmt.name_pos).report() }
 	sema.scope = stmt.scope
 	for arg in stmt.args {
 		sema.scope.add_symbol(ast.Variable{
@@ -25,7 +24,11 @@ fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 			is_mut:   arg.is_mut
 			is_ref:   arg.is_ref
 			type:     arg.type
-		}) or { context.error(err.msg(), arg.pos, context.note('inside function `${stmt.name}`')) }
+		}) or {
+			mut d := reporter.err(err.msg(), arg.pos)
+			d.add_note('inside function `${stmt.name}`')
+			d.report()
+		}
 	}
 	sema.stmts(mut stmt.stmts)
 }
@@ -33,11 +36,9 @@ fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 fn (mut sema Sema) sr_let_stmt(mut stmt ast.LetStmt) {
 	for mut left in stmt.lefts {
 		sema.scope.add_symbol(left, lookup: left.is_local) or {
-			context.error(err.msg(), left.pos, context.note('inside ${sema.sym.type_of()} `${sema.sym.name}`'))
-			// mut d := reporter.diagnostic_with_pos(.err, err.msg(), left.pos)
-			// d.add_note('inside ${sema.sym.type_of()} `${sema.sym.name}`')
-			// reporter.report(d)
+			mut d := reporter.err(err.msg(), left.pos)
+			d.add_note('inside ${sema.sym.type_of()} `${sema.sym.name}`')
+			d.report()
 		}
 	}
-	reporter.print()
 }

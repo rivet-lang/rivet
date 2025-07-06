@@ -7,6 +7,7 @@ import rivetc.ast
 import rivetc.context
 import rivetc.util
 import rivetc.token { Token, lookup }
+import rivetc.reporter
 
 const lf = 10
 const cr = 13
@@ -269,7 +270,8 @@ fn (mut t Tokenizer) internal_next() Token {
 						if t.pos >= t.text.len - 1 {
 							old_pos := t.pos
 							t.pos = start_pos
-							context.error('unterminated multiline comment', t.current_pos())
+
+							reporter.err('unterminated multiline comment', t.current_pos()).report()
 							t.pos = old_pos
 						}
 						if t.text[t.pos] == lf {
@@ -468,5 +470,5 @@ fn (mut t Tokenizer) invalid_character() {
 	} else {
 		t.text[t.pos..t.pos + ch_len]
 	}
-	context.error('invalid character `${s}`', pos)
+	reporter.err('invalid character `${s}`', pos).report()
 }

@@ -1,6 +1,7 @@
-tests/invalid/sema/duplicate_argument.err.ri:5:16: error: duplicate argument `a`
-      | 
-    5 | fn win(a: int, a: int) {} // FAIL
-      |                ^~~~~~            
-      = note: inside function `win`
+error: duplicate argument `a`
+   in tests/invalid/sema/duplicate_argument.err.ri:5:16
+         | 
+       5 | fn win(a: int, a: int) {} // FAIL
+         |                ^~~~~~            
+   = note: inside function `win`
 error: could not compile `duplicate_argument` module, aborting due to previous error

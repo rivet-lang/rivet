@@ -1,10 +1,17 @@
-tests/invalid/tokenizer/invalid_character_literal.err.ri:1:1: error: empty character literal
-      | 
-    1 | ''
-      | ^ 
-tests/invalid/tokenizer/invalid_character_literal.err.ri:2:5: error: character literal may only contain one codepoint
-      | 
-    2 | 'abc'
-      |     ^
-      = help: if you meant to write a string literal, use double quotes
-error: could not compile `invalid_character_literal` module, aborting due to 2 previous errors
+error: empty character literal
+   in tests/invalid/tokenizer/invalid_character_literal.err.ri:1:1
+         | 
+       1 | ''
+         | ^ 
+error: character literal may only contain one codepoint
+   in tests/invalid/tokenizer/invalid_character_literal.err.ri:2:5
+         | 
+       2 | 'abc'
+         |     ^
+   = help: if you meant to write a string literal, use double quotes
+error: invalid declaration: unexpected char
+   in tests/invalid/tokenizer/invalid_character_literal.err.ri:1:1
+         | 
+       1 | ''
+         | ^ 
+error: could not compile `invalid_character_literal` module, aborting due to 3 previous errors

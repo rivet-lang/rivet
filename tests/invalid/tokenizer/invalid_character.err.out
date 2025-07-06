@@ -1,5 +1,6 @@
-tests/invalid/tokenizer/invalid_character.err.ri:1:1: error: invalid character `¿`
-      | 
-    1 | ¿
-      | ^ 
+error: invalid character `¿`
+   in tests/invalid/tokenizer/invalid_character.err.ri:1:1
+         | 
+       1 | ¿
+         | ^ 
 error: could not compile `invalid_character` module, aborting due to previous error

@@ -1,26 +1,31 @@
-tests/invalid/sema/duplicate_variable.err.ri:3:9: error: duplicate constant `a`
-      | 
-    3 |     let a = 1; // fail
-      |         ^             
-      = note: inside function `main`
-tests/invalid/sema/duplicate_variable.err.ri:6:9: error: duplicate constant `b`
-      | 
-    6 |     let b = 1; // fail
-      |         ^             
-      = note: inside function `main`
-tests/invalid/sema/duplicate_variable.err.ri:10:5: error: duplicate constant `X`
-      | 
-   10 | let X = 1; // fail
-      |     ^             
-      = note: inside module `duplicate_variable`
-tests/invalid/sema/duplicate_variable.err.ri:13:9: error: constant `x` has the same name as an argument
-      | 
-   13 |     let x = 1; // fail
-      |         ^             
-      = note: inside function `function`
-tests/invalid/sema/duplicate_variable.err.ri:17:13: error: duplicate constant `b`
-      | 
-   17 |         let b = 1; // fail
-      |             ^             
-      = note: inside function `function`
+error: duplicate constant `a`
+   in tests/invalid/sema/duplicate_variable.err.ri:3:9
+         | 
+       3 |     let a = 1; // fail
+         |         ^             
+   = note: inside function `main`
+error: duplicate constant `b`
+   in tests/invalid/sema/duplicate_variable.err.ri:6:9
+         | 
+       6 |     let b = 1; // fail
+         |         ^             
+   = note: inside function `main`
+error: duplicate constant `X`
+   in tests/invalid/sema/duplicate_variable.err.ri:10:5
+         | 
+      10 | let X = 1; // fail
+         |     ^             
+   = note: inside module `duplicate_variable`
+error: constant `x` has the same name as an argument
+   in tests/invalid/sema/duplicate_variable.err.ri:13:9
+         | 
+      13 |     let x = 1; // fail
+         |         ^             
+   = note: inside function `function`
+error: duplicate constant `b`
+   in tests/invalid/sema/duplicate_variable.err.ri:17:13
+         | 
+      17 |         let b = 1; // fail
+         |             ^             
+   = note: inside function `function`
 error: could not compile `duplicate_variable` module, aborting due to 5 previous errors

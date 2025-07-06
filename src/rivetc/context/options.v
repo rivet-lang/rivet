@@ -5,6 +5,7 @@ module context
 
 import os
 import flag
+import rivetc.reporter
 
 @[footer: 'The compiler expects an input, either file or directory (if directory, it must contain a file entry `src/main.ri`).']
 @[xdoc: 'The Rivet programming language compiler']
@@ -22,10 +23,10 @@ pub mut:
 
 @[inline]
 pub fn parse_args(args []string) Options {
-	mut options, remaining := flag.to_struct[Options](args) or { ic_error(err.msg()) }
+	mut options, remaining := flag.to_struct[Options](args) or { reporter.ic_error(err.msg()) }
 
 	if options.show_help {
-		eprintln(flag.to_doc[Options]() or { ic_error(err.msg()) })
+		eprintln(flag.to_doc[Options]() or { reporter.ic_error(err.msg()) })
 		exit(0)
 	}
 
@@ -34,12 +35,12 @@ pub fn parse_args(args []string) Options {
 		if os.is_file(input) || os.is_dir(input) {
 			options.input = input
 		} else {
-			ic_error('`${input}` is not a valid input, expected directory or file')
+			reporter.ic_error('`${input}` is not a valid input, expected directory or file')
 		}
 	} else if remaining.len == 0 {
-		ic_error('at least one input was expected')
+		reporter.ic_error('at least one input was expected')
 	} else {
-		ic_error('only one input is expected')
+		reporter.ic_error('only one input is expected')
 	}
 
 	return options

@@ -5,7 +5,7 @@ module parser
 
 import rivetc.ast
 import rivetc.util
-import rivetc.context
+import rivetc.reporter
 
 fn (mut p Parser) parse_surrounded_expr() ast.Expr {
 	p.expect(.lparen)
@@ -211,8 +211,8 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				if p.tok.lit == 'b' {
 					expr = p.parse_char_literal()
 				} else {
-					context.error('only `b` is recognized as a valid prefix for a character literal',
-						p.tok.pos)
+					reporter.err('only `b` is recognized as a valid prefix for a character literal',
+						p.tok.pos).report()
 					p.next()
 				}
 			} else if p.next_tok.kind == .string {
@@ -317,7 +317,7 @@ fn (mut p Parser) parse_literal() ast.Expr {
 			p.parse_string_literal()
 		}
 		else {
-			context.error('invalid literal expression: found ${p.tok}', p.tok.pos)
+			reporter.err('invalid literal expression: found ${p.tok}', p.tok.pos).report()
 			ast.empty_expr
 		}
 	}
@@ -371,7 +371,7 @@ fn (mut p Parser) parse_string_literal() ast.Expr {
 				ast.StringType.raw_string
 			}
 			else {
-				context.error('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
+				reporter.err('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
 					p.prev_tok.pos)
 				ast.StringType.normal
 			}
