@@ -6,6 +6,7 @@ module context
 
 import term
 import rivetc.ast
+import rivetc.reporter as _
 
 __global stack = []&Context{}
 
