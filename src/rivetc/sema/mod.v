@@ -111,7 +111,7 @@ fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 			sema.defer_stmt(mut stmt)
 		}
 		ast.EmptyStmt {
-			reporter.err('empty statement detected', stmt.pos)
+			reporter.err('empty statement detected', stmt.pos).report()
 		}
 	}
 }
@@ -126,7 +126,7 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 
 	match sema.stage {
 		.symbol_reg {
-			sema.sr_fn_stmt(mut stmt)
+			sema.register_function(mut stmt)
 		}
 		else {
 			sema.scope = stmt.scope
@@ -153,7 +153,7 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
 	match sema.stage {
 		.symbol_reg {
-			sema.sr_let_stmt(mut stmt)
+			sema.register_variables(mut stmt)
 		}
 		else {
 			// TODO

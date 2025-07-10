@@ -6,7 +6,7 @@ module sema
 import rivetc.ast
 import rivetc.reporter
 
-fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
+fn (mut sema Sema) register_function(mut stmt ast.FnStmt) {
 	stmt.sym = &ast.Function{
 		name: stmt.name
 		args: stmt.args
@@ -33,7 +33,7 @@ fn (mut sema Sema) sr_fn_stmt(mut stmt ast.FnStmt) {
 	sema.stmts(mut stmt.stmts)
 }
 
-fn (mut sema Sema) sr_let_stmt(mut stmt ast.LetStmt) {
+fn (mut sema Sema) register_variables(mut stmt ast.LetStmt) {
 	for mut left in stmt.lefts {
 		sema.scope.add_symbol(left, lookup: left.is_local) or {
 			mut d := reporter.err(err.msg(), left.pos)
