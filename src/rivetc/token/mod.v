@@ -26,7 +26,8 @@ pub enum Kind {
 	unknown
 	eof
 	ident          // foo
-	number         // 123
+	int            // 123
+	float          // 123.0
 	string         // "foo"
 	char           // 'A'
 	plus           // +
@@ -128,7 +129,8 @@ fn build_token_str() []string {
 	s[Kind.unknown] = 'unknown'
 	s[Kind.eof] = 'end of file'
 	s[Kind.ident] = 'identifier'
-	s[Kind.number] = 'number'
+	s[Kind.int] = 'integer literal'
+	s[Kind.float] = 'floating-point literal'
 	s[Kind.string] = 'string'
 	s[Kind.char] = 'char'
 	s[Kind.plus] = '+'

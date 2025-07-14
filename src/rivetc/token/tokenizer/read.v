@@ -4,6 +4,7 @@
 module tokenizer
 
 import rivetc.util
+import rivetc.token
 import rivetc.reporter
 
 fn (mut t Tokenizer) read_ident() string {
@@ -49,7 +50,8 @@ fn (nm NumberMode) str() string {
 }
 
 @[direct_array_access]
-fn (mut t Tokenizer) read_number_mode(mode NumberMode) string {
+fn (mut t Tokenizer) read_number_mode(mode NumberMode) (string, token.Kind) {
+	mut kind := token.Kind.int
 	start := t.pos
 	if mode != .dec {
 		t.pos += 2 // skip '0x', '0b', '0o'
@@ -90,6 +92,7 @@ fn (mut t Tokenizer) read_number_mode(mode NumberMode) string {
 		mut is_range := false // `true` for, e.g., 5..10
 		// fractional part
 		if t.pos < t.text.len && t.text[t.pos] == `.` {
+			kind = .float
 			t.pos++
 			if t.pos < t.text.len {
 				// 16.6, 16.6.str()
@@ -136,6 +139,7 @@ fn (mut t Tokenizer) read_number_mode(mode NumberMode) string {
 		// exponential part
 		mut has_exp := false
 		if t.pos < t.text.len && t.text[t.pos] in [`e`, `E`] {
+			kind = .float
 			has_exp = true
 			t.pos++
 			if t.pos < t.text.len && t.text[t.pos] in [`-`, `+`] {
@@ -184,10 +188,10 @@ fn (mut t Tokenizer) read_number_mode(mode NumberMode) string {
 		t.pos = old_pos
 	}
 	t.pos-- // fix pos
-	return lit
+	return lit, kind
 }
 
-fn (mut t Tokenizer) read_number() string {
+fn (mut t Tokenizer) read_number() (string, token.Kind) {
 	return t.read_number_mode(match true {
 		t.matches('0b', t.pos) { .bin }
 		t.matches('0o', t.pos) { .oct }

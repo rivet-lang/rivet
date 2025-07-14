@@ -221,11 +221,11 @@ fn (mut t Tokenizer) internal_next() Token {
 				pos:  pos
 			}
 		} else if ch.is_digit() {
-			lit := t.read_number()
+			lit, kind := t.read_number()
 			pos.end = t.current_loc()
 			return Token{
 				lit:  lit.replace('_', '')
-				kind: .number
+				kind: kind
 				pos:  pos
 			}
 		}

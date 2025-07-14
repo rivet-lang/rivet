@@ -6,9 +6,7 @@ module ast
 pub type Expr = EmptyExpr
 	| ParenExpr
 	| Ident
-	| CharLiteral
-	| IntegerLiteral
-	| FloatLiteral
+	| BasicLiteral
 	| StringLiteral
 	| LoopControl
 	| ReturnExpr
@@ -41,23 +39,18 @@ pub:
 	pos   FilePos
 }
 
-pub struct IntegerLiteral {
-pub:
-	value string
-	pos   FilePos
+pub enum BasicLiteralKind {
+	int
+	float
+	char
+	byte
 }
 
-pub struct FloatLiteral {
+pub struct BasicLiteral {
 pub:
 	value string
+	kind  BasicLiteralKind
 	pos   FilePos
-}
-
-pub struct CharLiteral {
-pub:
-	value   string
-	is_byte bool
-	pos     FilePos
 }
 
 pub enum StringType {

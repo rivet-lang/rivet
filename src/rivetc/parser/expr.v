@@ -4,7 +4,6 @@
 module parser
 
 import rivetc.ast
-import rivetc.util
 import rivetc.reporter
 
 fn (mut p Parser) parse_surrounded_expr() ast.Expr {
@@ -183,7 +182,7 @@ fn (mut p Parser) parse_unary_expr() ast.Expr {
 fn (mut p Parser) parse_primary_expr() ast.Expr {
 	mut expr := ast.empty_expr
 	match p.tok.kind {
-		.char, .number, .string {
+		.char, .int, .float, .string {
 			expr = p.parse_literal()
 		}
 		.ident {
@@ -310,7 +309,7 @@ fn (mut p Parser) parse_literal() ast.Expr {
 		.char {
 			p.parse_char_literal()
 		}
-		.number {
+		.int, .float {
 			p.parse_number_literal()
 		}
 		.string {
@@ -327,17 +326,10 @@ fn (mut p Parser) parse_number_literal() ast.Expr {
 	pos := p.tok.pos
 	value := p.tok.lit
 	p.next()
-	no_has_prefix := !util.numeric_value_has_prefix(value)
-	return if no_has_prefix && value.index_any('.eE') >= 0 {
-		ast.FloatLiteral{
-			value: value
-			pos:   pos
-		}
-	} else {
-		ast.IntegerLiteral{
-			value: value
-			pos:   pos
-		}
+	return ast.BasicLiteral{
+		value: value
+		kind:  if p.prev_tok.kind == .int { .int } else { .float }
+		pos:   pos
 	}
 }
 
@@ -351,10 +343,10 @@ fn (mut p Parser) parse_char_literal() ast.Expr {
 	value := p.tok.lit
 	pos := p.tok.pos
 	p.expect(.char)
-	return ast.CharLiteral{
-		value:   value
-		is_byte: is_byte
-		pos:     pos
+	return ast.BasicLiteral{
+		value: value
+		kind:  if is_byte { .byte } else { .char }
+		pos:   pos
 	}
 }
 
