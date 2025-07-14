@@ -115,8 +115,11 @@ fn (mut p Parser) parse_ident() string {
 		p.next()
 		return ident
 	}
-	p.abort = true
-	reporter.err('expected identifier, but found ${p.tok}', p.tok.pos).report()
+	mut d := reporter.err('expected identifier, but found ${p.tok}', p.tok.pos)
+	if p.tok.kind == .string && p.tok.lit.is_identifier() {
+		d.add_help('remove the quotes around `${p.tok.lit}`')
+	}
+	d.report()
 	p.next()
 	return ''
 }

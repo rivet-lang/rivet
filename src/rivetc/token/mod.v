@@ -25,11 +25,13 @@ pub fn Token.no_lit(kind Kind, pos ast.FilePos) Token {
 pub enum Kind {
 	unknown
 	eof
-	ident          // foo
-	int            // 123
-	float          // 123.0
-	string         // "foo"
-	char           // 'A'
+
+	ident  // foo
+	int    // 123
+	float  // 123.0
+	string // "foo"
+	char   // 'A'
+
 	plus           // +
 	minus          // -
 	mul            // *
@@ -128,11 +130,13 @@ fn build_token_str() []string {
 	mut s := []string{len: int(Kind._end_)}
 	s[Kind.unknown] = 'unknown'
 	s[Kind.eof] = 'end of file'
+
 	s[Kind.ident] = 'identifier'
 	s[Kind.int] = 'integer literal'
 	s[Kind.float] = 'floating-point literal'
-	s[Kind.string] = 'string'
-	s[Kind.char] = 'char'
+	s[Kind.string] = 'string literal'
+	s[Kind.char] = 'character literal'
+
 	s[Kind.plus] = '+'
 	s[Kind.minus] = '-'
 	s[Kind.mul] = '*'
@@ -250,8 +254,11 @@ pub fn (t Token) str() string {
 		s = 'keyword'
 	}
 	if t.lit != '' {
-		// string contents etc
-		s += ' `${t.lit}`'
+		match t.kind {
+			.char { s += ' `\'${t.lit}\'`' }
+			.string { s += ' `"${t.lit}"`' }
+			else { s += ' `${t.lit}`' }
+		}
 	}
 	return s
 }

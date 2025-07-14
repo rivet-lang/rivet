@@ -364,7 +364,7 @@ fn (mut p Parser) parse_string_literal() ast.Expr {
 			}
 			else {
 				reporter.err('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
-					p.prev_tok.pos)
+					p.prev_tok.pos).report()
 				ast.StringType.normal
 			}
 		}
