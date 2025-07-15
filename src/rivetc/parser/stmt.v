@@ -209,7 +209,7 @@ fn (mut p Parser) parse_let_stmt(is_pub bool) ast.LetStmt {
 		mut type := if p.accept(.colon) {
 			p.parse_type()
 		} else {
-			p.ctx.no_type
+			p.ctx.untyped
 		}
 		lefts << ast.Variable{
 			name:     name

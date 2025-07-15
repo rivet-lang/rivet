@@ -49,7 +49,7 @@ pub mut:
 	// Types.
 	// NOTE: All of these types are initialized in the semantic analyzer,
 	// see `Sema.analyze`.
-	no_type    ast.Type
+	untyped    ast.Type
 	void_type  ast.Type
 	none_type  ast.Type
 	never_type ast.Type
@@ -76,6 +76,7 @@ pub mut:
 pub fn (mut ctx Context) load_builtin_symbols() {
 	ctx.load_universe()
 	ctx.load_primitive_types()
+	ctx.load_builtin_constants()
 }
 
 pub fn (mut ctx Context) load_universe() {
@@ -141,7 +142,7 @@ pub fn (mut ctx Context) load_universe() {
 }
 
 pub fn (mut ctx Context) load_primitive_types() {
-	ctx.no_type = ast.NoType{}
+	ctx.untyped = ast.Untyped{}
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
 	ctx.none_type = ast.NoneType{}
@@ -191,6 +192,21 @@ pub fn (mut ctx Context) load_primitive_types() {
 	ctx.rune_type = ast.SimpleType{
 		sym: ctx.universe.find('rune') or { reporter.ic_error(err.msg()) }
 	}
+}
+
+pub fn (mut ctx Context) load_builtin_constants() {
+	ctx.universe.add_symbol(ast.Variable{
+		name: 'true'
+		type: ctx.bool_type
+	}) or { reporter.ic_error(err.msg()) }
+	ctx.universe.add_symbol(ast.Variable{
+		name: 'false'
+		type: ctx.bool_type
+	}) or { reporter.ic_error(err.msg()) }
+	ctx.universe.add_symbol(ast.Variable{
+		name: 'none'
+		type: ctx.none_type
+	}) or { reporter.ic_error(err.msg()) }
 }
 
 @[inline]
