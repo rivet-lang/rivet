@@ -351,33 +351,33 @@ fn (mut p Parser) parse_char_literal() ast.Expr {
 }
 
 fn (mut p Parser) parse_string_literal() ast.Expr {
-	literal_type := if p.accept(.ident) {
+	str_kind := if p.accept(.ident) {
 		match p.prev_tok.lit {
 			'b' {
-				ast.StringType.bytes
+				ast.StringKind.bytes
 			}
 			'c' {
-				ast.StringType.c_string
+				ast.StringKind.c_string
 			}
 			'r' {
-				ast.StringType.raw_string
+				ast.StringKind.raw_string
 			}
 			else {
 				reporter.err('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
 					p.prev_tok.pos).report()
-				ast.StringType.normal
+				ast.StringKind.default
 			}
 		}
 	} else {
-		.normal
+		.default
 	}
 	value := p.tok.lit
 	pos := p.tok.pos
 	p.expect(.string)
 	return ast.StringLiteral{
-		value:        value
-		literal_type: literal_type
-		pos:          pos
+		value:    value
+		str_kind: str_kind
+		pos:      pos
 	}
 }
 

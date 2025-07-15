@@ -53,8 +53,8 @@ pub:
 	pos   FilePos
 }
 
-pub enum StringType {
-	normal
+pub enum StringKind {
+	default
 	c_string
 	bytes
 	raw_string
@@ -62,9 +62,9 @@ pub enum StringType {
 
 pub struct StringLiteral {
 pub:
-	value        string
-	literal_type StringType
-	pos          FilePos
+	value    string
+	str_kind StringKind
+	pos      FilePos
 }
 
 pub struct LoopControl {
