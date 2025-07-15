@@ -51,7 +51,7 @@ pub mut:
 	// see `Sema.analyze`.
 	untyped    ast.Type
 	void_type  ast.Type
-	none_type  ast.Type
+	null_type  ast.Type
 	never_type ast.Type
 
 	i8_type  ast.Type
@@ -145,7 +145,7 @@ pub fn (mut ctx Context) load_primitive_types() {
 	ctx.untyped = ast.Untyped{}
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
-	ctx.none_type = ast.NoneType{}
+	ctx.null_type = ast.NullType{}
 
 	ctx.i8_type = ast.SimpleType{
 		sym: ctx.universe.find('i8') or { reporter.ic_error(err.msg()) }
@@ -204,8 +204,8 @@ pub fn (mut ctx Context) load_builtin_constants() {
 		type: ctx.bool_type
 	}) or { reporter.ic_error(err.msg()) }
 	ctx.universe.add_symbol(ast.Variable{
-		name: 'none'
-		type: ctx.none_type
+		name: 'null'
+		type: ctx.null_type
 	}) or { reporter.ic_error(err.msg()) }
 }
 
