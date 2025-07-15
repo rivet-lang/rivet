@@ -51,11 +51,9 @@ const expected_tokens = [
 ]
 
 fn test_tokenizer_next() {
-	mut c_ctx := &context.Context{}
-	context.push(c_ctx)
-	defer { context.pop() }
+	mut ctx := &context.Context{}
 
-	mut t := tokenizer.from_memory(c_ctx, source)
+	mut t := tokenizer.from_memory(ctx, source)
 	tokens := t.get_all_tokens()
 
 	assert tokens.len == expected_tokens.len, tokens.str()

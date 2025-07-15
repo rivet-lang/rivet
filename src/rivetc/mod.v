@@ -11,9 +11,6 @@ import rivetc.sema
 pub fn run(args []string) {
 	mut ctx := &context.Context{}
 
-	context.push(ctx)
-	defer { context.pop() }
-
 	ctx.options = context.parse_args(args)
 
 	mut imp := importer.new(ctx)

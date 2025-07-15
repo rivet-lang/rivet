@@ -8,30 +8,6 @@ import term
 import rivetc.ast
 import rivetc.reporter
 
-__global stack = []&Context{}
-
-pub fn push(ctx &Context) {
-	unsafe {
-		stack << ctx
-	}
-}
-
-pub fn get() &Context {
-	if stack == [] {
-		panic('context.get: empty Context stack')
-	}
-	return stack.last()
-}
-
-pub fn pop() {
-	if stack == [] {
-		panic('context.pop: empty Context stack')
-	}
-	unsafe {
-		stack.pop()
-	}
-}
-
 @[heap]
 pub struct Context {
 pub mut:
