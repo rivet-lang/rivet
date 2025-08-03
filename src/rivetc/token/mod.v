@@ -88,7 +88,6 @@ pub enum Kind {
 	keyword_beg
 	kw_break
 	kw_continue
-	kw_defer
 	kw_else
 	kw_enum
 	kw_for
@@ -192,7 +191,6 @@ fn build_token_str() []string {
 
 	s[Kind.kw_break] = 'break'
 	s[Kind.kw_continue] = 'continue'
-	s[Kind.kw_defer] = 'defer'
 	s[Kind.kw_else] = 'else'
 	s[Kind.kw_enum] = 'enum'
 	s[Kind.kw_fn] = 'fn'

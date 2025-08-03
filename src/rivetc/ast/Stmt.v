@@ -3,7 +3,7 @@
 
 module ast
 
-pub type Stmt = EmptyStmt | FnStmt | ExprStmt | LetStmt | WhileStmt | DeferStmt
+pub type Stmt = EmptyStmt | FnStmt | ExprStmt | LetStmt | WhileStmt
 
 pub struct EmptyStmt {
 pub:
@@ -65,18 +65,4 @@ pub:
 	right  Expr
 	is_pub bool
 	pos    FilePos
-}
-
-pub enum DeferMode {
-	default
-	success
-	error
-}
-
-pub struct DeferStmt {
-pub:
-	tags Tags
-	mode DeferMode
-pub mut:
-	stmts []Stmt
 }

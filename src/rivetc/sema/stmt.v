@@ -23,9 +23,6 @@ fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 		ast.WhileStmt {
 			sema.while_stmt(mut stmt)
 		}
-		ast.DeferStmt {
-			sema.defer_stmt(mut stmt)
-		}
 		ast.ExprStmt {
 			sema.expr_stmt(mut stmt)
 		}
@@ -67,10 +64,6 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 	if stmt.continue_expr != none {
 		sema.expr(mut stmt.continue_expr)
 	}
-	sema.stmts(mut stmt.stmts)
-}
-
-fn (mut sema Sema) defer_stmt(mut stmt ast.DeferStmt) {
 	sema.stmts(mut stmt.stmts)
 }
 
