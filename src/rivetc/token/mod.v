@@ -208,7 +208,7 @@ fn build_token_str() []string {
 	s[Kind.kw_return] = 'return'
 	s[Kind.kw_struct] = 'struct'
 	s[Kind.kw_trait] = 'trait'
-	s[Kind.kw_while] = 'use'
+	s[Kind.kw_use] = 'use'
 	s[Kind.kw_while] = 'while'
 
 	return s
