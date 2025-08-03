@@ -229,6 +229,11 @@ pub fn is_key(key string) bool {
 }
 
 @[inline]
+pub fn (t Kind) is_keyword() bool {
+	return int(t) > int(Kind.keyword_beg) && int(t) < int(Kind.keyword_end)
+}
+
+@[inline]
 pub fn (t Kind) is_assign() bool {
 	return t in assign_tokens
 }

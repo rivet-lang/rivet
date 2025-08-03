@@ -109,15 +109,27 @@ fn (mut p Parser) accept(kind token.Kind) bool {
 	return false
 }
 
-fn (mut p Parser) parse_ident() string {
+@[params]
+struct ParseIdentParams {
+	allow_kw bool
+}
+
+fn (mut p Parser) parse_ident(params ParseIdentParams) string {
 	if p.tok.kind == .ident {
 		ident := p.tok.lit
 		p.next()
 		return ident
 	}
+	if params.allow_kw && p.tok.kind.is_keyword() {
+		kw_str := p.tok.kind.str()
+		p.next()
+		return kw_str
+	}
 	mut d := reporter.err('expected identifier, but found ${p.tok}', p.tok.pos)
 	if p.tok.kind == .string && p.tok.lit.is_identifier() {
 		d.add_help('remove the quotes around `${p.tok.lit}`')
+	} else if p.tok.kind.is_keyword() {
+		d.add_help('add a `_` before the keyword: `_${p.tok.kind}`')
 	}
 	d.report()
 	p.next()

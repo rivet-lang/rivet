@@ -4,3 +4,4 @@ fn 123() {} // FAIL
 fn "my_func"() {} // FAIL
 fn 'c'() {} // FAIL
 fn 123.4() {} // FAIL
+fn use() {} // FAIL
