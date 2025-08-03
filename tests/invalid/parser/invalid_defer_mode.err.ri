@@ -1,8 +1,0 @@
-fn main() {
-    defer {} // ok
-    defer(error) {} // ok
-    defer(success) {} // ok
-
-    defer(error1) {} // fail
-    defer(success1) {} // fail
-}
