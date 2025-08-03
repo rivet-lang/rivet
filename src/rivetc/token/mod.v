@@ -111,13 +111,13 @@ pub enum Kind {
 }
 
 pub const token_str = build_token_str()
-pub const keywords = build_keys()
+pub const keywords = build_keywords()
 
 pub const assign_tokens = [Kind.assign, .plus_assign, .minus_assign, .mul_assign, .div_assign,
 	.xor_assign, .mod_assign, .or_assign, .and_assign, .rshift_assign, .lshift_assign,
 	.log_and_assign, .log_or_assign]!
 
-fn build_keys() map[string]Kind {
+fn build_keywords() map[string]Kind {
 	mut res := map[string]Kind{}
 	for t in int(Kind.keyword_beg) + 1 .. int(Kind.keyword_end) {
 		res[token_str[t]] = unsafe { Kind(t) }
