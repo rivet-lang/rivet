@@ -3,7 +3,6 @@
 
 module tokenizer
 
-import rivetc.util
 import rivetc.token
 import rivetc.reporter
 
@@ -11,7 +10,7 @@ fn (mut t Tokenizer) read_ident() string {
 	start := t.pos
 	for t.pos < t.text.len {
 		c := t.text[t.pos]
-		if util.is_valid_name(c) || c.is_digit() {
+		if is_valid_name(c) || c.is_digit() {
 			t.pos++
 			continue
 		}

@@ -5,7 +5,6 @@ module tokenizer
 
 import rivetc.ast
 import rivetc.context
-import rivetc.util
 import rivetc.token { Token, lookup }
 import rivetc.reporter
 
@@ -17,6 +16,11 @@ const num_sep = `_`
 @[inline]
 fn is_new_line(ch u8) bool {
 	return ch in [cr, lf]
+}
+
+@[inline]
+pub fn is_valid_name(c u8) bool {
+	return c == `_` || c.is_letter()
 }
 
 @[minify]
@@ -212,7 +216,7 @@ fn (mut t Tokenizer) internal_next() Token {
 		ch := t.text[t.pos]
 		nextc := t.look_ahead(1)
 		mut pos := t.current_pos()
-		if util.is_valid_name(ch) {
+		if is_valid_name(ch) {
 			lit := t.read_ident()
 			pos.end = t.current_loc()
 			return Token{

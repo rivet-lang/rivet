@@ -5,7 +5,6 @@ module importer
 
 import os
 import rivetc.ast
-import rivetc.util
 import rivetc.context
 import rivetc.reporter
 
@@ -40,7 +39,7 @@ pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool) ImportedMo
 	imp.ctx.log(@METHOD)
 	mod_name := get_mod_name(dir_name)
 
-	input_files := util.get_rivet_files(dir_name)
+	input_files := get_rivet_files(dir_name)
 	if input_files == [] {
 		reporter.ic_error('the directory does not contain any Rivet source code files')
 	}
@@ -77,4 +76,12 @@ pub fn get_mod_name(dir_name string) string {
 	} else {
 		dir_name
 	})
+}
+
+@[inline]
+pub fn get_rivet_files(from string) []string {
+	if os.is_file(from) {
+		return [from]
+	}
+	return os.ls(from) or { [] }.filter(it.ends_with('.ri'))
 }
