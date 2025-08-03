@@ -32,7 +32,7 @@ pub fn report(d Diagnostic) {
 
 pub fn print() {
 	for d in reporter_.diagnostics {
-		eprint(d.renderize())
+		eprintln(d.renderize())
 	}
 }
 
@@ -163,7 +163,7 @@ pub fn (d Diagnostic) renderize() string {
 			}
 		}
 	}
-	return sb.str()
+	return sb.str().trim_space()
 }
 
 const backtick = `\``
@@ -176,7 +176,7 @@ fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 	sb.write_string(blue(bold('in ')))
 	sb.writeln(pos.str())
 
-	mut border := bold(blue('         | '))
+	mut border := bold(blue('         |'))
 	if is_embed {
 		border = margin + border
 	}
@@ -190,7 +190,7 @@ fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 			sb.write_string(bold(blue('  ${pos.begin.line + 1:6d} | ')))
 			sb.writeln(offending_line)
 
-			sb.write_string(border)
+			sb.write_string(border + ' ')
 			start_column := int_max(0, int_min(pos.begin.col - 1, offending_line.len))
 			end_column := int_max(0, int_min(pos.end.col, offending_line.len))
 			for jdx in 0 .. offending_line.len {

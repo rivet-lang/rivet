@@ -1,6 +1,6 @@
 error: expected block, found integer literal `1`
    in tests/invalid/parser/expected_block.err.ri:5:18
-         | 
+         |
        5 |     while (true) 1; // fail
          |                  ^
    = help: if you want to write a single-statement, use `:`: `if (is_online): player.kick()`

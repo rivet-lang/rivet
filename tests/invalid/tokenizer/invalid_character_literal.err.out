@@ -1,11 +1,11 @@
 error: empty character literal
    in tests/invalid/tokenizer/invalid_character_literal.err.ri:1:2
-         | 
+         |
        1 | ''
          |  ^
 error: character literal may only contain one codepoint
    in tests/invalid/tokenizer/invalid_character_literal.err.ri:2:5
-         | 
+         |
        2 | 'abc'
          |     ^
    = help: if you meant to write a string literal, use double quotes
