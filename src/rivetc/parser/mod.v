@@ -8,7 +8,7 @@ import rivetc.token
 import rivetc.context
 import rivetc.reporter
 import rivetc.importer
-import rivetc.token.tokenizer
+import rivetc.tokenizer
 
 pub struct Parser {
 mut:
