@@ -8,7 +8,7 @@ import term
 import rivetc.ast
 import rivetc.reporter
 
-@[heap]
+@[heap; noinit]
 pub struct Context {
 pub mut:
 	options Options
@@ -47,6 +47,11 @@ pub mut:
 
 	bool_type ast.Type
 	rune_type ast.Type
+}
+
+@[inline]
+pub fn new() &Context {
+	return &Context{}
 }
 
 pub fn (mut ctx Context) load_builtin_symbols() {

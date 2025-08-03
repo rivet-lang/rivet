@@ -9,7 +9,7 @@ import rivetc.importer
 import rivetc.sema
 
 pub fn run(args []string) {
-	mut ctx := &context.Context{}
+	mut ctx := context.new()
 
 	ctx.options = context.parse_args(args)
 

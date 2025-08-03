@@ -51,7 +51,7 @@ const expected_tokens = [
 ]
 
 fn test_tokenizer_next() {
-	mut ctx := &context.Context{}
+	mut ctx := context.new()
 
 	mut t := tokenizer.from_memory(ctx, source)
 	tokens := t.get_all_tokens()
