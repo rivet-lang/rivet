@@ -20,22 +20,25 @@ pub type Expr = EmptyExpr
 	| BinaryExpr
 
 pub struct EmptyExpr {
-pub:
-	pos FilePos
+pub mut:
+	type Type
+	pos  FilePos
 }
 
 pub const empty_expr = Expr(EmptyExpr{})
 
 pub struct ParenExpr {
-pub:
+pub mut:
 	expr Expr
+	type Type
 	pos  FilePos
 }
 
 pub struct Ident {
-pub:
+pub mut:
 	name  string
 	scope &Scope = unsafe { nil }
+	type  Type
 	pos   FilePos
 }
 
@@ -47,9 +50,10 @@ pub enum BasicLiteralKind {
 }
 
 pub struct BasicLiteral {
-pub:
+pub mut:
 	value string
 	kind  BasicLiteralKind
+	type  Type
 	pos   FilePos
 }
 
@@ -61,35 +65,40 @@ pub enum StringKind {
 }
 
 pub struct StringLiteral {
-pub:
+pub mut:
 	value    string
 	str_kind StringKind
+	type     Type
 	pos      FilePos
 }
 
 pub struct LoopControl {
-pub:
+pub mut:
 	is_continue bool
+	type        Type
 	pos         FilePos
 }
 
 pub struct ReturnExpr {
-pub:
+pub mut:
 	expr ?Expr
+	type Type
 	pos  FilePos
 }
 
 pub struct BuiltinCallExpr {
-pub:
+pub mut:
 	name string
 	args []Expr
+	type Type
 	pos  FilePos
 }
 
 pub struct CallExpr {
-pub:
+pub mut:
 	left Expr
 	args []Expr
+	type Type
 	pos  FilePos
 }
 
@@ -97,36 +106,41 @@ pub struct BlockExpr {
 pub mut:
 	stmts []Stmt
 	expr  ?Expr
-pub:
-	pos FilePos
+	type  Type
+	pos   FilePos
 }
 
 pub struct IfExpr {
-pub:
+pub mut:
 	branches  []IfBranch
 	is_inline bool
+	type      Type
 	pos       FilePos
 }
 
 pub struct IfBranch {
-pub:
+pub mut:
 	cond ?Expr
 	expr Expr
+	type Type
 	pos  FilePos
 }
 
 pub struct MatchExpr {
-pub:
+pub mut:
 	expr     Expr
 	branches []MatchBranch
+	type     Type
 	pos      FilePos
 }
 
 pub struct MatchBranch {
-pub:
+pub mut:
 	is_else bool
 	cases   []Expr
 	expr    Expr
+	type    Type
+	pos     FilePos
 }
 
 @[inline]
@@ -152,10 +166,11 @@ pub enum AssignOp {
 }
 
 pub struct AssignExpr {
-pub:
+pub mut:
 	left  Expr
 	op    AssignOp
 	right Expr
+	type  Type
 	pos   FilePos
 }
 
@@ -168,9 +183,10 @@ pub enum UnaryOp {
 }
 
 pub struct UnaryExpr {
-pub:
+pub mut:
 	right Expr
 	op    UnaryOp
+	type  Type
 	pos   FilePos
 }
 
@@ -202,9 +218,10 @@ pub enum BinaryOp {
 }
 
 pub struct BinaryExpr {
-pub:
+pub mut:
 	left  Expr
 	op    BinaryOp
 	right Expr
+	type  Type
 	pos   FilePos
 }

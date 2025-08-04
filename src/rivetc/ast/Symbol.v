@@ -62,6 +62,7 @@ pub enum TypeKind {
 
 	f32
 	f64
+	float
 
 	bool
 	rune

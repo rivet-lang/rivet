@@ -7,10 +7,30 @@ import rivetc.ast
 
 fn (mut sema Sema) expr(mut expr ast.Expr) {
 	match mut expr {
+		ast.BasicLiteral {
+			sema.basic_literal(mut expr)
+		}
 		ast.BlockExpr {
 			sema.block_expr(mut expr)
 		}
 		else {}
+	}
+}
+
+fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) {
+	match expr.kind {
+		.int {
+			expr.type = sema.ctx.int_type
+		}
+		.float {
+			expr.type = sema.ctx.float_type
+		}
+		.char {
+			expr.type = sema.ctx.rune_type
+		}
+		.byte {
+			expr.type = sema.ctx.u8_type
+		}
 	}
 }
 

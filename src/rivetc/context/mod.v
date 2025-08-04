@@ -42,8 +42,9 @@ pub mut:
 	u64_type  ast.Type
 	uint_type ast.Type
 
-	f32_type ast.Type
-	f64_type ast.Type
+	f32_type   ast.Type
+	f64_type   ast.Type
+	float_type ast.Type
 
 	bool_type ast.Type
 	rune_type ast.Type
@@ -110,6 +111,10 @@ pub fn (mut ctx Context) load_universe() {
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'f64'
 		kind: .f64
+	}) or { reporter.ic_error(err.msg()) }
+	ctx.universe.add_symbol(ast.TypeSym{
+		name: 'float'
+		kind: .float
 	}) or { reporter.ic_error(err.msg()) }
 
 	ctx.universe.add_symbol(ast.TypeSym{

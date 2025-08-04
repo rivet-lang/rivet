@@ -223,7 +223,10 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 		.lparen {
 			pos := p.tok.pos
 			p.next()
-			expr = ast.ParenExpr{p.parse_expr(), pos + p.tok.pos}
+			expr = ast.ParenExpr{
+				expr: p.parse_expr()
+				pos:  pos + p.tok.pos
+			}
 			p.expect(.rparen)
 		}
 		.kw_if {
@@ -439,7 +442,11 @@ fn (mut p Parser) parse_if_expr() ast.Expr {
 			if p.tok.kind != .lbrace {
 				p.expect(.colon)
 			}
-			branches << ast.IfBranch{none, p.parse_expr(), pos}
+			branches << ast.IfBranch{
+				cond: none
+				expr: p.parse_expr()
+				pos:  pos
+			}
 			break
 		}
 		p.expect(.kw_if)
@@ -450,7 +457,11 @@ fn (mut p Parser) parse_if_expr() ast.Expr {
 			expect_comma = true
 			is_inline = true
 		}
-		branches << ast.IfBranch{cond, p.parse_expr(), pos}
+		branches << ast.IfBranch{
+			cond: cond
+			expr: p.parse_expr()
+			pos:  pos
+		}
 		if expect_comma && p.next_tok.kind == .kw_else {
 			p.expect(.comma)
 		}
@@ -458,14 +469,21 @@ fn (mut p Parser) parse_if_expr() ast.Expr {
 			break
 		}
 	}
-	return ast.IfExpr{branches, is_inline, pos}
+	return ast.IfExpr{
+		branches:  branches
+		is_inline: is_inline
+		pos:       pos
+	}
 }
 
 fn (mut p Parser) parse_loop_control() ast.Expr {
 	pos := p.tok.pos
 	is_continue := p.tok.kind == .kw_continue
 	p.next()
-	return ast.LoopControl{is_continue, pos}
+	return ast.LoopControl{
+		is_continue: is_continue
+		pos:         pos
+	}
 }
 
 fn (mut p Parser) parse_return_expr() ast.Expr {
