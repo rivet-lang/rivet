@@ -5,19 +5,19 @@ module sema
 
 import rivetc.ast
 
-fn (mut sema Sema) expr(mut expr ast.Expr) {
+fn (mut sema Sema) expr(mut expr ast.Expr) ? {
 	match mut expr {
 		ast.BasicLiteral {
-			sema.basic_literal(mut expr)
+			sema.basic_literal(mut expr)?
 		}
 		ast.BlockExpr {
-			sema.block_expr(mut expr)
+			sema.block_expr(mut expr)?
 		}
 		else {}
 	}
 }
 
-fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) {
+fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) ? {
 	match expr.kind {
 		.int {
 			expr.type = sema.ctx.int_type
@@ -25,7 +25,7 @@ fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) {
 		.float {
 			expr.type = sema.ctx.float_type
 		}
-		.char {
+		.rune {
 			expr.type = sema.ctx.rune_type
 		}
 		.byte {
@@ -34,7 +34,7 @@ fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) {
 	}
 }
 
-fn (mut sema Sema) block_expr(mut expr ast.BlockExpr) {
+fn (mut sema Sema) block_expr(mut expr ast.BlockExpr) ? {
 	old_scope := sema.scope
 	defer {
 		sema.scope = old_scope

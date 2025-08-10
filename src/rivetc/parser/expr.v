@@ -348,7 +348,7 @@ fn (mut p Parser) parse_char_literal() ast.Expr {
 	p.expect(.char)
 	return ast.BasicLiteral{
 		value: value
-		kind:  if is_byte { .byte } else { .char }
+		kind:  if is_byte { .byte } else { .rune }
 		pos:   pos
 	}
 }

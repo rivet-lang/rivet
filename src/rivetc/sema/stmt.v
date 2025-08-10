@@ -60,13 +60,13 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 	if stmt.init_stmt != none {
 		sema.let_stmt(mut stmt.init_stmt)
 	}
-	sema.expr(mut stmt.cond)
+	sema.expr(mut stmt.cond) or { return }
 	if stmt.continue_expr != none {
-		sema.expr(mut stmt.continue_expr)
+		sema.expr(mut stmt.continue_expr) or { return }
 	}
 	sema.stmts(mut stmt.stmts)
 }
 
 fn (mut sema Sema) expr_stmt(mut stmt ast.ExprStmt) {
-	sema.expr(mut stmt.expr)
+	sema.expr(mut stmt.expr) or { return }
 }

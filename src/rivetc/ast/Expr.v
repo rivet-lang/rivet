@@ -45,7 +45,7 @@ pub mut:
 pub enum BasicLiteralKind {
 	int
 	float
-	char
+	rune
 	byte
 }
 
