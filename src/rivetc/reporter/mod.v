@@ -269,7 +269,7 @@ fn highlighted_message(msg string, mut sb strings.Builder, bold_s bool) {
 
 @[inline]
 pub fn ic_warn(msg string) {
-	eprint(Diagnostic{
+	eprintln(Diagnostic{
 		severity: .warn
 		msg:      msg
 	}.renderize())
@@ -277,7 +277,7 @@ pub fn ic_warn(msg string) {
 
 @[noreturn]
 pub fn ic_error(msg string) {
-	eprint(Diagnostic{
+	eprintln(Diagnostic{
 		severity: .err
 		msg:      msg
 	}.renderize())
@@ -286,7 +286,7 @@ pub fn ic_error(msg string) {
 
 @[noreturn]
 pub fn ic_fatal(msg string) {
-	eprint(Diagnostic{
+	eprintln(Diagnostic{
 		severity: .err
 		msg:      msg
 	}.renderize())
