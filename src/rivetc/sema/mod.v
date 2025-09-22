@@ -9,7 +9,7 @@ import rivetc.context
 import rivetc.importer
 import rivetc.reporter
 
-enum Stage {
+enum Stage as u8 {
 	quiet
 	symbol_reg // srg_
 	symbol_res

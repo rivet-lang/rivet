@@ -42,7 +42,7 @@ pub mut:
 	pos   FilePos
 }
 
-pub enum BasicLiteralKind {
+pub enum BasicLiteralKind as u8 {
 	int
 	float
 	rune
@@ -57,7 +57,7 @@ pub mut:
 	pos   FilePos
 }
 
-pub enum StringKind {
+pub enum StringKind as u8 {
 	default
 	c_string
 	bytes
@@ -148,7 +148,7 @@ pub fn (ib IfBranch) is_else() bool {
 	return ib.cond == none
 }
 
-pub enum AssignOp {
+pub enum AssignOp as u8 {
 	unknown
 	assign         // =
 	plus_assign    // +=
@@ -174,7 +174,7 @@ pub mut:
 	pos   FilePos
 }
 
-pub enum UnaryOp {
+pub enum UnaryOp as u8 {
 	unknown
 	amp     // &
 	bang    // !
@@ -190,7 +190,7 @@ pub mut:
 	pos   FilePos
 }
 
-pub enum BinaryOp {
+pub enum BinaryOp as u8 {
 	unknown
 	plus    // +
 	minus   // -

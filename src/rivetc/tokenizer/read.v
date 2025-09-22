@@ -21,7 +21,7 @@ fn (mut t Tokenizer) read_ident() string {
 	return lit
 }
 
-enum NumberMode {
+enum NumberMode as u8 {
 	bin
 	oct
 	hex

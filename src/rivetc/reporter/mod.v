@@ -36,7 +36,7 @@ pub fn print() {
 	}
 }
 
-pub enum Severity {
+pub enum Severity as u8 {
 	err
 	warn
 }

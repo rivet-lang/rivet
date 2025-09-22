@@ -22,7 +22,7 @@ pub fn Token.no_lit(kind Kind, pos ast.FilePos) Token {
 	}
 }
 
-pub enum Kind {
+pub enum Kind as u8 {
 	unknown
 	eof
 

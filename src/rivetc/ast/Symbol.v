@@ -44,7 +44,7 @@ pub:
 	scope  &Scope = unsafe { nil }
 }
 
-pub enum TypeKind {
+pub enum TypeKind as u8 {
 	unknown
 	alias
 
