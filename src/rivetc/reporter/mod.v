@@ -37,6 +37,7 @@ pub fn print() {
 }
 
 pub enum Severity as u8 {
+	fatal
 	err
 	warn
 }
@@ -44,6 +45,7 @@ pub enum Severity as u8 {
 @[inline]
 pub fn (s Severity) label() string {
 	return match s {
+		.fatal { 'fatal' }
 		.err { 'error' }
 		.warn { 'warning' }
 	}
@@ -52,7 +54,7 @@ pub fn (s Severity) label() string {
 @[inline]
 pub fn (s Severity) colorize(str string) string {
 	return match s {
-		.err { red(str) }
+		.err, .fatal { red(str) }
 		.warn { yellow(str) }
 	}
 }
@@ -282,13 +284,4 @@ pub fn ic_error(msg string) {
 		msg:      msg
 	}.renderize())
 	exit(101)
-}
-
-@[noreturn]
-pub fn ic_fatal(msg string) {
-	eprintln(Diagnostic{
-		severity: .err
-		msg:      msg
-	}.renderize())
-	exit(102)
 }

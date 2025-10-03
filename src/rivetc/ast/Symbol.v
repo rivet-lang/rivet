@@ -3,13 +3,15 @@
 
 module ast
 
+import rivetc.ice
+
 pub type Symbol = Module | Function | Variable | TypeSym
 
 pub fn (sym Symbol) as_type() Type {
 	if sym is TypeSym {
 		return sym.as_type()
 	}
-	panic('attempt to convert a symbol to type: ${sym}')
+	ice.ice('Symbol.as_type(): attempt to convert a symbol to type: ${sym}')
 }
 
 pub fn (sym Symbol) type_of() string {
