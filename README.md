@@ -11,6 +11,8 @@ A general-purpose programming language, focused on simplicity, safety and stabil
 [Documentation](https://rivet-lang.github.io/docs)
 •
 [Roadmap](ROADMAP.md)
+•
+[Contributing](CONTRIBUTING.md)
 
 ![issues](https://img.shields.io/github/issues/rivet-lang/rivet?style=flat-square)
 ![status](https://img.shields.io/badge/status-alpha-blue?style=flat-square)
