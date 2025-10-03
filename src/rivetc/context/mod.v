@@ -133,51 +133,24 @@ pub fn (mut ctx Context) load_primitive_types() {
 	ctx.never_type = ast.NeverType{}
 	ctx.null_type = ast.NullType{}
 
-	ctx.i8_type = ast.SimpleType{
-		sym: ctx.universe.find('i8') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.i16_type = ast.SimpleType{
-		sym: ctx.universe.find('i16') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.i32_type = ast.SimpleType{
-		sym: ctx.universe.find('i32') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.i64_type = ast.SimpleType{
-		sym: ctx.universe.find('i64') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.int_type = ast.SimpleType{
-		sym: ctx.universe.find('int') or { reporter.ic_error(err.msg()) }
-	}
+	ctx.i8_type = ctx.universe.find('i8') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.i16_type = ctx.universe.find('i16') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.i32_type = ctx.universe.find('i32') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.i64_type = ctx.universe.find('i64') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.int_type = ctx.universe.find('int') or { reporter.ic_error(err.msg()) }.as_type()
 
-	ctx.u8_type = ast.SimpleType{
-		sym: ctx.universe.find('u8') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.u16_type = ast.SimpleType{
-		sym: ctx.universe.find('u16') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.u32_type = ast.SimpleType{
-		sym: ctx.universe.find('u32') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.u64_type = ast.SimpleType{
-		sym: ctx.universe.find('u64') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.uint_type = ast.SimpleType{
-		sym: ctx.universe.find('uint') or { reporter.ic_error(err.msg()) }
-	}
+	ctx.u8_type = ctx.universe.find('u8') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.u16_type = ctx.universe.find('u16') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.u32_type = ctx.universe.find('u32') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.u64_type = ctx.universe.find('u64') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.uint_type = ctx.universe.find('uint') or { reporter.ic_error(err.msg()) }.as_type()
 
-	ctx.f32_type = ast.SimpleType{
-		sym: ctx.universe.find('f32') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.f64_type = ast.SimpleType{
-		sym: ctx.universe.find('f64') or { reporter.ic_error(err.msg()) }
-	}
+	ctx.f32_type = ctx.universe.find('f32') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.f64_type = ctx.universe.find('f64') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.float_type = ctx.universe.find('float') or { reporter.ic_error(err.msg()) }.as_type()
 
-	ctx.bool_type = ast.SimpleType{
-		sym: ctx.universe.find('bool') or { reporter.ic_error(err.msg()) }
-	}
-	ctx.rune_type = ast.SimpleType{
-		sym: ctx.universe.find('rune') or { reporter.ic_error(err.msg()) }
-	}
+	ctx.bool_type = ctx.universe.find('bool') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.rune_type = ctx.universe.find('rune') or { reporter.ic_error(err.msg()) }.as_type()
 }
 
 pub fn (mut ctx Context) load_builtin_constants() {
