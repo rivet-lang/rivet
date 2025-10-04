@@ -30,6 +30,9 @@ pub mut:
 	null_type  ast.Type
 	never_type ast.Type
 
+	bool_type ast.Type
+	rune_type ast.Type
+
 	i8_type  ast.Type
 	i16_type ast.Type
 	i32_type ast.Type
@@ -45,9 +48,6 @@ pub mut:
 	f32_type   ast.Type
 	f64_type   ast.Type
 	float_type ast.Type
-
-	bool_type ast.Type
-	rune_type ast.Type
 }
 
 @[inline]
@@ -62,6 +62,15 @@ pub fn (mut ctx Context) load_builtin_symbols() {
 }
 
 pub fn (mut ctx Context) load_universe() {
+	ctx.universe.add_symbol(ast.TypeSym{
+		name: 'bool'
+		kind: .bool
+	}) or { reporter.ic_error(err.msg()) }
+	ctx.universe.add_symbol(ast.TypeSym{
+		name: 'rune'
+		kind: .rune
+	}) or { reporter.ic_error(err.msg()) }
+
 	ctx.universe.add_symbol(ast.TypeSym{
 		name: 'i8'
 		kind: .i8
@@ -116,15 +125,6 @@ pub fn (mut ctx Context) load_universe() {
 		name: 'float'
 		kind: .float
 	}) or { reporter.ic_error(err.msg()) }
-
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'bool'
-		kind: .bool
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'rune'
-		kind: .rune
-	}) or { reporter.ic_error(err.msg()) }
 }
 
 pub fn (mut ctx Context) load_primitive_types() {
@@ -132,6 +132,9 @@ pub fn (mut ctx Context) load_primitive_types() {
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
 	ctx.null_type = ast.NullType{}
+
+	ctx.bool_type = ctx.universe.find('bool') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.rune_type = ctx.universe.find('rune') or { reporter.ic_error(err.msg()) }.as_type()
 
 	ctx.i8_type = ctx.universe.find('i8') or { reporter.ic_error(err.msg()) }.as_type()
 	ctx.i16_type = ctx.universe.find('i16') or { reporter.ic_error(err.msg()) }.as_type()
@@ -148,9 +151,6 @@ pub fn (mut ctx Context) load_primitive_types() {
 	ctx.f32_type = ctx.universe.find('f32') or { reporter.ic_error(err.msg()) }.as_type()
 	ctx.f64_type = ctx.universe.find('f64') or { reporter.ic_error(err.msg()) }.as_type()
 	ctx.float_type = ctx.universe.find('float') or { reporter.ic_error(err.msg()) }.as_type()
-
-	ctx.bool_type = ctx.universe.find('bool') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.rune_type = ctx.universe.find('rune') or { reporter.ic_error(err.msg()) }.as_type()
 }
 
 pub fn (mut ctx Context) load_builtin_constants() {

@@ -15,7 +15,7 @@ fn (mut p Parser) parse_surrounded_expr() ast.Expr {
 
 fn (mut p Parser) parse_expr() ast.Expr {
 	if p.should_abort() {
-		return ast.empty_expr
+		return ast.empty_expr(p.tok.pos)
 	}
 	old_inside_expr := p.inside_expr
 	defer { p.inside_expr = old_inside_expr }
@@ -156,7 +156,7 @@ fn (mut p Parser) parse_multiplicative_expr() ast.Expr {
 }
 
 fn (mut p Parser) parse_unary_expr() ast.Expr {
-	mut expr := ast.empty_expr
+	mut expr := ast.empty_expr(p.tok.pos)
 	if p.tok.kind in [.amp, .bang, .bit_not, .minus] {
 		op := p.tok.kind
 		pos := p.tok.pos
@@ -180,7 +180,7 @@ fn (mut p Parser) parse_unary_expr() ast.Expr {
 }
 
 fn (mut p Parser) parse_primary_expr() ast.Expr {
-	mut expr := ast.empty_expr
+	mut expr := ast.empty_expr(p.tok.pos)
 	match p.tok.kind {
 		.char, .int, .float, .string {
 			expr = p.parse_literal()
@@ -271,7 +271,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 					pos:  pos
 				}
 			}
-			p.tok.kind.is_assign() {
+			p.tok.kind.is_assign() && !p.inside_type {
 				op := match p.tok.kind {
 					.assign { ast.AssignOp.assign }
 					.plus_assign { .plus_assign }
@@ -320,7 +320,7 @@ fn (mut p Parser) parse_literal() ast.Expr {
 		}
 		else {
 			reporter.err('invalid literal expression: found ${p.tok}', p.tok.pos).report()
-			ast.empty_expr
+			ast.empty_expr(p.tok.pos)
 		}
 	}
 }

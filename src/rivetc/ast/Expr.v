@@ -25,7 +25,12 @@ pub mut:
 	pos  FilePos
 }
 
-pub const empty_expr = Expr(EmptyExpr{})
+@[inline]
+pub fn empty_expr(pos FilePos) Expr {
+	return EmptyExpr{
+		pos: pos
+	}
+}
 
 pub struct ParenExpr {
 pub mut:

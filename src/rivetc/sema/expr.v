@@ -4,6 +4,8 @@
 module sema
 
 import rivetc.ast
+import rivetc.ice
+import rivetc.reporter as _
 
 fn (mut sema Sema) expr(mut expr ast.Expr) ? {
 	match mut expr {
@@ -12,6 +14,9 @@ fn (mut sema Sema) expr(mut expr ast.Expr) ? {
 		}
 		ast.BlockExpr {
 			sema.block_expr(mut expr)?
+		}
+		ast.EmptyExpr {
+			ice.ice('empty expression detected - ${expr.pos}')
 		}
 		else {}
 	}

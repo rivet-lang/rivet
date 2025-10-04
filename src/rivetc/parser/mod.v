@@ -22,6 +22,7 @@ mut:
 	file &ast.File = unsafe { nil }
 	tags ast.Tags
 
+	inside_type        bool
 	inside_expr        bool
 	inside_block_expr  bool
 	inside_local_scope bool

@@ -4,6 +4,7 @@
 module sema
 
 import rivetc.ast
+import rivetc.ice
 import rivetc.reporter
 
 fn (mut sema Sema) stmts(mut stmts []ast.Stmt) {
@@ -27,7 +28,7 @@ fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 			sema.expr_stmt(mut stmt)
 		}
 		ast.EmptyStmt {
-			reporter.err('empty statement detected', stmt.pos).report()
+			ice.ice('empty statement detected - ${stmt.pos}')
 		}
 	}
 }
@@ -46,6 +47,12 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 	}
 
 	sema.scope = stmt.scope
+
+	for arg in stmt.args {
+		if mut default_expr := arg.default_expr {
+			sema.expr(mut default_expr) or { reporter.err(err.msg(), arg.pos).report() }
+		}
+	}
 	sema.stmts(mut stmt.stmts)
 }
 
