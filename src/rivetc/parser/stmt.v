@@ -168,7 +168,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 			arg_type := p.parse_type()
 			p.inside_type = old_inside_type
 
-			mut arg_default_expr := ast.empty_expr(p.tok.pos)
+			mut arg_default_expr := ?ast.Expr(none)
 			if p.accept(.assign) {
 				arg_default_expr = p.parse_expr()
 			}
