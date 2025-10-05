@@ -48,6 +48,10 @@ pub mut:
 	f32_type   ast.Type
 	f64_type   ast.Type
 	float_type ast.Type
+
+	true_sym  ast.Symbol
+	false_sym ast.Symbol
+	null_sym  ast.Symbol
 }
 
 @[inline]
@@ -56,113 +60,91 @@ pub fn new() &Context {
 }
 
 pub fn (mut ctx Context) load_builtin_symbols() {
-	ctx.load_universe()
-	ctx.load_primitive_types()
+	ctx.load_builtin_types()
 	ctx.load_builtin_constants()
 }
 
-pub fn (mut ctx Context) load_universe() {
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'bool'
-		kind: .bool
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'rune'
-		kind: .rune
-	}) or { reporter.ic_error(err.msg()) }
-
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'i8'
-		kind: .i8
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'i16'
-		kind: .i16
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'i32'
-		kind: .i32
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'i64'
-		kind: .i64
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'int'
-		kind: .int
-	}) or { reporter.ic_error(err.msg()) }
-
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'u8'
-		kind: .u8
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'u16'
-		kind: .u16
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'u32'
-		kind: .u32
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'u64'
-		kind: .u64
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'uint'
-		kind: .uint
-	}) or { reporter.ic_error(err.msg()) }
-
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'f32'
-		kind: .f32
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'f64'
-		kind: .f64
-	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.TypeSym{
-		name: 'float'
-		kind: .float
-	}) or { reporter.ic_error(err.msg()) }
-}
-
-pub fn (mut ctx Context) load_primitive_types() {
+pub fn (mut ctx Context) load_builtin_types() {
 	ctx.untyped = ast.Untyped{}
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
 	ctx.null_type = ast.NullType{}
 
-	ctx.bool_type = ctx.universe.find('bool') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.rune_type = ctx.universe.find('rune') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.bool_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'bool'
+		kind: .bool
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.rune_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'rune'
+		kind: .rune
+	}) or { reporter.ic_error(err.msg()) }.as_type()
 
-	ctx.i8_type = ctx.universe.find('i8') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.i16_type = ctx.universe.find('i16') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.i32_type = ctx.universe.find('i32') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.i64_type = ctx.universe.find('i64') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.int_type = ctx.universe.find('int') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.i8_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'i8'
+		kind: .i8
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.i16_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'i16'
+		kind: .i16
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.i32_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'i32'
+		kind: .i32
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.i64_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'i64'
+		kind: .i64
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.int_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'int'
+		kind: .int
+	}) or { reporter.ic_error(err.msg()) }.as_type()
 
-	ctx.u8_type = ctx.universe.find('u8') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.u16_type = ctx.universe.find('u16') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.u32_type = ctx.universe.find('u32') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.u64_type = ctx.universe.find('u64') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.uint_type = ctx.universe.find('uint') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.u8_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'u8'
+		kind: .u8
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.u16_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'u16'
+		kind: .u16
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.u32_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'u32'
+		kind: .u32
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.u64_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'u64'
+		kind: .u64
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.uint_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'uint'
+		kind: .uint
+	}) or { reporter.ic_error(err.msg()) }.as_type()
 
-	ctx.f32_type = ctx.universe.find('f32') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.f64_type = ctx.universe.find('f64') or { reporter.ic_error(err.msg()) }.as_type()
-	ctx.float_type = ctx.universe.find('float') or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.f32_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'f32'
+		kind: .f32
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.f64_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'f64'
+		kind: .f64
+	}) or { reporter.ic_error(err.msg()) }.as_type()
+	ctx.float_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
+		name: 'float'
+		kind: .float
+	}) or { reporter.ic_error(err.msg()) }.as_type()
 }
 
 pub fn (mut ctx Context) load_builtin_constants() {
-	ctx.universe.add_symbol(ast.Variable{
+	ctx.true_sym = ctx.universe.add_and_get_symbol(ast.Variable{
 		name: 'true'
 		type: ctx.bool_type
 	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.Variable{
+	ctx.false_sym = ctx.universe.add_and_get_symbol(ast.Variable{
 		name: 'false'
 		type: ctx.bool_type
 	}) or { reporter.ic_error(err.msg()) }
-	ctx.universe.add_symbol(ast.Variable{
+	ctx.null_sym = ctx.universe.add_and_get_symbol(ast.Variable{
 		name: 'null'
 		type: ctx.null_type
 	}) or { reporter.ic_error(err.msg()) }

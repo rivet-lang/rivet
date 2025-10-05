@@ -68,6 +68,11 @@ pub fn (mut sc Scope) add_symbol(sym Symbol, params AddSymbolParams) ! {
 	sc.syms << sym
 }
 
+pub fn (mut sc Scope) add_and_get_symbol(sym Symbol, params AddSymbolParams) !Symbol {
+	sc.add_symbol(sym, params)!
+	return sym
+}
+
 pub fn (sc &Scope) find(name string) ?Symbol {
 	for sym in sc.syms {
 		if sym.name == name {
