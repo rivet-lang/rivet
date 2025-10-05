@@ -61,8 +61,9 @@ pub mut:
 pub struct LetStmt {
 pub:
 	tags   Tags
-	lefts  []Variable
-	right  Expr
 	is_pub bool
 	pos    FilePos
+pub mut:
+	lefts []Variable
+	right ?Expr
 }

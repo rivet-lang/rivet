@@ -61,6 +61,9 @@ fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
 		sema.register_variables(mut stmt)
 		return
 	}
+	if mut right := stmt.right {
+		sema.expr(mut right) or { reporter.err(err.msg(), right.pos).report() }
+	}
 }
 
 fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {

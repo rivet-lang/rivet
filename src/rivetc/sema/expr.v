@@ -5,12 +5,15 @@ module sema
 
 import rivetc.ast
 import rivetc.ice
-import rivetc.reporter as _
+import rivetc.reporter
 
 fn (mut sema Sema) expr(mut expr ast.Expr) ? {
 	match mut expr {
 		ast.BasicLiteral {
 			sema.basic_literal(mut expr)?
+		}
+		ast.Ident {
+			sema.ident_expr(mut expr)?
 		}
 		ast.BlockExpr {
 			sema.block_expr(mut expr)?
@@ -36,6 +39,17 @@ fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) ? {
 		.byte {
 			expr.type = sema.ctx.u8_type
 		}
+	}
+}
+
+fn (mut sema Sema) ident_expr(mut expr ast.Ident) ? {
+	if sema.stage == .symbol_res {
+		if sym := sema.find_symbol(expr.name) {
+			expr.sym = sym
+		} else {
+			reporter.err(err.msg(), expr.pos).report()
+		}
+		return
 	}
 }
 

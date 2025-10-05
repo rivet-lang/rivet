@@ -42,6 +42,7 @@ pub mut:
 pub struct Ident {
 pub mut:
 	name  string
+	sym   Symbol
 	scope &Scope = unsafe { nil }
 	type  Type
 	pos   FilePos

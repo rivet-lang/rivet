@@ -229,7 +229,7 @@ fn (mut p Parser) parse_let_stmt(is_pub bool) ast.LetStmt {
 			break
 		}
 	}
-	mut right := ast.empty_expr(p.tok.pos)
+	mut right := ?ast.Expr(none)
 	if p.accept(.assign) {
 		right = p.parse_expr()
 	}

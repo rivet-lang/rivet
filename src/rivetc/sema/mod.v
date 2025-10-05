@@ -86,3 +86,15 @@ fn (mut sema Sema) check_file(mut file ast.File) {
 		return
 	}
 }
+
+fn (sema &Sema) find_symbol(name string) !ast.Symbol {
+	// local
+	if sym := sema.scope.lookup(name) {
+		return sym
+	}
+	// global
+	if sym := sema.ctx.universe.find(name) {
+		return sym
+	}
+	return error('cannot find symbol `${name}` in this scope')
+}
