@@ -88,13 +88,26 @@ fn (mut sema Sema) check_file(mut file ast.File) {
 }
 
 fn (sema &Sema) find_symbol(name string) !ast.Symbol {
-	// local
-	if sym := sema.scope.lookup(name) {
-		return sym
-	}
-	// global
-	if sym := sema.ctx.universe.find(name) {
-		return sym
+	match name {
+		'true' {
+			return sema.ctx.true_sym
+		}
+		'false' {
+			return sema.ctx.false_sym
+		}
+		'null' {
+			return sema.ctx.null_sym
+		}
+		else {
+			// local
+			if sym := sema.scope.lookup(name) {
+				return sym
+			}
+			// global
+			if sym := sema.ctx.universe.find(name) {
+				return sym
+			}
+		}
 	}
 	return error('cannot find symbol `${name}` in this scope')
 }
