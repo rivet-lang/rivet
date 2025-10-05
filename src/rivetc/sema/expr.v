@@ -26,6 +26,9 @@ fn (mut sema Sema) expr(mut expr ast.Expr) ? {
 }
 
 fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) ? {
+	if sema.stage != .type_check {
+		return
+	}
 	match expr.kind {
 		.int {
 			expr.type = sema.ctx.int_type
@@ -48,6 +51,7 @@ fn (mut sema Sema) ident_expr(mut expr ast.Ident) ? {
 			expr.sym = sym
 		} else {
 			reporter.err(err.msg(), expr.pos).report()
+			return none
 		}
 		return
 	}

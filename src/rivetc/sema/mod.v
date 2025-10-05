@@ -13,7 +13,7 @@ enum Stage as u8 {
 	quiet
 	symbol_reg // srg_
 	symbol_res
-	type_checking // tc_
+	type_check // tc_
 	_end_
 }
 
