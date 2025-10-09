@@ -14,7 +14,7 @@ fn (mut sema Sema) register_function(mut stmt ast.FnStmt) {
 	}
 	sema.sym = stmt.sym
 	stmt.scope = ast.Scope.new(sema.scope, sema.sym)
-	sema.scope.add_symbol(stmt.sym) or { reporter.err(err.msg(), stmt.name_pos).report() }
+	sema.scope.add_symbol(stmt.sym) or { reporter.emit_error(err.msg(), stmt.name_pos) }
 	sema.scope = stmt.scope
 	for arg in stmt.args {
 		sema.scope.add_symbol(ast.Variable{
@@ -27,7 +27,7 @@ fn (mut sema Sema) register_function(mut stmt ast.FnStmt) {
 		}) or {
 			mut d := reporter.err(err.msg(), arg.pos)
 			d.add_note('inside function `${stmt.name}`')
-			d.report()
+			d.emit()
 		}
 	}
 	sema.stmts(mut stmt.stmts)
@@ -38,7 +38,7 @@ fn (mut sema Sema) register_variables(mut stmt ast.LetStmt) {
 		sema.scope.add_symbol(left, lookup: left.is_local) or {
 			mut d := reporter.err(err.msg(), left.pos)
 			d.add_note('inside ${sema.sym.type_of()} `${sema.sym.name}`')
-			d.report()
+			d.emit()
 		}
 	}
 }

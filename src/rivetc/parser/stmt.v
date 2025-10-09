@@ -25,7 +25,7 @@ fn (mut p Parser) parse_stmts() []ast.Stmt {
 		p.abort = true
 		mut d := reporter.err('expected block, found ${p.tok}', p.tok.pos)
 		d.add_help('if you want to write a single-statement, use `:`: `if (is_online): player.kick()`')
-		d.report()
+		d.emit()
 		return []
 	}
 
@@ -69,8 +69,7 @@ fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
 	if !is_finished && !p.abort {
 		// we give an error because the block has not been finished (`}` was not found),
 		// but it has not been aborted (due to poor formation of expressions or statements)
-
-		reporter.err('unfinished block, expected `}` and found ${p.tok}', lbrace_pos).report()
+		reporter.emit_error('unfinished block, expected `}` and found ${p.tok}', lbrace_pos)
 		p.abort = true
 	}
 
@@ -104,7 +103,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.semicolon {
 			// an orphaned semicolon indicates that `p.stmt()` is not properly
 			// handling the `;`
-			reporter.err('orphan semicolon detected', p.tok.pos).report()
+			reporter.emit_error('orphan semicolon detected', p.tok.pos)
 			p.abort = true
 		}
 		else {
@@ -129,7 +128,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 					}
 				}
 			} else {
-				reporter.err('invalid declaration: unexpected ${p.tok}', p.tok.pos).report()
+				reporter.err('invalid declaration: unexpected ${p.tok}', p.tok.pos).emit()
 				p.abort = true
 			}
 		}

@@ -97,7 +97,7 @@ fn (mut p Parser) advance(n int) {
 
 fn (mut p Parser) expect(kind token.Kind) {
 	if !p.accept(kind) {
-		reporter.err('expected `${kind}`, but found ${p.tok}', p.tok.pos).report()
+		reporter.emit_error('expected `${kind}`, but found ${p.tok}', p.tok.pos)
 		p.abort = true
 	}
 }
@@ -132,7 +132,7 @@ fn (mut p Parser) parse_ident(params ParseIdentParams) string {
 	} else if p.tok.kind.is_keyword() {
 		d.add_help('add a `_` before the keyword: `_${p.tok.kind}`')
 	}
-	d.report()
+	d.emit()
 	p.next()
 	return ''
 }

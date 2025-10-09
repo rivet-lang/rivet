@@ -30,7 +30,7 @@ fn (mut p Parser) parse_tags() ast.Tags {
 				}
 				p.expect(.rparen)
 			}
-			tags.add(name, args) or { reporter.err(err.msg(), name_pos + p.prev_tok.pos).report() }
+			tags.add(name, args) or { reporter.emit_error(err.msg(), name_pos + p.prev_tok.pos) }
 			if !p.accept(.semicolon) {
 				break
 			}

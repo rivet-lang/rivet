@@ -111,16 +111,24 @@ pub fn warn(msg string, pos ast.FilePos) Diagnostic {
 }
 
 @[inline]
-pub fn (d Diagnostic) report() {
-	unsafe {
-		if d.pos != none {
-			mut pos := &d.pos
-			if d.severity == .err {
-				pos.file.errors++
-			}
+pub fn (d Diagnostic) emit() {
+	if d.pos != none {
+		mut pos := &d.pos
+		if d.severity == .err {
+			pos.file.errors++
 		}
 	}
 	report(d)
+}
+
+@[inline]
+pub fn emit_error(msg string, pos ast.FilePos) {
+	err(msg, pos).emit()
+}
+
+@[inline]
+pub fn emit_warn(msg string, pos ast.FilePos) {
+	warn(msg, pos).emit()
 }
 
 @[params]

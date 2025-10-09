@@ -271,8 +271,7 @@ fn (mut t Tokenizer) internal_next() Token {
 						if t.pos >= t.text.len - 1 {
 							old_pos := t.pos
 							t.pos = start_pos
-
-							reporter.err('unterminated multiline comment', t.current_pos()).report()
+							reporter.emit_error('unterminated multiline comment', t.current_pos())
 							t.pos = old_pos
 						}
 						if t.text[t.pos] == lf {
@@ -472,5 +471,5 @@ fn (mut t Tokenizer) invalid_character() {
 	} else {
 		t.text[t.pos..t.pos + ch_len]
 	}
-	reporter.err('invalid character `${s}`', pos).report()
+	reporter.emit_error('invalid character `${s}`', pos)
 }

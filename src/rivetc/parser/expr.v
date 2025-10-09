@@ -210,8 +210,8 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				if p.tok.lit == 'b' {
 					expr = p.parse_char_literal()
 				} else {
-					reporter.err('only `b` is recognized as a valid prefix for a character literal',
-						p.tok.pos).report()
+					reporter.emit_error('only `b` is recognized as a valid prefix for a character literal',
+						p.tok.pos)
 					p.next()
 				}
 			} else if p.next_tok.kind == .string {
@@ -319,7 +319,7 @@ fn (mut p Parser) parse_literal() ast.Expr {
 			p.parse_string_literal()
 		}
 		else {
-			reporter.err('invalid literal expression: found ${p.tok}', p.tok.pos).report()
+			reporter.emit_error('invalid literal expression: found ${p.tok}', p.tok.pos)
 			ast.empty_expr(p.tok.pos)
 		}
 	}
@@ -366,8 +366,8 @@ fn (mut p Parser) parse_string_literal() ast.Expr {
 				ast.StringKind.raw_string
 			}
 			else {
-				reporter.err('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
-					p.prev_tok.pos).report()
+				reporter.emit_error('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
+					p.prev_tok.pos)
 				ast.StringKind.default
 			}
 		}
