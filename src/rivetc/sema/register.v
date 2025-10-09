@@ -14,7 +14,7 @@ fn (mut sema Sema) register_function(mut stmt ast.FnStmt) {
 	}
 	sema.sym = stmt.sym
 	stmt.scope = ast.Scope.new(sema.scope, sema.sym)
-	sema.scope.add_symbol(stmt.sym) or { reporter.emit_error(err.msg(), stmt.name_pos) }
+	sema.scope.add_symbol(stmt.sym) or { reporter.emit_err(err.msg(), stmt.name_pos) }
 	sema.scope = stmt.scope
 	for arg in stmt.args {
 		sema.scope.add_symbol(ast.Variable{

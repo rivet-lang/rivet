@@ -122,7 +122,7 @@ pub fn (d Diagnostic) emit() {
 }
 
 @[inline]
-pub fn emit_error(msg string, pos ast.FilePos) {
+pub fn emit_err(msg string, pos ast.FilePos) {
 	err(msg, pos).emit()
 }
 

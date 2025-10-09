@@ -210,7 +210,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				if p.tok.lit == 'b' {
 					expr = p.parse_char_literal()
 				} else {
-					reporter.emit_error('only `b` is recognized as a valid prefix for a character literal',
+					reporter.emit_err('only `b` is recognized as a valid prefix for a character literal',
 						p.tok.pos)
 					p.next()
 				}
@@ -319,7 +319,7 @@ fn (mut p Parser) parse_literal() ast.Expr {
 			p.parse_string_literal()
 		}
 		else {
-			reporter.emit_error('invalid literal expression: found ${p.tok}', p.tok.pos)
+			reporter.emit_err('invalid literal expression: found ${p.tok}', p.tok.pos)
 			ast.empty_expr(p.tok.pos)
 		}
 	}
@@ -366,7 +366,7 @@ fn (mut p Parser) parse_string_literal() ast.Expr {
 				ast.StringKind.raw_string
 			}
 			else {
-				reporter.emit_error('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
+				reporter.emit_err('only `b`, `c` and `r` are recognized as valid prefixes for a string literal',
 					p.prev_tok.pos)
 				ast.StringKind.default
 			}
@@ -503,7 +503,6 @@ fn (mut p Parser) parse_block_expr() ast.Expr {
 	old_inside_block_expr := p.inside_block_expr
 	defer { p.inside_block_expr = old_inside_block_expr }
 	p.inside_block_expr = p.inside_expr
-
 	stmts, expr := p.parse_simple_block()
 	return ast.BlockExpr{
 		stmts: stmts

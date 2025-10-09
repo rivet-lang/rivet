@@ -50,7 +50,7 @@ fn (mut sema Sema) ident_expr(mut expr ast.Ident) ? {
 		if sym := sema.find_symbol(expr.name) {
 			expr.sym = sym
 		} else {
-			reporter.emit_error(err.msg(), expr.pos)
+			reporter.emit_err(err.msg(), expr.pos)
 			return none
 		}
 		return

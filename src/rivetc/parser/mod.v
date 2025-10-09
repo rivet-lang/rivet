@@ -97,7 +97,7 @@ fn (mut p Parser) advance(n int) {
 
 fn (mut p Parser) expect(kind token.Kind) {
 	if !p.accept(kind) {
-		reporter.emit_error('expected `${kind}`, but found ${p.tok}', p.tok.pos)
+		reporter.emit_err('expected `${kind}`, but found ${p.tok}', p.tok.pos)
 		p.abort = true
 	}
 }

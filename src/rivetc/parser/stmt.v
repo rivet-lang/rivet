@@ -45,7 +45,6 @@ fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
 	}
 
 	mut expr := ?ast.Expr(none)
-
 	mut is_finished := false
 	mut stmts := []ast.Stmt{}
 	for {
@@ -69,7 +68,7 @@ fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
 	if !is_finished && !p.abort {
 		// we give an error because the block has not been finished (`}` was not found),
 		// but it has not been aborted (due to poor formation of expressions or statements)
-		reporter.emit_error('unfinished block, expected `}` and found ${p.tok}', lbrace_pos)
+		reporter.emit_err('unfinished block, expected `}` and found ${p.tok}', lbrace_pos)
 		p.abort = true
 	}
 
@@ -103,7 +102,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 		.semicolon {
 			// an orphaned semicolon indicates that `p.stmt()` is not properly
 			// handling the `;`
-			reporter.emit_error('orphan semicolon detected', p.tok.pos)
+			reporter.emit_err('orphan semicolon detected', p.tok.pos)
 			p.abort = true
 		}
 		else {
@@ -128,7 +127,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 					}
 				}
 			} else {
-				reporter.err('invalid declaration: unexpected ${p.tok}', p.tok.pos).emit()
+				reporter.emit_err('invalid declaration: unexpected ${p.tok}', p.tok.pos)
 				p.abort = true
 			}
 		}
@@ -155,18 +154,22 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 		for {
 			mut arg_pos := p.tok.pos
 
+			// & | mut | &mut
 			arg_is_ref := p.accept(.amp)
 			arg_is_mut := p.accept(.kw_mut)
 
+			// arg
 			arg_name := p.parse_ident()
 			arg_name_pos := p.prev_tok.pos
-			p.expect(.colon)
 
+			// : int
+			p.expect(.colon)
 			old_inside_type := p.inside_type
 			p.inside_type = true
 			arg_type := p.parse_type()
 			p.inside_type = old_inside_type
 
+			// = 2004
 			mut arg_default_expr := ?ast.Expr(none)
 			if p.accept(.assign) {
 				arg_default_expr = p.parse_expr()

@@ -50,7 +50,7 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 
 	for arg in stmt.args {
 		if mut default_expr := arg.default_expr {
-			sema.expr(mut default_expr) or { reporter.emit_error(err.msg(), arg.pos) }
+			sema.expr(mut default_expr) or { reporter.emit_err(err.msg(), arg.pos) }
 		}
 	}
 	sema.stmts(mut stmt.stmts)
@@ -62,7 +62,7 @@ fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
 		return
 	}
 	if mut right := stmt.right {
-		sema.expr(mut right) or { reporter.emit_error(err.msg(), right.pos) }
+		sema.expr(mut right) or { reporter.emit_err(err.msg(), right.pos) }
 	}
 }
 
