@@ -7,27 +7,29 @@ import rivetc.ast
 import rivetc.ice
 import rivetc.reporter
 
-fn (mut sema Sema) expr(mut expr ast.Expr) ? {
-	match mut expr {
+fn (mut sema Sema) expr(mut expr ast.Expr) bool {
+	return match mut expr {
 		ast.BasicLiteral {
-			sema.basic_literal(mut expr)?
+			sema.basic_literal(mut expr)
 		}
 		ast.Ident {
-			sema.ident_expr(mut expr)?
+			sema.ident_expr(mut expr)
 		}
 		ast.BlockExpr {
-			sema.block_expr(mut expr)?
+			sema.block_expr(mut expr)
 		}
 		ast.EmptyExpr {
 			ice.ice('empty expression detected - ${expr.pos}')
 		}
-		else {}
+		else {
+			false
+		}
 	}
 }
 
-fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) ? {
+fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) bool {
 	if sema.stage != .type_check {
-		return
+		return true
 	}
 	match expr.kind {
 		.int {
@@ -43,25 +45,28 @@ fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) ? {
 			expr.type = sema.ctx.u8_type
 		}
 	}
+	return true
 }
 
-fn (mut sema Sema) ident_expr(mut expr ast.Ident) ? {
+fn (mut sema Sema) ident_expr(mut expr ast.Ident) bool {
 	if sema.stage == .symbol_res {
 		if sym := sema.find_symbol(expr.name) {
 			expr.sym = sym
 		} else {
 			reporter.emit_err(err.msg(), expr.pos)
-			return none
+			return false
 		}
-		return
+		return true
 	}
+	return true
 }
 
-fn (mut sema Sema) block_expr(mut expr ast.BlockExpr) ? {
+fn (mut sema Sema) block_expr(mut expr ast.BlockExpr) bool {
 	old_scope := sema.scope
 	defer {
 		sema.scope = old_scope
 	}
 	sema.scope = ast.Scope.new(sema.scope, sema.sym)
 	sema.stmts(mut expr.stmts)
+	return true
 }

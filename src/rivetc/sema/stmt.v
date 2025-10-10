@@ -5,7 +5,6 @@ module sema
 
 import rivetc.ast
 import rivetc.ice
-import rivetc.reporter
 
 fn (mut sema Sema) stmts(mut stmts []ast.Stmt) {
 	for mut stmt in stmts {
@@ -50,7 +49,7 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 
 	for arg in stmt.args {
 		if mut default_expr := arg.default_expr {
-			sema.expr(mut default_expr) or { reporter.emit_err(err.msg(), arg.pos) }
+			_ = sema.expr(mut default_expr)
 		}
 	}
 	sema.stmts(mut stmt.stmts)
@@ -62,7 +61,7 @@ fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
 		return
 	}
 	if mut right := stmt.right {
-		sema.expr(mut right) or { reporter.emit_err(err.msg(), right.pos) }
+		_ = sema.expr(mut right)
 	}
 }
 
@@ -70,13 +69,13 @@ fn (mut sema Sema) while_stmt(mut stmt ast.WhileStmt) {
 	if stmt.init_stmt != none {
 		sema.let_stmt(mut stmt.init_stmt)
 	}
-	sema.expr(mut stmt.cond) or { return }
+	_ = sema.expr(mut stmt.cond)
 	if stmt.continue_expr != none {
-		sema.expr(mut stmt.continue_expr) or { return }
+		_ = sema.expr(mut stmt.continue_expr)
 	}
 	sema.stmts(mut stmt.stmts)
 }
 
 fn (mut sema Sema) expr_stmt(mut stmt ast.ExprStmt) {
-	sema.expr(mut stmt.expr) or { return }
+	_ = sema.expr(mut stmt.expr)
 }
