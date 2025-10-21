@@ -55,7 +55,7 @@ fn (mut sema Sema) check_files(mut files []&ast.File) {
 		sema.stage = unsafe { Stage(i) }
 		sema.ctx.log('>> Stage: ${sema.stage}')
 		for mut file in files {
-			sema.check_file(mut *file)
+			sema.check_file(mut file)
 		}
 	}
 }

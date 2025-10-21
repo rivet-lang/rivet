@@ -42,8 +42,8 @@ pub fn new(ctx &context.Context) &Parser {
 pub fn (mut p Parser) parse(mut imp importer.ImportedMod) {
 	p.ctx.log(@METHOD)
 	for mut file in imp.files {
-		if p.parse_file(mut *file) {
-			p.ctx.files << *file
+		if p.parse_file(mut file) {
+			p.ctx.files << file
 		}
 	}
 }
