@@ -6,10 +6,6 @@
 
 A general-purpose programming language, focused on simplicity, safety and stability.
 
-[Website](https://rivet-lang.github.io)
-•
-[Documentation](https://rivet-lang.github.io/docs)
-•
 [Roadmap](ROADMAP.md)
 •
 [Contributing](CONTRIBUTING.md)
