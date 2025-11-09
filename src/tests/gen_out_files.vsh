@@ -9,7 +9,7 @@ if !os.exists(rivetc) {
 	panic('`${rivetc}` executable not found')
 }
 
-files := os.walk_ext('tests/', '.ri')
+files := os.walk_ext('src/tests/', '.ri')
 if files.len == 0 {
 	return
 }

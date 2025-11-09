@@ -5,9 +5,12 @@
 build:
 	v -o bin/rivetc src/rivetc/cmd
 
+build-prod:
+	v -prod -o bin/rivetc src/rivetc/cmd
+
 test: build
 	v test src/rivetc
-	v tests/run_tests.vsh
+	v src/tests/run_tests.vsh
 
 fmt:
 	v fmt -w .

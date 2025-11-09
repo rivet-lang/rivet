@@ -1,5 +1,5 @@
 error: duplicate argument `a`
-   in tests/invalid/sema/duplicate_argument.err.ri:5:16
+   in src/tests/invalid/sema/duplicate_argument.err.ri:5:16
          |
        5 | fn win(a: int, a: int) {} // FAIL
          |                ^~~~~~

@@ -1,26 +1,26 @@
 error: expected identifier, but found integer literal `123`
-   in tests/invalid/parser/expected_identifier.err.ri:3:4
+   in src/tests/invalid/parser/expected_identifier.err.ri:3:4
          |
        3 | fn 123() {} // FAIL
          |    ^~~
 error: expected identifier, but found string literal `"my_func"`
-   in tests/invalid/parser/expected_identifier.err.ri:4:4
+   in src/tests/invalid/parser/expected_identifier.err.ri:4:4
          |
        4 | fn "my_func"() {} // FAIL
          |    ^~~~~~~~~
    = help: remove the quotes around `my_func`
 error: expected identifier, but found character literal `'c'`
-   in tests/invalid/parser/expected_identifier.err.ri:5:4
+   in src/tests/invalid/parser/expected_identifier.err.ri:5:4
          |
        5 | fn 'c'() {} // FAIL
          |    ^~~
 error: expected identifier, but found floating-point literal `123.4`
-   in tests/invalid/parser/expected_identifier.err.ri:6:4
+   in src/tests/invalid/parser/expected_identifier.err.ri:6:4
          |
        6 | fn 123.4() {} // FAIL
          |    ^~~~~
 error: expected identifier, but found keyword `use`
-   in tests/invalid/parser/expected_identifier.err.ri:7:4
+   in src/tests/invalid/parser/expected_identifier.err.ri:7:4
          |
        7 | fn use() {} // FAIL
          |    ^~~

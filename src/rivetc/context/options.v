@@ -7,10 +7,10 @@ import os
 import flag
 import rivetc.reporter
 
-@[footer: 'The compiler expects an input, either file or directory (if directory, it must contain a file entry `src/main.ri`).']
-@[xdoc: 'The Rivet programming language compiler']
 @[name: 'rivetc']
 @[version: '0.1.0']
+@[xdoc: '\nThe Rivet programming language compiler']
+@[footer: 'The compiler expects an input, either file or directory (if directory, it must contain a file entry `src/main.ri`).']
 pub struct Options {
 pub mut:
 	input string @[ignore]
