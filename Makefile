@@ -1,15 +1,15 @@
-# Copyright (C) 2024 The Rivet programming language. Use of this source
+# Copyright (C) 2024 The Weld programming language. Use of this source
 # code is governed by an MIT license that can be found in the LICENSE
 # file.
 
 build:
-	v -o bin/rivetc src/rivetc/cmd
+	v -o bin/weldc src/weldc/cmd
 
 build-prod:
-	v -prod -o bin/rivetc src/rivetc/cmd
+	v -prod -o bin/weldc src/weldc/cmd
 
 test: build
-	v test src/rivetc
+	v test src/weldc
 	v src/tests/run_tests.vsh
 
 fmt:

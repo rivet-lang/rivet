@@ -1,10 +1,10 @@
 error: empty character literal
-   in src/tests/invalid/tokenizer/invalid_character_literal.err.ri:1:2
+   in src/tests/invalid/tokenizer/invalid_character_literal.err.wd:1:2
          |
        1 | ''
          |  ^
 error: character literal may only contain one codepoint
-   in src/tests/invalid/tokenizer/invalid_character_literal.err.ri:2:5
+   in src/tests/invalid/tokenizer/invalid_character_literal.err.wd:2:5
          |
        2 | 'abc'
          |     ^

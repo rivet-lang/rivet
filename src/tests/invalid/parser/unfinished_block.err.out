@@ -1,5 +1,5 @@
 error: unfinished block, expected `}` and found end of file
-   in src/tests/invalid/parser/unfinished_block.err.ri:1:11
+   in src/tests/invalid/parser/unfinished_block.err.wd:1:11
          |
        1 | fn main() {
          |           ^

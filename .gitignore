@@ -1,8 +1,8 @@
 # Local files
-bin/rivetc
+bin/weldc
 tests/gen_out_files
 tests/run_tests
 
-main.ri
+main.wd
 x.py
-test.ri
+test.wd

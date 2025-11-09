@@ -1,21 +1,21 @@
-// Copyright (C) 2024 The Rivet programming language. Use of this source
+// Copyright (C) 2024 The Weld programming language. Use of this source
 // code is governed by an MIT license that can be found in the LICENSE file.
 import os
 import term
 
-// test.err.ri -> test.err.out
-// test.ok.ri -> test.ok.out
+// test.err.wd -> test.err.out
+// test.ok.wd -> test.ok.out
 
-const rivetc = './bin/rivetc'
+const weldc = './bin/weldc'
 
-if !os.exists(rivetc) {
-	panic('`${rivetc}` executable not found')
+if !os.exists(weldc) {
+	panic('`${weldc}` executable not found')
 }
 
 mut passed := 0
 mut failed := 0
 
-files := os.walk_ext('src/tests/', '.ri')
+files := os.walk_ext('src/tests/', '.wd')
 if files.len == 0 {
 	return
 }
@@ -23,9 +23,9 @@ for i, file in files {
 	print(term.bold(term.cyan('  [${i + 1}/${files.len}] ')))
 	print(file)
 	mut test_passed := true
-	is_err_out := file.ends_with('.err.ri')
+	is_err_out := file.ends_with('.err.wd')
 	out_content := if is_err_out { os.read_file(file#[..-3] + '.out')! } else { '' }
-	res := os.execute('${rivetc} ${file}')
+	res := os.execute('${weldc} ${file}')
 	res_out := res.output.trim_space()
 	out_is_diff := res.exit_code != 0 && res_out != out_content
 	if is_err_out {

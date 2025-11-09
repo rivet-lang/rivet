@@ -2,9 +2,9 @@ name: Compiler Tests
 
 on:
   push:
-    paths: ['src/rivetc/**.v', '.github/workflows/compiler_tests.yml', 'tests/**']
+    paths: ['src/weldc/**.v', '.github/workflows/compiler_tests.yml', 'tests/**']
   pull_request:
-    paths: ['src/rivetc/**.v', '.github/workflows/compiler_tests.yml', 'tests/**']
+    paths: ['src/weldc/**.v', '.github/workflows/compiler_tests.yml', 'tests/**']
     types: [opened, synchronize]
 
 jobs:
@@ -19,10 +19,10 @@ jobs:
           cd v && make && sudo ./v symlink
           cd ..
 
-      - name: Build Rivet compiler
+      - name: Build Weld compiler
         run: |
           make build
 
-      - name: Run Rivet compiler tests
+      - name: Run Weld compiler tests
         run: |
           make test

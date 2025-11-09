@@ -1,5 +1,5 @@
 error: expected `;`, but found token `]`
-   in src/tests/invalid/parser/unexpected_token.err.ri:1:13
+   in src/tests/invalid/parser/unexpected_token.err.wd:1:13
          |
        1 | fn main() { ] abc
          |             ^
