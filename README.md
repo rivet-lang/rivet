@@ -1,5 +1,4 @@
 <div align="center">
-
 <!--
 <img src="https://github.com/weld-lang/logo/blob/main/logo.png" alt="Weld logo" width="200" height="200"/>
 -->
@@ -38,5 +37,7 @@ interpreter available.
 > 
 > Read [CONTRIBUTING](CONTRIBUTING.md) to get more information.
 
+<!--
 You can find information on how to build Weld on your computer by going to the
 [documentation](https://weld-lang.github.io/docs).
+-->
