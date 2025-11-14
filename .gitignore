@@ -1,8 +1,7 @@
 # Local files
 bin/weldc
-tests/gen_out_files
-tests/run_tests
+src/tests/gen_out_files
+src/tests/run_tests
 
 main.wd
-x.py
 test.wd
