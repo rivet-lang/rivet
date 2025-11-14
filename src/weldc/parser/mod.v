@@ -62,16 +62,16 @@ pub fn (mut p Parser) parse_file(mut file ast.File) bool {
 
 	p.advance(2)
 	if p.tok.kind == .eof {
-		return true
+		return false
 	}
 
 	for {
-		p.file.stmts << p.parse_stmt()
+		p.file.stmts << p.parse_stmt() or { return false }
 		if p.should_abort() {
 			break
 		}
 	}
-	return true
+	return !p.abort
 }
 
 fn (mut p Parser) reset() {

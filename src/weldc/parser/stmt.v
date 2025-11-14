@@ -14,10 +14,12 @@ fn (mut p Parser) parse_stmts() []ast.Stmt {
 	}
 
 	if p.accept(.colon) {
-		// single-statement: `if (is_online): player.kick();`
-		stmt := p.parse_stmt()
-		p.expect_semicolon = false
-		return [stmt]
+		// single-statement: `if (player.is_online): player.ban();`
+		if stmt := p.parse_stmt() {
+			p.expect_semicolon = false
+			return [stmt]
+		}
+		return []
 	}
 
 	p.expect_semicolon = false
@@ -30,10 +32,11 @@ fn (mut p Parser) parse_stmts() []ast.Stmt {
 	}
 
 	old_inside_local_scope := p.inside_local_scope
-	defer { p.inside_local_scope = old_inside_local_scope }
-	p.inside_local_scope = true
 
+	p.inside_local_scope = true
 	stmts, _ := p.parse_simple_block()
+	p.inside_local_scope = old_inside_local_scope
+
 	return stmts
 }
 
@@ -49,7 +52,7 @@ fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
 	mut stmts := []ast.Stmt{}
 	for {
 		p.expect_semicolon = true
-		stmt := p.parse_stmt()
+		stmt := p.parse_stmt() or { break }
 		p.expect_semicolon = false
 
 		if p.inside_block_expr && p.tok.kind == .rbrace && stmt is ast.ExprStmt {
@@ -75,13 +78,13 @@ fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
 	return stmts, expr
 }
 
-fn (mut p Parser) parse_stmt() ast.Stmt {
+fn (mut p Parser) parse_stmt() ?ast.Stmt {
 	if p.should_abort() {
-		return ast.empty_stmt(p.tok.pos)
+		return none
 	}
 
-	mut old_expect_semicolon := p.expect_semicolon
-	mut old_tags := p.tags
+	old_expect_semicolon := p.expect_semicolon
+	old_tags := p.tags
 	defer {
 		p.expect_semicolon = old_expect_semicolon
 		p.tags = old_tags
@@ -91,7 +94,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 
 	// module stmts: fns, vars, etc.
 	is_pub := !p.inside_local_scope && p.accept(.kw_pub)
-	mut stmt := ast.empty_stmt(p.tok.pos)
+	mut stmt := ?ast.Stmt(none)
 	match p.tok.kind {
 		.kw_fn {
 			stmt = p.parse_fn_stmt(is_pub)
@@ -104,6 +107,8 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 			// handling the `;`
 			reporter.emit_err('orphan semicolon detected', p.tok.pos)
 			p.abort = true
+			p.next()
+			return none
 		}
 		else {
 			// local stmts: if, while, match, etc.
@@ -129,6 +134,7 @@ fn (mut p Parser) parse_stmt() ast.Stmt {
 			} else {
 				reporter.emit_err('invalid declaration: unexpected ${p.tok}', p.tok.pos)
 				p.abort = true
+				return none
 			}
 		}
 	}
