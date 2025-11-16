@@ -40,11 +40,6 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 		sema.sym = old_sym
 	}
 
-	if sema.stage == .symbol_reg {
-		sema.register_function(mut stmt)
-		return
-	}
-
 	sema.scope = stmt.scope
 
 	for arg in stmt.args {
@@ -56,10 +51,6 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 }
 
 fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {
-	if sema.stage == .symbol_reg {
-		sema.register_variables(mut stmt)
-		return
-	}
 	if mut right := stmt.right {
 		_ = sema.expr(mut right)
 	}

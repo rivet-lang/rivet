@@ -48,11 +48,13 @@ pub fn (mut p Parser) parse(mut imp importer.ImportedMod) {
 	}
 }
 
+// parse_file returns `true` when it was able to parse the file
+// successfully (and it is not empty), `false` otherwise.
 pub fn (mut p Parser) parse_file(mut file ast.File) bool {
+	defer { p.reset() }
+
 	p.file = file
 	file.stage = .parsed
-
-	defer { p.reset() }
 
 	p.tokenizer = tokenizer.from_file(p.ctx, p.file)
 	if p.file.errors > 0 {
@@ -62,6 +64,7 @@ pub fn (mut p Parser) parse_file(mut file ast.File) bool {
 
 	p.advance(2)
 	if p.tok.kind == .eof {
+		// if the file doesn't contain any declaration, we simply skip it
 		return false
 	}
 
@@ -71,6 +74,7 @@ pub fn (mut p Parser) parse_file(mut file ast.File) bool {
 			break
 		}
 	}
+
 	return !p.abort
 }
 

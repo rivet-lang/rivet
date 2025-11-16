@@ -28,9 +28,6 @@ fn (mut sema Sema) expr(mut expr ast.Expr) bool {
 }
 
 fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) bool {
-	if sema.stage != .type_check {
-		return true
-	}
 	match expr.kind {
 		.int {
 			expr.type = sema.ctx.int_type
@@ -49,14 +46,11 @@ fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) bool {
 }
 
 fn (mut sema Sema) ident_expr(mut expr ast.Ident) bool {
-	if sema.stage == .symbol_res {
-		if sym := sema.find_symbol(expr.name) {
-			expr.sym = sym
-		} else {
-			reporter.emit_err(err.msg(), expr.pos)
-			return false
-		}
-		return true
+	if sym := sema.find_symbol(expr.name) {
+		expr.sym = sym
+	} else {
+		reporter.emit_err(err.msg(), expr.pos)
+		return false
 	}
 	return true
 }
