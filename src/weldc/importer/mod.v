@@ -37,8 +37,10 @@ pub fn (mut imp Importer) import_root_pkg() ImportedMod {
 // be the same as the directory.
 // Files are sorted alphabetically and by priority.
 pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool, pkg_name string) ImportedMod {
-	imp.ctx.log('${@METHOD}("${dir_name}", ${is_pkg}, "${pkg_name}")')
 	mod_name := get_mod_name(dir_name)
+	pkg_name_ := get_mod_name(pkg_name)
+
+	imp.ctx.log('${@METHOD}("${mod_name}", ${is_pkg}, "${pkg_name_}")')
 
 	input_files := get_weld_files(dir_name)
 	if input_files == [] {
@@ -62,22 +64,25 @@ pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool, pkg_name s
 	return ImportedMod{
 		name:     mod_name
 		is_pkg:   is_pkg
-		pkg_name: pkg_name
+		pkg_name: pkg_name_
 		files:    files
 	}
 }
 
 @[inline]
 pub fn get_mod_name(dir_name string) string {
-	if os.is_file(dir_name) {
-		_, mod_name, _ := os.split_path(dir_name)
-		return mod_name.all_before('.')
+	if os.is_file(dir_name) || os.is_dir(dir_name) {
+		if os.is_file(dir_name) {
+			_, mod_name, _ := os.split_path(dir_name)
+			return mod_name.all_before('.')
+		}
+		return os.base(if dir_name == '.' {
+			os.abs_path(dir_name)
+		} else {
+			dir_name
+		})
 	}
-	return os.base(if dir_name == '.' {
-		os.abs_path(dir_name)
-	} else {
-		dir_name
-	})
+	return dir_name
 }
 
 @[inline]

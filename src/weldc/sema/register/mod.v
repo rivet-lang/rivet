@@ -22,7 +22,7 @@ pub fn register_symbols(ctx &context.Context) {
 		ctx: ctx
 	}
 	for mut pkg in reg.ctx.pkgs {
-		ctx.log('${@METHOD}() for package `${pkg.name}`')
+		ctx.log('${@FN}() for package `${pkg.name}`')
 		reg.pkg = pkg
 		for mut file in pkg.files {
 			reg.check_file(mut file)
