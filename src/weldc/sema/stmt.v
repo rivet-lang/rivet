@@ -42,9 +42,9 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 
 	sema.scope = stmt.scope
 
-	for arg in stmt.args {
-		if mut default_expr := arg.default_expr {
-			_ = sema.expr(mut default_expr)
+	for mut arg in stmt.args {
+		if arg.default_expr != none {
+			_ = sema.expr(mut arg.default_expr)
 		}
 	}
 	sema.stmts(mut stmt.stmts)

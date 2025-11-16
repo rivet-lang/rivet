@@ -182,7 +182,15 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 			}
 
 			arg_pos += p.prev_tok.pos
-			args << ast.FnArg{arg_name, arg_name_pos, arg_type, arg_default_expr, arg_is_mut, arg_is_ref, arg_pos}
+			args << ast.FnArg{
+				name:         arg_name
+				name_pos:     arg_name_pos
+				type:         arg_type
+				default_expr: arg_default_expr
+				is_mut:       arg_is_mut
+				is_ref:       arg_is_ref
+				pos:          arg_pos
+			}
 			if !p.accept(.comma) || p.should_abort() {
 				break
 			}

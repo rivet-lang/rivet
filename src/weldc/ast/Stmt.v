@@ -39,13 +39,14 @@ pub mut:
 
 pub struct FnArg {
 pub:
-	name         string
-	name_pos     FilePos
+	name     string
+	name_pos FilePos
+	is_mut   bool
+	is_ref   bool
+	pos      FilePos
+pub mut:
 	type         Type
 	default_expr ?Expr
-	is_mut       bool
-	is_ref       bool
-	pos          FilePos
 }
 
 pub struct WhileStmt {

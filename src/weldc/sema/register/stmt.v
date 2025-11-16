@@ -57,7 +57,7 @@ fn (mut reg Register) fn_stmt(mut stmt ast.FnStmt) {
 	stmt.scope = ast.Scope.new(reg.scope, reg.sym)
 	reg.scope.add_symbol(stmt.sym) or { reporter.emit_err(err.msg(), stmt.name_pos) }
 	reg.scope = stmt.scope
-	for arg in stmt.args {
+	for mut arg in stmt.args {
 		reg.scope.add_symbol(ast.Variable{
 			name:     arg.name
 			is_local: true
@@ -70,8 +70,8 @@ fn (mut reg Register) fn_stmt(mut stmt ast.FnStmt) {
 			d.add_note('inside function `${stmt.name}`')
 			d.emit()
 		}
-		if mut default_expr := arg.default_expr {
-			reg.expr(mut default_expr)
+		if arg.default_expr != none {
+			reg.expr(mut arg.default_expr)
 		}
 	}
 	reg.stmts(mut stmt.stmts)
