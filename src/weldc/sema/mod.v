@@ -19,7 +19,8 @@ mut:
 	parser &parser.Parser     = unsafe { nil }
 	imp    &importer.Importer = unsafe { nil }
 
-	file  &ast.File = unsafe { nil }
+	pkg   &ast.Package = unsafe { nil }
+	file  &ast.File    = unsafe { nil }
 	sym   ast.Symbol
 	scope &ast.Scope = unsafe { nil }
 }
@@ -38,16 +39,20 @@ pub fn (mut sema Sema) analyze(p &parser.Parser, imp &importer.Importer) {
 	sema.ctx.log(@METHOD)
 	sema.ctx.load_builtin_symbols()
 
-	sema.check_files(mut sema.ctx.files)
+	sema.check_files()
 }
 
-fn (mut sema Sema) check_files(mut files []&ast.File) {
-	register.register_symbols(sema.ctx, mut files)
+fn (mut sema Sema) check_files() {
+	register.register_symbols(sema.ctx)
 	if sema.ctx.code_has_errors() {
 		return
 	}
-	for mut file in files {
-		sema.check_file(mut file)
+	for mut pkg in sema.ctx.pkgs {
+		sema.ctx.log('${@METHOD}() for package `${pkg.name}`')
+		sema.pkg = pkg
+		for mut file in pkg.files {
+			sema.check_file(mut file)
+		}
 	}
 }
 

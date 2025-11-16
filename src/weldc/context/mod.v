@@ -10,17 +10,18 @@ import weldc.reporter
 
 @[heap; noinit]
 pub struct Context {
-pub mut:
+pub:
 	options Options
-
+pub mut:
 	// Universe is the main scope of all symbols that both the user and the compiler define.
 	universe &ast.Scope = ast.Scope.new(unsafe { nil }, none)
 
 	// Name of the main package with which the compiler was called.
 	root_name string
 
-	// Weld source code files, sorted by package.
-	files []&ast.File
+	// The compiler groups each parsed file by package, this way we can analyze it package by
+	// package in the following phases.
+	pkgs []&ast.Package
 
 	// Types.
 	// NOTE: All of these types are initialized in the semantic analyzer,
@@ -55,8 +56,23 @@ pub mut:
 }
 
 @[inline]
-pub fn new() &Context {
-	return &Context{}
+pub fn new(options Options) &Context {
+	return &Context{
+		options: options
+	}
+}
+
+pub fn (mut ctx Context) find_or_add_pkg(name string) &ast.Package {
+	for pkg in ctx.pkgs {
+		if pkg.name == name {
+			return pkg
+		}
+	}
+	pkg := &ast.Package{
+		name: name
+	}
+	ctx.pkgs << pkg
+	return pkg
 }
 
 pub fn (mut ctx Context) load_builtin_symbols() {

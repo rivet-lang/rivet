@@ -9,9 +9,7 @@ import weldc.importer
 import weldc.sema
 
 pub fn run(args []string) {
-	mut ctx := context.new()
-
-	ctx.options = context.parse_args(args)
+	mut ctx := context.new(context.parse_args(args))
 
 	mut imp := importer.new(ctx)
 	mut root_pkg := imp.import_root_pkg()

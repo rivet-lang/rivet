@@ -11,18 +11,22 @@ struct Register {
 mut:
 	ctx &context.Context = unsafe { nil }
 
-	file  &ast.File = unsafe { nil }
+	pkg   &ast.Package = unsafe { nil }
+	file  &ast.File    = unsafe { nil }
 	sym   ast.Symbol
 	scope &ast.Scope = unsafe { nil }
 }
 
-pub fn register_symbols(ctx &context.Context, mut files []&ast.File) {
-	ctx.log(@METHOD)
+pub fn register_symbols(ctx &context.Context) {
 	mut reg := &Register{
 		ctx: ctx
 	}
-	for mut file in files {
-		reg.check_file(mut file)
+	for mut pkg in reg.ctx.pkgs {
+		ctx.log('${@METHOD}() for package `${pkg.name}`')
+		reg.pkg = pkg
+		for mut file in pkg.files {
+			reg.check_file(mut file)
+		}
 	}
 }
 

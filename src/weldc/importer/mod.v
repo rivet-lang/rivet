@@ -15,9 +15,10 @@ pub mut:
 
 pub struct ImportedMod {
 pub:
-	name   string
-	is_pkg bool
-	files  []&ast.File
+	name     string
+	is_pkg   bool
+	pkg_name string
+	files    []&ast.File
 }
 
 pub fn new(ctx &context.Context) &Importer {
@@ -28,15 +29,15 @@ pub fn new(ctx &context.Context) &Importer {
 
 @[inline]
 pub fn (mut imp Importer) import_root_pkg() ImportedMod {
-	return imp.import_module(imp.ctx.options.input, true)
+	return imp.import_module(imp.ctx.options.input, true, imp.ctx.options.input)
 }
 
 // The input the compiler receives can be a file or a directory. If it's a file, the
 // module name will be the same as the file, and if it's a directory, the name will
 // be the same as the directory.
 // Files are sorted alphabetically and by priority.
-pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool) ImportedMod {
-	imp.ctx.log(@METHOD)
+pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool, pkg_name string) ImportedMod {
+	imp.ctx.log('${@METHOD}("${dir_name}", ${is_pkg}, "${pkg_name}")')
 	mod_name := get_mod_name(dir_name)
 
 	input_files := get_weld_files(dir_name)
@@ -56,12 +57,13 @@ pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool) ImportedMo
 		}
 		files << f
 	}
-	files.sort(b.priority < a.priority)
+	files.sort(a.priority > b.priority)
 
 	return ImportedMod{
-		name:   mod_name
-		is_pkg: is_pkg
-		files:  files
+		name:     mod_name
+		is_pkg:   is_pkg
+		pkg_name: pkg_name
+		files:    files
 	}
 }
 
