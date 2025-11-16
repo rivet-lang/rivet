@@ -1,6 +1,6 @@
 error: unterminated multiline comment
    in src/tests/invalid/tokenizer/unterminated_multiline_comment.err.wd:2:1
-         |
-       2 | unterminated multiline comment :(
-         |
-error: could not compile `unterminated_multiline_comment` module, aborting due to previous error
+       |
+     2 | unterminated multiline comment :(
+       |
+error: aborting due to previous error

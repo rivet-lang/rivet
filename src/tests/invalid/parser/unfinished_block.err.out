@@ -1,6 +1,6 @@
 error: unfinished block, expected `}` and found end of file
    in src/tests/invalid/parser/unfinished_block.err.wd:1:11
-         |
-       1 | fn main() {
-         |           ^
-error: could not compile `unfinished_block` module, aborting due to previous error
+       |
+     1 | fn main() {
+       |           ^
+error: aborting due to previous error

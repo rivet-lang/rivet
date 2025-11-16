@@ -1,12 +1,12 @@
 error: empty character literal
    in src/tests/invalid/tokenizer/invalid_character_literal.err.wd:1:2
-         |
-       1 | ''
-         |  ^
+       |
+     1 | ''
+       |  ^
 error: character literal may only contain one codepoint
    in src/tests/invalid/tokenizer/invalid_character_literal.err.wd:2:5
-         |
-       2 | 'abc'
-         |     ^
+       |
+     2 | 'abc'
+       |     ^
    = help: if you meant to write a string literal, use double quotes
-error: could not compile `invalid_character_literal` module, aborting due to 2 previous errors
+error: aborting due to 2 previous errors

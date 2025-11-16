@@ -1,28 +1,28 @@
 error: expected identifier, but found integer literal `123`
    in src/tests/invalid/parser/expected_identifier.err.wd:3:4
-         |
-       3 | fn 123() {} // FAIL
-         |    ^~~
+       |
+     3 | fn 123() {} // FAIL
+       |    ^~~
 error: expected identifier, but found string literal `"my_func"`
    in src/tests/invalid/parser/expected_identifier.err.wd:4:4
-         |
-       4 | fn "my_func"() {} // FAIL
-         |    ^~~~~~~~~
+       |
+     4 | fn "my_func"() {} // FAIL
+       |    ^~~~~~~~~
    = help: remove the quotes around `my_func`
 error: expected identifier, but found character literal `'c'`
    in src/tests/invalid/parser/expected_identifier.err.wd:5:4
-         |
-       5 | fn 'c'() {} // FAIL
-         |    ^~~
+       |
+     5 | fn 'c'() {} // FAIL
+       |    ^~~
 error: expected identifier, but found floating-point literal `123.4`
    in src/tests/invalid/parser/expected_identifier.err.wd:6:4
-         |
-       6 | fn 123.4() {} // FAIL
-         |    ^~~~~
+       |
+     6 | fn 123.4() {} // FAIL
+       |    ^~~~~
 error: expected identifier, but found keyword `use`
    in src/tests/invalid/parser/expected_identifier.err.wd:7:4
-         |
-       7 | fn use() {} // FAIL
-         |    ^~~
+       |
+     7 | fn use() {} // FAIL
+       |    ^~~
    = help: add a `_` before the keyword: `_use`
-error: could not compile `expected_identifier` module, aborting due to 5 previous errors
+error: aborting due to 5 previous errors

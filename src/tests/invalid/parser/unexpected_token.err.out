@@ -1,6 +1,6 @@
 error: expected `;`, but found token `]`
    in src/tests/invalid/parser/unexpected_token.err.wd:1:13
-         |
-       1 | fn main() { ] abc
-         |             ^
-error: could not compile `unexpected_token` module, aborting due to previous error
+       |
+     1 | fn main() { ] abc
+       |             ^
+error: aborting due to previous error

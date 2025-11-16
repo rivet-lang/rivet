@@ -186,7 +186,7 @@ fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 	sb.write_string(blue(bold('in ')))
 	sb.writeln(pos.str())
 
-	mut border := bold(blue('         |'))
+	mut border := bold(blue('       |'))
 	if is_embed {
 		border = margin + border
 	}
@@ -197,7 +197,7 @@ fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 				sb.write_string(margin)
 			}
 
-			sb.write_string(bold(blue('  ${pos.begin.line + 1:6d} | ')))
+			sb.write_string(bold(blue('  ${pos.begin.line + 1:4d} | ')))
 			sb.writeln(offending_line)
 
 			sb.write_string(border + ' ')

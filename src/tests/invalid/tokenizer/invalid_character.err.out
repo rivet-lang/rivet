@@ -1,6 +1,6 @@
 error: invalid character `¿`
    in src/tests/invalid/tokenizer/invalid_character.err.wd:1:1
-         |
-       1 | ¿
-         | ^
-error: could not compile `invalid_character` module, aborting due to previous error
+       |
+     1 | ¿
+       | ^
+error: aborting due to previous error

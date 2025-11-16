@@ -1,7 +1,7 @@
 error: expected block, found integer literal `1`
    in src/tests/invalid/parser/expected_block.err.wd:5:18
-         |
-       5 |     while (true) 1; // fail
-         |                  ^
+       |
+     5 |     while (true) 1; // fail
+       |                  ^
    = help: if you want to write a single-statement, use `:`: `if (is_online): player.kick()`
-error: could not compile `expected_block` module, aborting due to previous error
+error: aborting due to previous error

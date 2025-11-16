@@ -1,6 +1,6 @@
 error: unfinished string literal
    in src/tests/invalid/tokenizer/invalid_string_literal.err.wd:1:1
-         |
-       1 | "unfinished string literal
-         | ^
-error: could not compile `invalid_string_literal` module, aborting due to previous error
+       |
+     1 | "unfinished string literal
+       | ^
+error: aborting due to previous error

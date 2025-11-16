@@ -180,11 +180,10 @@ pub fn (ctx &Context) log(msg string) {
 pub fn (ctx &Context) abort_if_errors() {
 	if ctx.code_has_errors() {
 		reporter.print()
-		reason := if reporter_.errors == 1 {
+		reporter.ic_error(if reporter_.errors == 1 {
 			'aborting due to previous error'
 		} else {
 			'aborting due to ${reporter_.errors} previous errors'
-		}
-		reporter.ic_error('could not compile `${ctx.root_name}` module, ${reason}')
+		})
 	}
 }

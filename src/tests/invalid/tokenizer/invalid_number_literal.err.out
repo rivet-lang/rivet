@@ -1,78 +1,78 @@
 error: number part of this binary number is not provided
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:6:2
-         |
-       6 | 0b // fail
-         |  ^
+       |
+     6 | 0b // fail
+       |  ^
 error: number part of this octal number is not provided
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:7:2
-         |
-       7 | 0o // fail
-         |  ^
+       |
+     7 | 0o // fail
+       |  ^
 error: number part of this hexadecimal number is not provided
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:8:2
-         |
-       8 | 0x // fail
-         |  ^
+       |
+     8 | 0x // fail
+       |  ^
 error: this number has unsuitable digit `g`
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:10:5
-         |
-      10 | 123eg // fail
-         |     ^
+       |
+    10 | 123eg // fail
+       |     ^
 error: exponent has no digits
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:11:5
-         |
-      11 | 123.e // fail
-         |     ^
+       |
+    11 | 123.e // fail
+       |     ^
 error: float literals should have a digit after the decimal point
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:12:4
-         |
-      12 | 123. // fail
-         |    ^
+       |
+    12 | 123. // fail
+       |    ^
    = help: use `123.0` instead of `123`
 error: exponent has no digits
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:13:4
-         |
-      13 | 123e // fail
-         |    ^
+       |
+    13 | 123e // fail
+       |    ^
 error: too many decimal points in number
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:15:5
-         |
-      15 | 123.1.3 // fail
-         |     ^
+       |
+    15 | 123.1.3 // fail
+       |     ^
 error: separator `_` is only valid between digits in a numeric literal
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:17:3
-         |
-      17 | 0x_abc // fail
-         |   ^
+       |
+    17 | 0x_abc // fail
+       |   ^
 error: cannot use `_` consecutively in a numeric literal
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:18:3
-         |
-      18 | 1__00 // fail
-         |   ^
+       |
+    18 | 1__00 // fail
+       |   ^
 error: zeros are not allowed at the beginning of a decimal literal
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:19:1
-         |
-      19 | 0123 // fail
-         | ^
+       |
+    19 | 0123 // fail
+       | ^
    = note: use the prefix `0o` to denote an octal number
 error: binary number has unsuitable digit `2`
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:20:5
-         |
-      20 | 0b01210101 // fail
-         |     ^
+       |
+    20 | 0b01210101 // fail
+       |     ^
 error: hexadecimal number has unsuitable digit `h`
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:21:3
-         |
-      21 | 0xhabc // fail
-         |   ^
+       |
+    21 | 0xhabc // fail
+       |   ^
 error: octal number has unsuitable digit `9`
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:22:3
-         |
-      22 | 0o91234 // fail
-         |   ^
+       |
+    22 | 0o91234 // fail
+       |   ^
 error: cannot use `_` at the end of a numeric literal
    in src/tests/invalid/tokenizer/invalid_number_literal.err.wd:23:4
-         |
-      23 | 123_ // fail
-         |    ^
-error: could not compile `invalid_number_literal` module, aborting due to 15 previous errors
+       |
+    23 | 123_ // fail
+       |    ^
+error: aborting due to 15 previous errors
