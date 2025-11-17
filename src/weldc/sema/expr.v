@@ -7,7 +7,7 @@ import weldc.ast
 import weldc.ice
 import weldc.reporter
 
-fn (mut sema Sema) expr(mut expr ast.Expr) bool {
+fn (mut sema Sema) expr(mut expr ast.Expr) ?ast.Type {
 	return match mut expr {
 		ast.BasicLiteral {
 			sema.basic_literal(mut expr)
@@ -22,12 +22,12 @@ fn (mut sema Sema) expr(mut expr ast.Expr) bool {
 			ice.ice('empty expression detected - ${expr.pos}')
 		}
 		else {
-			false
+			none
 		}
 	}
 }
 
-fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) bool {
+fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) ?ast.Type {
 	match expr.kind {
 		.int {
 			expr.type = sema.ctx.int_type
@@ -42,30 +42,31 @@ fn (mut sema Sema) basic_literal(mut expr ast.BasicLiteral) bool {
 			expr.type = sema.ctx.u8_type
 		}
 	}
-	return true
+	return expr.type
 }
 
-fn (mut sema Sema) ident_expr(mut expr ast.Ident) bool {
+fn (mut sema Sema) ident_expr(mut expr ast.Ident) ?ast.Type {
 	if sym := sema.find_symbol(expr.name) {
 		expr.sym = sym
 	} else {
 		reporter.emit_err(err.msg(), expr.pos)
-		return false
+		return none
 	}
 	if mut expr.sym is ast.Variable && expr.sym.is_local {
 		if expr.sym.pos > expr.pos {
 			reporter.emit_err('variable `${expr.name}` used before declaration', expr.pos)
+			return none
 		}
 	}
-	return true
+	return expr.type
 }
 
-fn (mut sema Sema) block_expr(mut expr ast.BlockExpr) bool {
+fn (mut sema Sema) block_expr(mut expr ast.BlockExpr) ?ast.Type {
 	old_scope := sema.scope
 	defer {
 		sema.scope = old_scope
 	}
 	sema.scope = ast.Scope.new(sema.scope, sema.sym)
 	sema.stmts(mut expr.stmts)
-	return true
+	return expr.type
 }
