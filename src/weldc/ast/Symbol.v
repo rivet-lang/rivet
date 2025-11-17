@@ -23,13 +23,7 @@ pub fn (sym Symbol) type_of() string {
 			'function'
 		}
 		Variable {
-			if sym.is_arg {
-				'argument'
-			} else if sym.is_mut {
-				'variable'
-			} else {
-				'constant'
-			}
+			sym.type_of()
 		}
 		TypeSym {
 			'type'
@@ -117,4 +111,12 @@ pub:
 	type     Type
 	pos      FilePos
 	scope    &Scope = unsafe { nil }
+}
+
+pub fn (v &Variable) type_of() string {
+	return if v.is_arg {
+		'argument'
+	} else {
+		'variable'
+	}
 }

@@ -11,6 +11,11 @@ pub:
 	col  int
 }
 
+@[inline]
+pub fn (fl FileLoc) < (loc FileLoc) bool {
+	return fl.pos < loc.pos
+}
+
 @[minify]
 pub struct FilePos {
 pub mut:
@@ -30,6 +35,11 @@ pub fn (fp FilePos) == (fp2 FilePos) bool {
 }
 
 @[inline]
+pub fn (fp FilePos) < (fp2 FilePos) bool {
+	return fp.begin < fp2.begin && fp.end < fp2.end
+}
+
+@[inline]
 pub fn (fp FilePos) + (fp2 FilePos) FilePos {
 	return fp.extend(fp2)
 }
@@ -42,7 +52,7 @@ pub fn (fp FilePos) extend(end FilePos) FilePos {
 	}
 }
 
-pub fn (fp &FilePos) contains(loc &FileLoc) bool {
+pub fn (fp &FilePos) contains(loc FileLoc) bool {
 	return match true {
 		loc.line > fp.begin.line && loc.line < fp.end.line {
 			true

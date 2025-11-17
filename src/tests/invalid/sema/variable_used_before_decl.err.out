@@ -1,0 +1,6 @@
+error: variable `x` used before declaration
+   in src/tests/invalid/sema/variable_used_before_decl.err.wd:2:13
+       |
+     2 |     let _ = x;
+       |             ^
+error: aborting due to previous error
