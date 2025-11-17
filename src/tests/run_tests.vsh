@@ -20,7 +20,8 @@ if files.len == 0 {
 	return
 }
 for i, file in files {
-	print(term.bold(term.cyan('  [${i + 1}/${files.len}] ')))
+	idx := '${i + 1}/${files.len}'
+	print(term.bold(term.cyan('  [${idx:05}] ')))
 	print(file)
 	mut test_passed := true
 	is_err_out := file.ends_with('.err.wd')
