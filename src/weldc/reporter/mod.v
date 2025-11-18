@@ -11,6 +11,7 @@ import weldc.ast
 __global reporter_ = Reporter{}
 
 const margin = '   '
+const backtick = `\``
 
 struct Reporter {
 pub mut:
@@ -176,8 +177,6 @@ pub fn (d Diagnostic) renderize() string {
 	return sb.str().trim_space()
 }
 
-const backtick = `\``
-
 fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 	if is_embed {
 		sb.write_string(margin)
@@ -239,19 +238,21 @@ fn renderize_position(pos ast.FilePos, mut sb strings.Builder, is_embed bool) {
 	}
 }
 
+const special_chars = [backtick, `"`, `'`]!
+
 @[direct_array_access]
 fn highlighted_message(msg string, mut sb strings.Builder, bold_s bool) {
 	mut start := 0
 	mut cur := 0
-	mut sb2 := strings.new_builder(100)
+	mut sb2 := strings.new_builder(msg.len)
 
 	for cur < msg.len {
-		if msg[cur] == backtick {
+		if msg[cur] in special_chars {
 			sb2.write_string(msg[start..cur])
 			start = cur
 			cur++
 
-			for cur < msg.len && msg[cur] != backtick {
+			for cur < msg.len && msg[cur] !in special_chars {
 				cur++
 			}
 

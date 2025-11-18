@@ -93,6 +93,7 @@ pub enum Kind as u8 {
 	kw_for
 	kw_fn
 	kw_if
+	kw_impl
 	kw_in
 	kw_is
 	kw_let
@@ -196,6 +197,7 @@ fn build_token_str() []string {
 	s[Kind.kw_fn] = 'fn'
 	s[Kind.kw_for] = 'for'
 	s[Kind.kw_if] = 'if'
+	s[Kind.kw_impl] = 'impl'
 	s[Kind.kw_in] = 'in'
 	s[Kind.kw_is] = 'is'
 	s[Kind.kw_let] = 'let'
@@ -258,8 +260,8 @@ pub fn (t Token) str() string {
 	}
 	if t.lit != '' {
 		match t.kind {
-			.char { s += ' `\'${t.lit}\'`' }
-			.string { s += ' `"${t.lit}"`' }
+			.char { s += ' \'${t.lit}\'' }
+			.string { s += ' "${t.lit}"' }
 			else { s += ' `${t.lit}`' }
 		}
 	}

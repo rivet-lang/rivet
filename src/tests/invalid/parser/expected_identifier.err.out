@@ -3,13 +3,13 @@ error: expected identifier, but found integer literal `123`
        |
      3 | fn 123() {} // FAIL
        |    ^~~
-error: expected identifier, but found string literal `"my_func"`
+error: expected identifier, but found string literal "my_func"
    in src/tests/invalid/parser/expected_identifier.err.wd:4:4
        |
      4 | fn "my_func"() {} // FAIL
        |    ^~~~~~~~~
    = help: remove the quotes around `my_func`
-error: expected identifier, but found character literal `'c'`
+error: expected identifier, but found character literal 'c'
    in src/tests/invalid/parser/expected_identifier.err.wd:5:4
        |
      5 | fn 'c'() {} // FAIL
