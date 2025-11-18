@@ -113,6 +113,7 @@ pub:
 	scope    &Scope = unsafe { nil }
 }
 
+@[inline]
 pub fn (v &Variable) type_of() string {
 	return if v.is_arg {
 		'argument'

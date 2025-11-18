@@ -42,9 +42,14 @@ pub fn (mut imp Importer) import_module(dir_name string, is_pkg bool, pkg_name s
 
 	imp.ctx.log('${@METHOD}("${mod_name}", ${is_pkg}, "${pkg_name_}")')
 
+	if !mod_name.is_identifier() {
+		kind := if is_pkg { 'package' } else { 'module' }
+		reporter.ic_error('`${mod_name}` is not a valid ${kind} name')
+	}
+
 	input_files := get_weld_files(dir_name)
 	if input_files == [] {
-		reporter.ic_error('the directory does not contain any Weld source code files')
+		reporter.ic_error("directory `${dir_name}` doesn't contains Weld source files")
 	}
 
 	mut files := []&ast.File{}
