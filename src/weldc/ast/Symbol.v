@@ -14,10 +14,11 @@ pub fn (sym Symbol) as_type() Type {
 	ice.ice('Symbol.as_type(): attempt to convert a symbol to type: ${sym}')
 }
 
+@[inline]
 pub fn (sym Symbol) type_of() string {
 	return match sym {
 		Module {
-			'module'
+			sym.type_of()
 		}
 		Function {
 			'function'
@@ -26,7 +27,7 @@ pub fn (sym Symbol) type_of() string {
 			sym.type_of()
 		}
 		TypeSym {
-			'type'
+			sym.type_of()
 		}
 	}
 }
@@ -39,12 +40,31 @@ pub mut:
 	scope &Scope = unsafe { nil }
 }
 
+@[inline]
+pub fn (m &Module) type_of() string {
+	return if m.is_pkg {
+		'package'
+	} else {
+		'module'
+	}
+}
+
 pub struct TypeSym {
 pub:
 	name   string
 	kind   TypeKind
 	fields []Field
 	scope  &Scope = unsafe { nil }
+}
+
+@[inline]
+pub fn (ts &TypeSym) type_of() string {
+	return match ts.kind {
+		.enum { 'enum' }
+		.struct { 'struct' }
+		.trait { 'trait' }
+		else { 'type' }
+	}
 }
 
 @[inline]
@@ -57,6 +77,8 @@ pub fn (ts &TypeSym) as_type() Type {
 pub enum TypeKind as u8 {
 	unknown
 	alias
+
+	function
 
 	i8
 	i16
@@ -74,16 +96,16 @@ pub enum TypeKind as u8 {
 	f64
 	float
 
-	bool
-	rune
+	bool // alias? => u8
+	rune // alias? => i32
 
 	array
 	slice
 	tuple
+
+	enum
 	struct
 	trait
-	enum
-	function
 }
 
 pub struct Field {

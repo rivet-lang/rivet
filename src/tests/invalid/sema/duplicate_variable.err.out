@@ -15,7 +15,7 @@ error: duplicate variable `X`
        |
     10 | let X = 1; // fail
        |     ^
-   = note: inside module `duplicate_variable`
+   = note: inside package `duplicate_variable`
 error: variable `x` has the same name as an argument
    in src/tests/invalid/sema/duplicate_variable.err.wd:13:9
        |
