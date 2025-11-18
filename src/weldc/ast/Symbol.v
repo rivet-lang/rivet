@@ -62,6 +62,7 @@ pub fn (ts &TypeSym) type_of() string {
 	return match ts.kind {
 		.enum { 'enum' }
 		.struct { 'struct' }
+		.union { 'union' }
 		.trait { 'trait' }
 		else { 'type' }
 	}
@@ -77,8 +78,6 @@ pub fn (ts &TypeSym) as_type() Type {
 pub enum TypeKind as u8 {
 	unknown
 	alias
-
-	function
 
 	i8
 	i16
@@ -105,7 +104,10 @@ pub enum TypeKind as u8 {
 
 	enum
 	struct
+	union
 	trait
+
+	function
 }
 
 pub struct Field {
