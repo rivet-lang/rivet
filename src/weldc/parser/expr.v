@@ -156,14 +156,13 @@ fn (mut p Parser) parse_multiplicative_expr() ast.Expr {
 }
 
 fn (mut p Parser) parse_unary_expr() ast.Expr {
-	mut expr := ast.empty_expr(p.tok.pos)
-	if p.tok.kind in [.amp, .bang, .bit_not, .minus] {
+	return if p.tok.kind in [.amp, .bang, .bit_not, .minus] {
 		op := p.tok.kind
 		pos := p.tok.pos
 		p.next()
 		right := p.parse_unary_expr()
-		expr = ast.UnaryExpr{
-			right: expr
+		ast.UnaryExpr{
+			right: right
 			op:    match op {
 				.amp { .amp }
 				.bang { .bang }
@@ -174,9 +173,8 @@ fn (mut p Parser) parse_unary_expr() ast.Expr {
 			pos:   pos + right.pos
 		}
 	} else {
-		expr = p.parse_primary_expr()
+		p.parse_primary_expr()
 	}
-	return expr
 }
 
 fn (mut p Parser) parse_primary_expr() ast.Expr {
@@ -207,13 +205,12 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 					pos:  pos
 				}
 			} else if p.next_tok.kind == .char {
-				if p.tok.lit == 'b' {
-					expr = p.parse_char_literal()
-				} else {
+				if p.tok.lit != 'b' {
 					reporter.emit_err('only `b` is recognized as a valid prefix for a character literal',
 						p.tok.pos)
 					p.next()
 				}
+				expr = p.parse_char_literal()
 			} else if p.next_tok.kind == .string {
 				expr = p.parse_string_literal()
 			} else {
@@ -257,10 +254,12 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				// call expr
 				mut pos := p.prev_tok.pos
 				mut args := []ast.Expr{}
-				for {
-					args << p.parse_expr()
-					if !p.accept(.comma) || p.should_abort() {
-						break
+				if p.tok.kind != .rparen {
+					for {
+						args << p.parse_expr()
+						if !p.accept(.comma) || p.should_abort() {
+							break
+						}
 					}
 				}
 				pos += p.tok.pos
