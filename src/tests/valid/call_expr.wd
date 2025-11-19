@@ -1,6 +1,6 @@
 fn main() {
     let x = abc();
-    assert!(x == 1124);
+    @assert(x == 1124);
 }
 
 fn add(a: int, b: int) int {

@@ -184,27 +184,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 			expr = p.parse_literal()
 		}
 		.ident {
-			if p.next_tok.kind == .bang {
-				// builtin call expr
-				mut pos := p.tok.pos
-				name := p.parse_ident()
-				p.expect(.bang)
-				p.expect(.lparen)
-				mut args := []ast.Expr{}
-				for {
-					args << p.parse_expr()
-					if !p.accept(.comma) || p.should_abort() {
-						break
-					}
-				}
-				pos += p.tok.pos
-				p.expect(.rparen)
-				expr = ast.BuiltinCallExpr{
-					name: name
-					args: args
-					pos:  pos
-				}
-			} else if p.next_tok.kind == .char {
+			if p.next_tok.kind == .char {
 				if p.tok.lit != 'b' {
 					reporter.emit_err('only `b` is recognized as a valid prefix for a character literal',
 						p.tok.pos)
@@ -215,6 +195,29 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				expr = p.parse_string_literal()
 			} else {
 				expr = p.parse_ident_expr()
+			}
+		}
+		.at {
+			// builtin call expr: `@assert()`
+			mut pos := p.tok.pos
+			p.next()
+			name := p.parse_ident()
+			p.expect(.lparen)
+			mut args := []ast.Expr{}
+			if p.tok.kind != .rparen {
+				for {
+					args << p.parse_expr()
+					if !p.accept(.comma) || p.should_abort() {
+						break
+					}
+				}
+			}
+			pos += p.tok.pos
+			p.expect(.rparen)
+			expr = ast.BuiltinCallExpr{
+				name: name
+				args: args
+				pos:  pos
 			}
 		}
 		.lparen {
