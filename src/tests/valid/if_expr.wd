@@ -12,11 +12,12 @@ fn main() {
         add = 4;
     }
 
-    if (true): x,
-    else: y;
+    if (true):
+        x
+    else:
+        y;
 
-    let test0 = if (true): x,
-        else: y;
+    let test0 = if (true): x else: y;
 
     if (1 == 1): true;
 }
