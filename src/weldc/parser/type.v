@@ -8,33 +8,42 @@ import weldc.reporter
 
 fn (mut p Parser) parse_type() ?ast.Type {
 	pos := p.tok.pos
-	match true {
+	return match true {
+		p.accept(.question) {
+			// option types: ?T
+			ast.OptionType{
+				inner: p.parse_type()?
+				pos:   pos + p.prev_tok.pos
+			}
+		}
 		p.accept(.amp) {
 			// pointer types: *T, *mut T
-			return ast.PointerType{
+			ast.PointerType{
 				is_mut: p.accept(.kw_mut)
 				inner:  p.parse_type()?
 				pos:    pos + p.prev_tok.pos
 			}
 		}
 		p.accept(.lbracket) {
-			// array types | slice types: [5]int, []int
+			// array or slice types: [5]int, []int
 			mut size := ?ast.Expr(none)
 			if p.tok.kind != .rbracket {
 				size = p.parse_expr()
 			}
 			p.expect(.rbracket)
-			return ast.ArrayType{
+			ast.ArrayType{
 				size:   size
 				is_mut: p.accept(.kw_mut)
 				inner:  p.parse_type()?
+				pos:    pos + p.prev_tok.pos
 			}
 		}
-		else {}
+		else {
+			expr := p.parse_expr()?
+			if expr !in [ast.Ident, ast.BuiltinCallExpr] {
+				reporter.emit_err('invalid type declaration', expr.pos)
+			}
+			ast.UnresolvedType{expr, expr.pos}
+		}
 	}
-	expr := p.parse_expr()?
-	if expr !in [ast.Ident, ast.BuiltinCallExpr] {
-		reporter.emit_err('invalid type declaration', expr.pos)
-	}
-	return ast.UnresolvedType{expr, expr.pos}
 }

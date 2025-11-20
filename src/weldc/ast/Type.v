@@ -12,6 +12,7 @@ pub type Type = Untyped
 	| SymbolType
 	| PointerType
 	| ArrayType
+	| OptionType
 
 pub struct Untyped {}
 
@@ -48,4 +49,10 @@ pub:
 	inner  Type
 	is_mut bool
 	pos    FilePos
+}
+
+pub struct OptionType {
+pub:
+	inner Type
+	pos   FilePos
 }
