@@ -6,16 +6,16 @@ module parser
 import weldc.ast
 import weldc.reporter
 
-fn (mut p Parser) parse_surrounded_expr() ast.Expr {
+fn (mut p Parser) parse_surrounded_expr() ?ast.Expr {
 	p.expect(.lparen)
 	expr := p.parse_expr()
 	p.expect(.rparen)
 	return expr
 }
 
-fn (mut p Parser) parse_expr() ast.Expr {
+fn (mut p Parser) parse_expr() ?ast.Expr {
 	if p.should_abort() {
-		return ast.empty_expr(p.tok.pos)
+		return none
 	}
 	old_inside_expr := p.inside_expr
 	defer { p.inside_expr = old_inside_expr }
@@ -23,10 +23,10 @@ fn (mut p Parser) parse_expr() ast.Expr {
 	return p.parse_or_expr()
 }
 
-fn (mut p Parser) parse_or_expr() ast.Expr {
-	mut left := p.parse_and_expr()
+fn (mut p Parser) parse_or_expr() ?ast.Expr {
+	mut left := p.parse_and_expr()?
 	for p.accept(.log_or) {
-		right := p.parse_and_expr()
+		right := p.parse_and_expr()?
 		left = ast.BinaryExpr{
 			left:  left
 			op:    .log_or
@@ -37,10 +37,10 @@ fn (mut p Parser) parse_or_expr() ast.Expr {
 	return left
 }
 
-fn (mut p Parser) parse_and_expr() ast.Expr {
-	mut left := p.parse_equality_expr()
+fn (mut p Parser) parse_and_expr() ?ast.Expr {
+	mut left := p.parse_equality_expr()?
 	for p.accept(.log_and) {
-		right := p.parse_equality_expr()
+		right := p.parse_equality_expr()?
 		left = ast.BinaryExpr{
 			left:  left
 			op:    .log_and
@@ -51,12 +51,12 @@ fn (mut p Parser) parse_and_expr() ast.Expr {
 	return left
 }
 
-fn (mut p Parser) parse_equality_expr() ast.Expr {
-	mut left := p.parse_relational_expr()
+fn (mut p Parser) parse_equality_expr() ?ast.Expr {
+	mut left := p.parse_relational_expr()?
 	for p.tok.kind in [.eq, .ne] {
 		op := p.tok.kind
 		p.next()
-		right := p.parse_relational_expr()
+		right := p.parse_relational_expr()?
 		left = ast.BinaryExpr{
 			left:  left
 			op:    if op == .eq { .eq } else { .ne }
@@ -67,12 +67,12 @@ fn (mut p Parser) parse_equality_expr() ast.Expr {
 	return left
 }
 
-fn (mut p Parser) parse_relational_expr() ast.Expr {
-	mut left := p.parse_shift_expr()
+fn (mut p Parser) parse_relational_expr() ?ast.Expr {
+	mut left := p.parse_shift_expr()?
 	for p.tok.kind in [.gt, .lt, .le, .or_else, .kw_in, .not_in, .kw_is, .not_is] {
 		op := p.tok.kind
 		p.next()
-		right := p.parse_shift_expr()
+		right := p.parse_shift_expr()?
 		left = ast.BinaryExpr{
 			left:  left
 			op:    match op {
@@ -91,12 +91,12 @@ fn (mut p Parser) parse_relational_expr() ast.Expr {
 	return left
 }
 
-fn (mut p Parser) parse_shift_expr() ast.Expr {
-	mut left := p.parse_additive_expr()
+fn (mut p Parser) parse_shift_expr() ?ast.Expr {
+	mut left := p.parse_additive_expr()?
 	for p.tok.kind in [.amp, .pipe, .xor, .lshift, .rshift] {
 		op := p.tok.kind
 		p.next()
-		right := p.parse_additive_expr()
+		right := p.parse_additive_expr()?
 		left = ast.BinaryExpr{
 			left:  left
 			op:    match op {
@@ -114,12 +114,12 @@ fn (mut p Parser) parse_shift_expr() ast.Expr {
 	return left
 }
 
-fn (mut p Parser) parse_additive_expr() ast.Expr {
-	mut left := p.parse_multiplicative_expr()
+fn (mut p Parser) parse_additive_expr() ?ast.Expr {
+	mut left := p.parse_multiplicative_expr()?
 	for p.tok.kind in [.plus, .minus] {
 		op := p.tok.kind
 		p.next()
-		right := p.parse_multiplicative_expr()
+		right := p.parse_multiplicative_expr()?
 		left = ast.BinaryExpr{
 			left:  left
 			op:    match op {
@@ -134,12 +134,12 @@ fn (mut p Parser) parse_additive_expr() ast.Expr {
 	return left
 }
 
-fn (mut p Parser) parse_multiplicative_expr() ast.Expr {
-	mut left := p.parse_unary_expr()
+fn (mut p Parser) parse_multiplicative_expr() ?ast.Expr {
+	mut left := p.parse_unary_expr()?
 	for p.tok.kind in [.mul, .div, .mod] {
 		op := p.tok.kind
 		p.next()
-		right := p.parse_unary_expr()
+		right := p.parse_unary_expr()?
 		left = ast.BinaryExpr{
 			left:  left
 			op:    match op {
@@ -155,12 +155,12 @@ fn (mut p Parser) parse_multiplicative_expr() ast.Expr {
 	return left
 }
 
-fn (mut p Parser) parse_unary_expr() ast.Expr {
+fn (mut p Parser) parse_unary_expr() ?ast.Expr {
 	return if p.tok.kind in [.amp, .bang, .bit_not, .minus] {
 		op := p.tok.kind
 		pos := p.tok.pos
 		p.next()
-		right := p.parse_unary_expr()
+		right := p.parse_unary_expr()?
 		ast.UnaryExpr{
 			right: right
 			op:    match op {
@@ -177,8 +177,8 @@ fn (mut p Parser) parse_unary_expr() ast.Expr {
 	}
 }
 
-fn (mut p Parser) parse_primary_expr() ast.Expr {
-	mut expr := ast.empty_expr(p.tok.pos)
+fn (mut p Parser) parse_primary_expr() ?ast.Expr {
+	mut expr := ?ast.Expr(none)
 	match p.tok.kind {
 		.char, .int, .float, .string {
 			expr = p.parse_literal()
@@ -206,7 +206,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 			mut args := []ast.Expr{}
 			if p.tok.kind != .rparen {
 				for {
-					args << p.parse_expr()
+					args << p.parse_expr()?
 					if !p.accept(.comma) || p.should_abort() {
 						break
 					}
@@ -224,7 +224,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 			pos := p.tok.pos
 			p.next()
 			expr = ast.ParenExpr{
-				expr: p.parse_expr()
+				expr: p.parse_expr()?
 				pos:  pos + p.tok.pos
 			}
 			p.expect(.rparen)
@@ -244,11 +244,14 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 		.lbrace {
 			expr = p.parse_block_expr()
 		}
-		else {}
+		else {
+			reporter.emit_err('expected expression, but found ${p.tok}', p.tok.pos)
+			return none
+		}
 	}
 
 	if p.should_abort() {
-		return expr
+		return none
 	}
 
 	for {
@@ -259,7 +262,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				mut args := []ast.Expr{}
 				if p.tok.kind != .rparen {
 					for {
-						args << p.parse_expr()
+						args << p.parse_expr()?
 						if !p.accept(.comma) || p.should_abort() {
 							break
 						}
@@ -268,7 +271,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				pos += p.tok.pos
 				p.expect(.rparen)
 				expr = ast.CallExpr{
-					left: expr
+					left: expr?
 					args: args
 					pos:  pos
 				}
@@ -292,13 +295,13 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 				}
 				p.next()
 				expr = ast.AssignExpr{
-					left:  expr
+					left:  expr?
 					op:    op
-					right: p.parse_expr()
+					right: p.parse_expr()?
 				}
 			}
 			p.should_abort() {
-				break
+				return none
 			}
 			else {
 				break
@@ -309,7 +312,7 @@ fn (mut p Parser) parse_primary_expr() ast.Expr {
 	return expr
 }
 
-fn (mut p Parser) parse_literal() ast.Expr {
+fn (mut p Parser) parse_literal() ?ast.Expr {
 	return match p.tok.kind {
 		.char {
 			p.parse_char_literal()
@@ -322,7 +325,7 @@ fn (mut p Parser) parse_literal() ast.Expr {
 		}
 		else {
 			reporter.emit_err('invalid literal expression: found ${p.tok}', p.tok.pos)
-			ast.empty_expr(p.tok.pos)
+			none
 		}
 	}
 }
@@ -395,12 +398,12 @@ fn (mut p Parser) parse_ident_expr() ast.Expr {
 	}
 }
 
-fn (mut p Parser) parse_match_expr() ast.Expr {
+fn (mut p Parser) parse_match_expr() ?ast.Expr {
 	pos := p.tok.pos
 	mut branches := []ast.MatchBranch{}
 
 	p.expect(.kw_match)
-	expr := p.parse_surrounded_expr()
+	expr := p.parse_surrounded_expr()?
 	p.expect(.lbrace)
 	for {
 		mut is_else := false
@@ -409,14 +412,14 @@ fn (mut p Parser) parse_match_expr() ast.Expr {
 			is_else = true
 		} else {
 			for {
-				cases << p.parse_expr()
+				cases << p.parse_expr()?
 				if !p.accept(.comma) || p.should_abort() {
 					break
 				}
 			}
 		}
 		p.expect(.colon)
-		branch_expr := p.parse_expr()
+		branch_expr := p.parse_expr()?
 		branches << ast.MatchBranch{
 			is_else: is_else
 			cases:   cases
@@ -435,7 +438,7 @@ fn (mut p Parser) parse_match_expr() ast.Expr {
 	}
 }
 
-fn (mut p Parser) parse_if_expr() ast.Expr {
+fn (mut p Parser) parse_if_expr() ?ast.Expr {
 	mut is_inline := false
 	mut branches := []ast.IfBranch{}
 	pos := p.tok.pos
@@ -446,7 +449,7 @@ fn (mut p Parser) parse_if_expr() ast.Expr {
 			}
 			branches << ast.IfBranch{
 				cond: none
-				expr: p.parse_expr()
+				expr: p.parse_expr()?
 				pos:  pos
 			}
 			break
@@ -459,7 +462,7 @@ fn (mut p Parser) parse_if_expr() ast.Expr {
 		}
 		branches << ast.IfBranch{
 			cond: cond
-			expr: p.parse_expr()
+			expr: p.parse_expr()?
 			pos:  pos
 		}
 		if p.tok.kind != .kw_else || p.should_abort() {

@@ -6,7 +6,7 @@ module parser
 import weldc.ast
 import weldc.reporter
 
-fn (mut p Parser) parse_tags() ast.Tags {
+fn (mut p Parser) parse_tags() ?ast.Tags {
 	mut tags := ast.Tags{}
 
 	for p.accept(.hash) {
@@ -22,7 +22,7 @@ fn (mut p Parser) parse_tags() ast.Tags {
 						arg_name = p.tok.lit
 						p.advance(2)
 					}
-					arg_value := p.parse_expr()
+					arg_value := p.parse_expr()?
 					args << ast.TagArg{arg_name, arg_value}
 					if !p.accept(.comma) || p.should_abort() {
 						break

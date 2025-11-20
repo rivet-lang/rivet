@@ -71,7 +71,7 @@ fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
 	if !is_finished && !p.abort {
 		// we give an error because the block has not been finished (`}` was not found),
 		// but it has not been aborted (due to poor formation of expressions or statements)
-		reporter.emit_err('unfinished block, expected `}` and found ${p.tok}', lbrace_pos)
+		reporter.emit_err('unfinished block: expected `}`, but found ${p.tok}', lbrace_pos)
 		p.abort = true
 	}
 
@@ -90,17 +90,17 @@ fn (mut p Parser) parse_stmt() ?ast.Stmt {
 		p.tags = old_tags
 	}
 
-	p.tags = p.parse_tags()
+	p.tags = p.parse_tags()?
 
 	// module stmts: fns, vars, etc.
 	is_pub := !p.inside_local_scope && p.accept(.kw_pub)
 	mut stmt := ?ast.Stmt(none)
 	match p.tok.kind {
 		.kw_fn {
-			stmt = p.parse_fn_stmt(is_pub)
+			stmt = p.parse_fn_stmt(is_pub)?
 		}
 		.kw_let {
-			stmt = p.parse_let_stmt(is_pub)
+			stmt = p.parse_let_stmt(is_pub)?
 		}
 		.semicolon {
 			// an orphaned semicolon indicates that `p.stmt()` is not properly
@@ -116,12 +116,12 @@ fn (mut p Parser) parse_stmt() ?ast.Stmt {
 				match p.tok.kind {
 					.kw_for {}
 					.kw_while {
-						stmt = p.parse_while_stmt()
+						stmt = p.parse_while_stmt()?
 					}
 					else {
 						// `.kw_if`, `.kw_match`, `.kw_break`/`.kw_continue` and `.kw_return` are
 						// handled in `p.parse_expr()`
-						expr := p.parse_expr()
+						expr := p.parse_expr()?
 						if expr in [ast.MatchExpr, ast.BlockExpr] {
 							p.expect_semicolon = false
 						} else if expr is ast.IfExpr {
@@ -150,7 +150,7 @@ fn (mut p Parser) parse_stmt() ?ast.Stmt {
 	return stmt
 }
 
-fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
+fn (mut p Parser) parse_fn_stmt(is_pub bool) ?ast.FnStmt {
 	p.expect(.kw_fn)
 	name_pos := p.tok.pos
 	name := p.parse_ident()
@@ -172,7 +172,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 			p.expect(.colon)
 			old_inside_type := p.inside_type
 			p.inside_type = true
-			arg_type := p.parse_type()
+			arg_type := p.parse_type()?
 			p.inside_type = old_inside_type
 
 			// = 2004
@@ -198,7 +198,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 		p.expect(.rparen)
 	}
 	return_type := if p.tok.kind !in [.lbrace, .semicolon] {
-		p.parse_type()
+		p.parse_type()?
 	} else {
 		p.ctx.void_type
 	}
@@ -219,7 +219,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ast.FnStmt {
 	}
 }
 
-fn (mut p Parser) parse_let_stmt(is_pub bool) ast.LetStmt {
+fn (mut p Parser) parse_let_stmt(is_pub bool) ?ast.LetStmt {
 	mut left_pos := p.tok.pos
 	p.expect(.kw_let)
 	mut lefts := []ast.Variable{}
@@ -228,7 +228,7 @@ fn (mut p Parser) parse_let_stmt(is_pub bool) ast.LetStmt {
 		name_pos := p.tok.pos
 		name := p.parse_ident()
 		mut type := if p.accept(.colon) {
-			p.parse_type()
+			p.parse_type()?
 		} else {
 			p.ctx.untyped
 		}
@@ -259,7 +259,7 @@ fn (mut p Parser) parse_let_stmt(is_pub bool) ast.LetStmt {
 	}
 }
 
-fn (mut p Parser) parse_while_stmt() ast.WhileStmt {
+fn (mut p Parser) parse_while_stmt() ?ast.WhileStmt {
 	p.expect(.kw_while)
 	p.expect(.lparen)
 	mut init_stmt := ?ast.LetStmt(none)
@@ -267,7 +267,7 @@ fn (mut p Parser) parse_while_stmt() ast.WhileStmt {
 		init_stmt = p.parse_let_stmt(false)
 		p.expect(.semicolon)
 	}
-	cond := p.parse_expr()
+	cond := p.parse_expr()?
 	mut continue_expr := ?ast.Expr(none)
 	if p.accept(.semicolon) {
 		continue_expr = p.parse_expr()
