@@ -3,7 +3,7 @@ fn main() {
     @assert(x == 1124);
 }
 
-fn add(a: int, b: int) int {
+fn add(a: int, b: int) @type_of(a) {
     return a + b;
 }
 

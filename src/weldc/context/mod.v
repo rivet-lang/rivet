@@ -26,10 +26,11 @@ pub mut:
 	// Types.
 	// NOTE: All of these types are initialized in the semantic analyzer,
 	// see `Sema.analyze`.
-	untyped    ast.Type
-	void_type  ast.Type
-	null_type  ast.Type
-	never_type ast.Type
+	untyped     ast.Type
+	void_type   ast.Type
+	null_type   ast.Type
+	never_type  ast.Type
+	anyptr_type ast.Type
 
 	bool_type ast.Type
 	rune_type ast.Type
@@ -85,6 +86,7 @@ pub fn (mut ctx Context) load_builtin_types() {
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
 	ctx.null_type = ast.NullType{}
+	ctx.anyptr_type = ast.AnyptrType{}
 
 	ctx.bool_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
 		name: 'bool'

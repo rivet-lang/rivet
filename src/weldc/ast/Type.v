@@ -7,9 +7,11 @@ pub type Type = Untyped
 	| VoidType
 	| NullType
 	| NeverType
+	| AnyptrType
 	| UnresolvedType
-	| SimpleType
+	| SymbolType
 	| PointerType
+	| ArrayType
 
 pub struct Untyped {}
 
@@ -25,7 +27,9 @@ pub struct NullType {}
 
 pub struct NeverType {}
 
-pub struct SimpleType {
+pub struct AnyptrType {}
+
+pub struct SymbolType {
 pub:
 	sym Symbol
 	pos FilePos
@@ -33,6 +37,15 @@ pub:
 
 pub struct PointerType {
 pub:
-	inner Type
-	pos   FilePos
+	inner  Type
+	is_mut bool
+	pos    FilePos
+}
+
+pub struct ArrayType {
+pub:
+	size   ?Expr // none = slice
+	inner  Type
+	is_mut bool
+	pos    FilePos
 }

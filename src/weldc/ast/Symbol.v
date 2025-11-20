@@ -70,7 +70,7 @@ pub fn (ts &TypeSym) type_of() string {
 
 @[inline]
 pub fn (ts &TypeSym) as_type() Type {
-	return SimpleType{
+	return SymbolType{
 		sym: ts
 	}
 }
