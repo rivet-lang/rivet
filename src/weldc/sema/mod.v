@@ -77,8 +77,8 @@ fn (sema &Sema) find_symbol(name string) !ast.Symbol {
 		'false' {
 			return sema.ctx.false_sym
 		}
-		'null' {
-			return sema.ctx.null_sym
+		'nil' {
+			return sema.ctx.nil_sym
 		}
 		else {
 			// local

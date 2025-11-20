@@ -5,7 +5,7 @@ module ast
 
 pub type Type = Untyped
 	| VoidType
-	| NullType
+	| NilType
 	| NeverType
 	| AnyptrType
 	| UnresolvedType
@@ -24,7 +24,7 @@ pub:
 
 pub struct VoidType {}
 
-pub struct NullType {}
+pub struct NilType {}
 
 pub struct NeverType {}
 

@@ -28,7 +28,7 @@ pub mut:
 	// see `Sema.analyze`.
 	untyped     ast.Type
 	void_type   ast.Type
-	null_type   ast.Type
+	nil_type    ast.Type
 	never_type  ast.Type
 	anyptr_type ast.Type
 
@@ -53,7 +53,7 @@ pub mut:
 
 	true_sym  ast.Symbol
 	false_sym ast.Symbol
-	null_sym  ast.Symbol
+	nil_sym   ast.Symbol
 }
 
 @[inline]
@@ -85,7 +85,7 @@ pub fn (mut ctx Context) load_builtin_types() {
 	ctx.untyped = ast.Untyped{}
 	ctx.void_type = ast.VoidType{}
 	ctx.never_type = ast.NeverType{}
-	ctx.null_type = ast.NullType{}
+	ctx.nil_type = ast.NilType{}
 	ctx.anyptr_type = ast.AnyptrType{}
 
 	ctx.bool_type = ctx.universe.add_and_get_symbol(ast.TypeSym{
@@ -162,9 +162,9 @@ pub fn (mut ctx Context) load_builtin_constants() {
 		name: 'false'
 		type: ctx.bool_type
 	}) or { reporter.ic_error(err.msg()) }
-	ctx.null_sym = ctx.universe.add_and_get_symbol(ast.Variable{
-		name: 'null'
-		type: ctx.null_type
+	ctx.nil_sym = ctx.universe.add_and_get_symbol(ast.Variable{
+		name: 'nil'
+		type: ctx.nil_type
 	}) or { reporter.ic_error(err.msg()) }
 }
 
