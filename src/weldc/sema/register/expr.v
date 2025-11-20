@@ -4,7 +4,6 @@
 module register
 
 import weldc.ast
-import weldc.ice
 
 fn (mut reg Register) expr(mut expr ast.Expr) {
 	match mut expr {
@@ -55,9 +54,6 @@ fn (mut reg Register) expr(mut expr ast.Expr) {
 		ast.AssignExpr, ast.BinaryExpr {
 			reg.expr(mut expr.left)
 			reg.expr(mut expr.right)
-		}
-		ast.EmptyExpr {
-			ice.ice('empty expression detected - ${expr.pos}')
 		}
 		else {}
 	}

@@ -3,8 +3,7 @@
 
 module ast
 
-pub type Expr = EmptyExpr
-	| ParenExpr
+pub type Expr = ParenExpr
 	| Ident
 	| BasicLiteral
 	| StringLiteral
@@ -18,19 +17,6 @@ pub type Expr = EmptyExpr
 	| BlockExpr
 	| UnaryExpr
 	| BinaryExpr
-
-pub struct EmptyExpr {
-pub mut:
-	type Type
-	pos  FilePos
-}
-
-@[inline]
-pub fn empty_expr(pos FilePos) Expr {
-	return EmptyExpr{
-		pos: pos
-	}
-}
 
 pub struct ParenExpr {
 pub mut:

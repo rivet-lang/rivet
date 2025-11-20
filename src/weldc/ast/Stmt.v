@@ -3,17 +3,7 @@
 
 module ast
 
-pub type Stmt = EmptyStmt | FnStmt | ExprStmt | LetStmt | WhileStmt
-
-pub struct EmptyStmt {
-pub:
-	pos FilePos
-}
-
-@[inline]
-pub fn empty_stmt(pos FilePos) Stmt {
-	return EmptyStmt{pos}
-}
+pub type Stmt = FnStmt | ExprStmt | LetStmt | WhileStmt
 
 pub struct ExprStmt {
 pub:

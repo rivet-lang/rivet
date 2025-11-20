@@ -4,7 +4,6 @@
 module sema
 
 import weldc.ast
-import weldc.ice
 
 fn (mut sema Sema) stmts(mut stmts []ast.Stmt) {
 	for mut stmt in stmts {
@@ -25,9 +24,6 @@ fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 		}
 		ast.ExprStmt {
 			sema.expr_stmt(mut stmt)
-		}
-		ast.EmptyStmt {
-			ice.ice('empty statement detected - ${stmt.pos}')
 		}
 	}
 }

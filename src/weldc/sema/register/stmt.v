@@ -4,7 +4,6 @@
 module register
 
 import weldc.ast
-import weldc.ice
 import weldc.reporter
 
 fn (mut reg Register) stmts(mut stmts []ast.Stmt) {
@@ -33,9 +32,6 @@ fn (mut reg Register) stmt(mut stmt ast.Stmt) {
 		}
 		ast.ExprStmt {
 			reg.expr(mut stmt.expr)
-		}
-		ast.EmptyStmt {
-			ice.ice('empty statement detected - ${stmt.pos}')
 		}
 	}
 }

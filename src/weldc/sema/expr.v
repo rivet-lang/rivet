@@ -4,7 +4,6 @@
 module sema
 
 import weldc.ast
-import weldc.ice
 import weldc.reporter
 
 fn (mut sema Sema) expr(mut expr ast.Expr) ?ast.Type {
@@ -17,9 +16,6 @@ fn (mut sema Sema) expr(mut expr ast.Expr) ?ast.Type {
 		}
 		ast.BlockExpr {
 			sema.block_expr(mut expr)
-		}
-		ast.EmptyExpr {
-			ice.ice('empty expression detected - ${expr.pos}')
 		}
 		else {
 			none
