@@ -6,4 +6,11 @@ fn main() {
             continue;
         }
     }
+
+    let mut exit = false;
+    while (true)
+        if (exit)
+            break
+        else
+            exit = true;
 }
