@@ -12,14 +12,14 @@ fn main() {
         add = 4;
     }
 
-    if (true):
+    if (true)
         x
-    else:
+    else
         y;
 
-    let test0 = if (true): x else: y;
+    let test0 = if (true) x else y;
 
-    if (1 == 1): true;
+    if (1 == 1) true;
 
     match (x) {
         1 -> @assert(true),

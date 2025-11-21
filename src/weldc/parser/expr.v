@@ -444,9 +444,6 @@ fn (mut p Parser) parse_if_expr() ?ast.Expr {
 	pos := p.tok.pos
 	for {
 		if p.accept(.kw_else) && p.tok.kind != .kw_if {
-			if p.tok.kind != .lbrace {
-				p.expect(.colon)
-			}
 			branches << ast.IfBranch{
 				cond: none
 				expr: p.parse_expr()?
@@ -457,7 +454,6 @@ fn (mut p Parser) parse_if_expr() ?ast.Expr {
 		p.expect(.kw_if)
 		cond := p.parse_surrounded_expr()
 		if p.tok.kind != .lbrace {
-			p.expect(.colon)
 			is_inline = true
 		}
 		branches << ast.IfBranch{

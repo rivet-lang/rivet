@@ -7,37 +7,29 @@ import weldc.ast
 import weldc.reporter
 
 // parses a list of statements that are enclosed in `{` `}`, it can also parse a
-// single-statement if the form `: <stmt>` is used.
+// single-statement.
 fn (mut p Parser) parse_stmts() []ast.Stmt {
 	if p.tok.kind == .eof {
 		return []
 	}
 
-	if p.accept(.colon) {
-		// single-statement: `if (player.is_online): player.ban();`
-		if stmt := p.parse_stmt() {
-			p.expect_semicolon = false
-			return [stmt]
-		}
-		return []
+	if p.tok.kind == .lbrace { // block
+		p.expect_semicolon = false
+		old_inside_local_scope := p.inside_local_scope
+
+		p.inside_local_scope = true
+		stmts, _ := p.parse_simple_block()
+		p.inside_local_scope = old_inside_local_scope
+
+		return stmts
 	}
 
-	p.expect_semicolon = false
-	if p.tok.kind != .lbrace {
-		p.abort = true
-		mut d := reporter.err('expected block, found ${p.tok}', p.tok.pos)
-		d.add_help('if you want to write a single-statement, use `:`: `if (is_online): player.kick()`')
-		d.emit()
-		return []
+	// single-statement: `if (player.is_online) player.ban();`
+	if stmt := p.parse_stmt() {
+		p.expect_semicolon = false
+		return [stmt]
 	}
-
-	old_inside_local_scope := p.inside_local_scope
-
-	p.inside_local_scope = true
-	stmts, _ := p.parse_simple_block()
-	p.inside_local_scope = old_inside_local_scope
-
-	return stmts
+	return []
 }
 
 fn (mut p Parser) parse_simple_block() ([]ast.Stmt, ?ast.Expr) {
