@@ -102,8 +102,10 @@ pub enum Kind as u8 {
 	kw_mut
 	kw_pub
 	kw_return
+	kw_self
 	kw_struct
 	kw_trait
+	kw_union
 	kw_use
 	kw_while
 	keyword_end
@@ -118,6 +120,7 @@ pub const assign_tokens = [Kind.assign, .plus_assign, .minus_assign, .mul_assign
 	.xor_assign, .mod_assign, .or_assign, .and_assign, .rshift_assign, .lshift_assign,
 	.log_and_assign, .log_or_assign]!
 
+@[direct_array_access]
 fn build_keywords() map[string]Kind {
 	mut res := map[string]Kind{}
 	for t in int(Kind.keyword_beg) + 1 .. int(Kind.keyword_end) {
@@ -126,6 +129,7 @@ fn build_keywords() map[string]Kind {
 	return res
 }
 
+@[direct_array_access]
 fn build_token_str() []string {
 	mut s := []string{len: int(Kind._end_)}
 	s[Kind.unknown] = 'unknown'
@@ -206,8 +210,10 @@ fn build_token_str() []string {
 	s[Kind.kw_mut] = 'mut'
 	s[Kind.kw_pub] = 'pub'
 	s[Kind.kw_return] = 'return'
+	s[Kind.kw_self] = 'self'
 	s[Kind.kw_struct] = 'struct'
 	s[Kind.kw_trait] = 'trait'
+	s[Kind.kw_union] = 'union'
 	s[Kind.kw_use] = 'use'
 	s[Kind.kw_while] = 'while'
 
@@ -238,7 +244,7 @@ pub fn (t Kind) is_assign() bool {
 	return t in assign_tokens
 }
 
-@[inline]
+@[direct_array_access; inline]
 pub fn (t Kind) str() string {
 	idx := int(t)
 	if idx < 0 || token_str.len <= idx {
