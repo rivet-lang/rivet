@@ -9,7 +9,7 @@ if !os.exists(weldc) {
 	panic('`${weldc}` executable not found')
 }
 
-files := os.walk_ext('src/tests/', '.wd')
+files := os.walk_ext('test/compile_errors/', '.wd')
 if files.len == 0 {
 	return
 }

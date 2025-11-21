@@ -1,5 +1,5 @@
 error: unterminated multiline comment
-   in src/tests/invalid/tokenizer/unterminated_multiline_comment.err.wd:2:1
+   in test/compile_errors/unterminated_multiline_comment.err.wd:2:1
        |
      2 | unterminated multiline comment :(
        |

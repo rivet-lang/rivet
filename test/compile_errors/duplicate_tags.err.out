@@ -1,15 +1,15 @@
 error: duplicate tag `unsafe`
-   in src/tests/invalid/parser/duplicate_tags.err.wd:1:11
+   in test/compile_errors/duplicate_tags.err.wd:1:11
        |
      1 | #[unsafe; unsafe]
        |           ^~~~~~
 error: duplicate tag `unsafe`
-   in src/tests/invalid/parser/duplicate_tags.err.wd:5:3
+   in test/compile_errors/duplicate_tags.err.wd:5:3
        |
      5 | #[unsafe] // fail
        |   ^~~~~~
 error: `c_extern` tag has duplicate `link_name` argument
-   in src/tests/invalid/parser/duplicate_tags.err.wd:8:3
+   in test/compile_errors/duplicate_tags.err.wd:8:3
        |
      8 | #[c_extern(link_name: "", link_name: "")]
        |   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

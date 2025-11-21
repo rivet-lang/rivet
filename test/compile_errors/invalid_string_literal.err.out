@@ -1,5 +1,5 @@
 error: unfinished string literal
-   in src/tests/invalid/tokenizer/invalid_string_literal.err.wd:1:1
+   in test/compile_errors/invalid_string_literal.err.wd:1:1
        |
      1 | "unfinished string literal
        | ^

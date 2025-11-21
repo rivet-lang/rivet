@@ -1,10 +1,10 @@
 error: expected expression, but found token `]`
-   in src/tests/invalid/parser/unexpected_token.err.wd:1:13
+   in test/compile_errors/unexpected_token.err.wd:1:13
        |
      1 | fn main() { ] abc
        |             ^
 error: unfinished block: expected `}`, but found token `]`
-   in src/tests/invalid/parser/unexpected_token.err.wd:1:11
+   in test/compile_errors/unexpected_token.err.wd:1:11
        |
      1 | fn main() { ] abc
        |           ^

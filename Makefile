@@ -10,7 +10,10 @@ build-prod:
 
 test: build
 	v test src/weldc
-	v src/tests/run_tests.vsh
+	v run test/run_tests.vsh
+
+gen-out-files:
+	v run test/gen_out_files.vsh
 
 fmt:
 	v fmt -w .
