@@ -243,7 +243,11 @@ fn (mut t Tokenizer) internal_next() Token {
 				return Token.no_lit(.plus, pos)
 			}
 			`-` {
-				if nextc == `=` {
+				if nextc == `>` {
+					t.pos++
+					pos.end = t.current_loc()
+					return Token.no_lit(.arrow, pos)
+				} else if nextc == `=` {
 					t.pos++
 					pos.end = t.current_loc()
 					return Token.no_lit(.minus_assign, pos)
@@ -334,11 +338,7 @@ fn (mut t Tokenizer) internal_next() Token {
 				return Token.no_lit(.gt, pos)
 			}
 			`.` {
-				if nextc == `.` && t.look_ahead(2) == `.` {
-					t.pos += 2
-					pos.end = t.current_loc()
-					return Token.no_lit(.ellipsis, pos)
-				} else if nextc == `.` {
+				if nextc == `.` {
 					t.pos++
 					pos.end = t.current_loc()
 					return Token.no_lit(.dotdot, pos)

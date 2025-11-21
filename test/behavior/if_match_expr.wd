@@ -20,4 +20,9 @@ fn main() {
     let test0 = if (true): x else: y;
 
     if (1 == 1): true;
+
+    match (x) {
+        1 -> @assert(true),
+        else -> @assert(false)
+    }
 }

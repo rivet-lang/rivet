@@ -418,7 +418,7 @@ fn (mut p Parser) parse_match_expr() ?ast.Expr {
 				}
 			}
 		}
-		p.expect(.colon)
+		p.expect(.arrow)
 		branch_expr := p.parse_expr()?
 		branches << ast.MatchBranch{
 			is_else: is_else

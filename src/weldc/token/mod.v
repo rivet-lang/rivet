@@ -83,7 +83,7 @@ pub enum Kind as u8 {
 	le             // <=
 	dot            // .
 	dotdot         // ..
-	ellipsis       // ...
+	arrow          // ->
 
 	keyword_beg
 	kw_break
@@ -152,7 +152,7 @@ fn build_token_str() []string {
 	s[Kind.bang] = '!'
 	s[Kind.dot] = '.'
 	s[Kind.dotdot] = '..'
-	s[Kind.ellipsis] = '...'
+	s[Kind.arrow] = '->'
 	s[Kind.comma] = ','
 	s[Kind.not_in] = '!in'
 	s[Kind.not_is] = '!is'
