@@ -45,12 +45,14 @@ fn (mut sema Sema) ident_expr(mut expr ast.Ident) ?ast.Type {
 	if sym := sema.find_symbol(expr.name) {
 		expr.sym = sym
 	} else {
-		reporter.emit_err(err.msg(), expr.pos)
+		reporter.emit_ierr(err, expr.pos)
 		return none
 	}
 	if mut expr.sym is ast.Variable && expr.sym.is_local {
 		if expr.sym.pos > expr.pos {
-			reporter.emit_err('variable `${expr.name}` used before declaration', expr.pos)
+			mut d := reporter.err('variable `${expr.name}` used before declaration', expr.pos)
+			d.add_note('`${expr.name}` is defined later here', pos: expr.sym.pos)
+			d.emit()
 			return none
 		}
 	}

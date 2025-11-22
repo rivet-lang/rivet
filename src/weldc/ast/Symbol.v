@@ -36,6 +36,7 @@ pub struct Module {
 pub:
 	name   string
 	is_pkg bool
+	pos    FilePos
 pub mut:
 	scope &Scope = unsafe { nil }
 }
@@ -55,6 +56,7 @@ pub:
 	kind   TypeKind
 	fields []Field
 	scope  &Scope = unsafe { nil }
+	pos    FilePos
 }
 
 @[inline]
@@ -114,6 +116,7 @@ pub struct Field {
 pub:
 	name string
 	type Type
+	pos  FilePos
 }
 
 pub struct Function {
@@ -122,6 +125,7 @@ pub:
 	args  []FnArg
 	node  &FnStmt = unsafe { nil }
 	scope &Scope  = unsafe { nil }
+	pos   FilePos
 }
 
 pub struct Variable {

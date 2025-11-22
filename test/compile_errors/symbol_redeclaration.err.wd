@@ -9,6 +9,8 @@ fn main() {
 let X = 1;
 let X = 1; // fail
 
+let global = 1;
+
 fn function(x: int) {
     let x = 1; // fail
 
@@ -16,4 +18,13 @@ fn function(x: int) {
     {
         let b = 1; // fail
     }
+
+    let global = 1; // fail
 }
+
+fn my_fn(a: int, b: int) {} // ok
+
+fn win(a: int, a: int) {} // fail
+
+fn dup() {}
+fn dup() {} // fail

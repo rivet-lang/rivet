@@ -48,6 +48,7 @@ fn (mut reg Register) fn_stmt(mut stmt ast.FnStmt) {
 		name: stmt.name
 		args: stmt.args
 		node: unsafe { stmt }
+		pos:  stmt.name_pos
 	}
 	reg.sym = stmt.sym
 	stmt.scope = ast.Scope.new(reg.scope, reg.sym)
@@ -61,11 +62,8 @@ fn (mut reg Register) fn_stmt(mut stmt ast.FnStmt) {
 			is_mut:   arg.is_mut
 			is_ref:   arg.is_ref
 			type:     arg.type
-		}) or {
-			mut d := reporter.err(err.msg(), arg.pos)
-			d.add_note('inside function `${stmt.name}`')
-			d.emit()
-		}
+			pos:      arg.pos
+		}) or { reporter.emit_ierr(err, arg.pos) }
 		if arg.default_expr != none {
 			reg.expr(mut arg.default_expr)
 		}
@@ -75,11 +73,7 @@ fn (mut reg Register) fn_stmt(mut stmt ast.FnStmt) {
 
 fn (mut reg Register) let_stmt(mut stmt ast.LetStmt) {
 	for mut left in stmt.lefts {
-		reg.scope.add_symbol(left, lookup: left.is_local) or {
-			mut d := reporter.err(err.msg(), left.pos)
-			d.add_note('inside ${reg.sym.type_of()} `${reg.sym.name}`')
-			d.emit()
-		}
+		reg.scope.add_symbol(left, lookup: left.is_local) or { reporter.emit_ierr(err, left.pos) }
 	}
 	if mut right := stmt.right {
 		reg.expr(mut right)

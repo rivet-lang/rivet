@@ -53,17 +53,27 @@ pub fn (mut sc Scope) find_or_add_module(mod_name string, is_pkg bool) !Symbol {
 	return Symbol(sym)
 }
 
+pub struct DuplicatedSymbolError implements IError {
+pub:
+	m string
+	s Symbol
+}
+
+pub fn (d DuplicatedSymbolError) msg() string {
+	return d.m
+}
+
+pub fn (d DuplicatedSymbolError) code() int {
+	return 101
+}
+
 pub fn (mut sc Scope) add_symbol(sym Symbol, params AddSymbolParams) ! {
 	func := if params.lookup { sc.lookup } else { sc.find }
 	if other := func(sym.name) {
-		m := if (other is Variable && other.is_arg) && (sym is Variable && !sym.is_arg) {
-			'${sym.type_of()} `${sym.name}` has the same name as an argument'
-		} else if other.type_of() == sym.type_of() {
-			'duplicate ${sym.type_of()} `${sym.name}`'
-		} else {
-			'another symbol exists with the same name as `${sym.name}`'
+		return DuplicatedSymbolError{
+			m: 'redeclaration of symbol `${sym.name}`'
+			s: other
 		}
-		return error(m)
 	}
 	sc.syms << sym
 }

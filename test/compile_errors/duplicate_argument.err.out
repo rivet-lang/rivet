@@ -1,7 +1,0 @@
-error: duplicate argument `a`
-   in test/compile_errors/duplicate_argument.err.wd:5:16
-       |
-     5 | fn win(a: int, a: int) {} // FAIL
-       |                ^~~~~~
-   = note: inside function `win`
-error: aborting due to previous error
