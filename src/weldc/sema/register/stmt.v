@@ -52,7 +52,7 @@ fn (mut reg Register) fn_stmt(mut stmt ast.FnStmt) {
 	}
 	reg.sym = stmt.sym
 	stmt.scope = ast.Scope.new(reg.scope, reg.sym)
-	reg.scope.add_symbol(stmt.sym) or { reporter.emit_err(err.msg(), stmt.name_pos) }
+	reg.scope.add_symbol(stmt.sym) or { reporter.emit_ierr(err, stmt.name_pos) }
 	reg.scope = stmt.scope
 	for mut arg in stmt.args {
 		reg.scope.add_symbol(ast.Variable{

@@ -73,4 +73,9 @@ error: redeclaration of symbol `dup`
        |
     30 | fn dup() {} // fail
        |    ^~~
+   = note: previous declaration of `dup` was here
+      in test/compile_errors/symbol_redeclaration.err.wd:29:4
+          |
+       29 | fn dup() {}
+          |    ^~~
 error: aborting due to 8 previous errors
