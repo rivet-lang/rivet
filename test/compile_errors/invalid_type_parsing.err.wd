@@ -1,0 +1,4 @@
+fn main() {
+    let x: [5]int; // OK
+    let x2: [5]mut T; // FAIL
+}

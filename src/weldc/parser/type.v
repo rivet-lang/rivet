@@ -25,15 +25,23 @@ fn (mut p Parser) parse_type() ?ast.Type {
 			}
 		}
 		p.accept(.lbracket) {
-			// array or slice types: [5]int, []int
+			// array or slice types: [N]T, []T, []mut T
 			mut size := ?ast.Expr(none)
 			if p.tok.kind != .rbracket {
 				size = p.parse_expr()
 			}
 			p.expect(.rbracket)
+			is_mut := p.accept(.kw_mut)
+			if size != none && is_mut {
+				mut d := reporter.err('invalid array type declaration: unexpected keyword `mut`',
+					p.prev_tok.pos)
+				d.add_help('if you want a mutable array, apply `mut` to the variable binding: `mut x: [5]int`')
+				d.add_note('arrays store values directly. Use slices (`[]mut T`) for mutable views.')
+				d.emit()
+			}
 			ast.ArrayType{
 				size:   size
-				is_mut: p.accept(.kw_mut)
+				is_mut: is_mut
 				inner:  p.parse_type()?
 				pos:    pos + p.prev_tok.pos
 			}

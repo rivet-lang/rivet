@@ -1,0 +1,8 @@
+error: invalid array type declaration: unexpected keyword `mut`
+   in test/compile_errors/invalid_type_parsing.err.wd:3:16
+       |
+     3 |     let x2: [5]mut T; // FAIL
+       |                ^~~
+   = help: if you want a mutable array, apply `mut` to the variable binding: `mut x: [5]int`
+   = note: arrays store values directly. Use slices (`[]mut T`) for mutable views.
+error: aborting due to previous error
