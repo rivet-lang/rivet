@@ -23,6 +23,10 @@ pub fn register_symbols(ctx &context.Context) {
 	}
 	for mut pkg in reg.ctx.pkgs {
 		ctx.log('${@FN}() for package `${pkg.name}`')
+		reg.sym = reg.ctx.universe.find_or_add_module(pkg.name, true) or {
+			reporter.ic_error(err.msg())
+		}
+		pkg.sym = &(reg.sym as ast.Module)
 		reg.pkg = pkg
 		for mut file in pkg.files {
 			reg.check_file(mut file)
@@ -33,8 +37,12 @@ pub fn register_symbols(ctx &context.Context) {
 fn (mut reg Register) check_file(mut file ast.File) {
 	reg.file = file
 
-	reg.sym = reg.ctx.universe.find_or_add_module(file.mod_name, file.is_pkg) or {
-		reporter.ic_error(err.msg())
+	if !file.is_pkg {
+		old_sym := reg.sym
+		defer(fn) { reg.sym = old_sym }
+		reg.sym = reg.sym.scope.find_or_add_module(file.mod_name, false) or {
+			reporter.ic_error(err.msg())
+		}
 	}
 
 	reg.file.scope = reg.sym.scope
