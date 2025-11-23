@@ -1,0 +1,6 @@
+error: invalid expression: unexpected keyword `let`
+   in test/compile_errors/invalid_expression.err.wd:2:13
+       |
+     2 |     let x = let;
+       |             ^~~
+error: aborting due to previous error

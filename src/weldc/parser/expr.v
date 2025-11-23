@@ -245,7 +245,8 @@ fn (mut p Parser) parse_primary_expr() ?ast.Expr {
 			expr = p.parse_block_expr()
 		}
 		else {
-			reporter.emit_err('expected expression, but found ${p.tok}', p.tok.pos)
+			reporter.emit_err('invalid expression: unexpected ${p.tok}', p.tok.pos)
+			p.next()
 			return none
 		}
 	}
