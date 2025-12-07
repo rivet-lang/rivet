@@ -48,6 +48,7 @@ fn (mut sema Sema) ident_expr(mut expr ast.Ident) ?ast.Type {
 		reporter.emit_ierr(err, expr.pos)
 		return none
 	}
+	expr.type = expr.sym.as_type()
 	if mut expr.sym is ast.Variable && expr.sym.is_local {
 		if expr.sym.pos > expr.pos {
 			mut d := reporter.err('variable `${expr.name}` used before declaration', expr.pos)

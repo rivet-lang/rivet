@@ -35,7 +35,6 @@ mut:
 	eofs        int
 
 	is_started bool
-	is_cr_lf   bool
 
 	all_tokens []Token
 	tidx       int
@@ -106,12 +105,10 @@ fn (mut t Tokenizer) eat_to_end_of_line() {
 }
 
 fn (mut t Tokenizer) inc_line_number() {
-	t.last_nl_pos = t.text.len - 1
-	if t.last_nl_pos > t.pos {
-		t.last_nl_pos = t.pos
-	}
-	if t.is_cr_lf {
-		t.last_nl_pos++
+	t.last_nl_pos = if t.text.len - 1 > t.pos {
+		t.pos
+	} else {
+		t.text.len - 1
 	}
 	t.line++
 }
@@ -120,18 +117,18 @@ fn (mut t Tokenizer) inc_line_number() {
 fn (mut t Tokenizer) skip_whitespace() {
 	for t.pos < t.text.len {
 		c := t.text[t.pos]
-		if c == 9 {
+		if c == 9 || c == 32 {
+			// tabs and spaces are most common
+			t.pos++
+			continue
+		}
+		if c == lf {
+			t.inc_line_number()
 			t.pos++
 			continue
 		}
 		if !c.is_space() {
 			return
-		}
-		if t.pos + 1 < t.text.len && c == cr && t.text[t.pos + 1] == lf {
-			t.is_cr_lf = true
-		}
-		if c in [cr, lf] && !(t.pos > 0 && t.text[t.pos - 1] == cr && c == lf) {
-			t.inc_line_number()
 		}
 		t.pos++
 	}

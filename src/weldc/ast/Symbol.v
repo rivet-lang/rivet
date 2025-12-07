@@ -8,10 +8,17 @@ import weldc.ice
 pub type Symbol = Module | Function | Variable | TypeSym
 
 pub fn (sym Symbol) as_type() Type {
-	if sym is TypeSym {
-		return sym.as_type()
+	return match sym {
+		TypeSym {
+			sym.as_type()
+		}
+		Variable {
+			sym.type
+		}
+		else {
+			ice.ice('Symbol.as_type(): attempt to convert a symbol to type: ${sym}')
+		}
 	}
-	ice.ice('Symbol.as_type(): attempt to convert a symbol to type: ${sym}')
 }
 
 @[inline]
