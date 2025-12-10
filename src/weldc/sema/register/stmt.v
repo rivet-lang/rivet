@@ -14,6 +14,9 @@ fn (mut reg Register) stmts(mut stmts []ast.Stmt) {
 
 fn (mut reg Register) stmt(mut stmt ast.Stmt) {
 	match mut stmt {
+		ast.ConstStmt {
+			reg.const_stmt(mut stmt)
+		}
 		ast.FnStmt {
 			reg.fn_stmt(mut stmt)
 		}
@@ -34,6 +37,13 @@ fn (mut reg Register) stmt(mut stmt ast.Stmt) {
 			reg.expr(mut stmt.expr)
 		}
 	}
+}
+
+fn (mut reg Register) const_stmt(mut stmt ast.ConstStmt) {
+	for mut left in stmt.lefts {
+		reg.scope.add_symbol(left) or { reporter.emit_ierr(err, left.pos) }
+	}
+	reg.expr(mut stmt.right)
 }
 
 fn (mut reg Register) fn_stmt(mut stmt ast.FnStmt) {

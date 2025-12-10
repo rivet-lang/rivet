@@ -1,80 +1,80 @@
 error: redeclaration of symbol `a`
-   in test/compile_errors/symbol_redeclaration.err.wd:3:9
+   in tests/compile_errors/symbol_redeclaration.err.wd:3:9
        |
      3 |     let a = 1; // fail
        |         ^
    = note: previous declaration of `a` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:2:9
+      in tests/compile_errors/symbol_redeclaration.err.wd:2:9
           |
         2 |     let a = 1;
           |         ^
 error: redeclaration of symbol `b`
-   in test/compile_errors/symbol_redeclaration.err.wd:6:9
+   in tests/compile_errors/symbol_redeclaration.err.wd:6:9
        |
      6 |     let b = 1; // fail
        |         ^
    = note: previous declaration of `b` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:5:9
+      in tests/compile_errors/symbol_redeclaration.err.wd:5:9
           |
         5 |     let b = 1;
           |         ^
 error: redeclaration of symbol `X`
-   in test/compile_errors/symbol_redeclaration.err.wd:10:5
+   in tests/compile_errors/symbol_redeclaration.err.wd:10:5
        |
     10 | let X = 1; // fail
        |     ^
    = note: previous declaration of `X` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:9:5
+      in tests/compile_errors/symbol_redeclaration.err.wd:9:5
           |
         9 | let X = 1;
           |     ^
 error: redeclaration of symbol `x`
-   in test/compile_errors/symbol_redeclaration.err.wd:15:9
+   in tests/compile_errors/symbol_redeclaration.err.wd:15:9
        |
     15 |     let x = 1; // fail
        |         ^
    = note: previous declaration of `x` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:14:13
+      in tests/compile_errors/symbol_redeclaration.err.wd:14:13
           |
        14 | fn function(x: int) {
           |             ^~~~~~
 error: redeclaration of symbol `b`
-   in test/compile_errors/symbol_redeclaration.err.wd:19:13
+   in tests/compile_errors/symbol_redeclaration.err.wd:19:13
        |
     19 |         let b = 1; // fail
        |             ^
    = note: previous declaration of `b` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:17:9
+      in tests/compile_errors/symbol_redeclaration.err.wd:17:9
           |
        17 |     let b = 1;
           |         ^
 error: redeclaration of symbol `global`
-   in test/compile_errors/symbol_redeclaration.err.wd:22:9
+   in tests/compile_errors/symbol_redeclaration.err.wd:22:9
        |
     22 |     let global = 1; // fail
        |         ^~~~~~
    = note: previous declaration of `global` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:12:5
+      in tests/compile_errors/symbol_redeclaration.err.wd:12:5
           |
        12 | let global = 1;
           |     ^~~~~~
 error: redeclaration of symbol `a`
-   in test/compile_errors/symbol_redeclaration.err.wd:27:16
+   in tests/compile_errors/symbol_redeclaration.err.wd:27:16
        |
     27 | fn win(a: int, a: int) {} // fail
        |                ^~~~~~
    = note: previous declaration of `a` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:27:8
+      in tests/compile_errors/symbol_redeclaration.err.wd:27:8
           |
        27 | fn win(a: int, a: int) {} // fail
           |        ^~~~~~
 error: redeclaration of symbol `dup`
-   in test/compile_errors/symbol_redeclaration.err.wd:30:4
+   in tests/compile_errors/symbol_redeclaration.err.wd:30:4
        |
     30 | fn dup() {} // fail
        |    ^~~
    = note: previous declaration of `dup` was here
-      in test/compile_errors/symbol_redeclaration.err.wd:29:4
+      in tests/compile_errors/symbol_redeclaration.err.wd:29:4
           |
        29 | fn dup() {}
           |    ^~~

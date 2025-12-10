@@ -2,8 +2,11 @@ fn other_fn() {
     let bc = true;
 }
 
+const MAX_SIZE = 123;
+const ARR_SIZE: int = 2;
+
 let mut x = 1;
-let ABC = 1; // immutable
+let static_abc = 1; // immutable
 
 fn main() {
     let j = 1;

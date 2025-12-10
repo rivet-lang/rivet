@@ -3,13 +3,16 @@
 
 module ast
 
-pub type Stmt = FnStmt | ExprStmt | LetStmt | WhileStmt
+pub type Stmt = ConstStmt | FnStmt | ExprStmt | LetStmt | WhileStmt
 
-pub struct ExprStmt {
+pub struct ConstStmt {
 pub:
-	tags Tags
+	tags   Tags
+	is_pub bool
+	pos    FilePos
 pub mut:
-	expr Expr
+	lefts []Const
+	right Expr
 }
 
 pub struct FnStmt {
@@ -57,4 +60,11 @@ pub:
 pub mut:
 	lefts []Variable
 	right ?Expr
+}
+
+pub struct ExprStmt {
+pub:
+	tags Tags
+pub mut:
+	expr Expr
 }

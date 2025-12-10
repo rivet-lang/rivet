@@ -47,10 +47,13 @@ fn (mut p Parser) parse_type() ?ast.Type {
 			}
 		}
 		else {
+			old_inside_type := p.inside_type
+			p.inside_type = true
 			expr := p.parse_expr()?
 			if expr !in [ast.Ident, ast.BuiltinCallExpr] {
 				reporter.emit_err('invalid type declaration', expr.pos)
 			}
+			p.inside_type = old_inside_type
 			ast.UnresolvedType{expr, expr.pos}
 		}
 	}

@@ -13,6 +13,9 @@ fn (mut sema Sema) stmts(mut stmts []ast.Stmt) {
 
 fn (mut sema Sema) stmt(mut stmt ast.Stmt) {
 	match mut stmt {
+		ast.ConstStmt {
+			sema.const_stmt(mut stmt)
+		}
 		ast.FnStmt {
 			sema.fn_stmt(mut stmt)
 		}
@@ -44,6 +47,13 @@ fn (mut sema Sema) fn_stmt(mut stmt ast.FnStmt) {
 		}
 	}
 	sema.stmts(mut stmt.stmts)
+}
+
+fn (mut sema Sema) const_stmt(mut stmt ast.ConstStmt) {
+	for mut _ in stmt.lefts {
+		// TODO
+	}
+	_ = sema.expr(mut stmt.right)
 }
 
 fn (mut sema Sema) let_stmt(mut stmt ast.LetStmt) {

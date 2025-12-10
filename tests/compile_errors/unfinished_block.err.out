@@ -1,5 +1,5 @@
 error: unfinished block: expected `}`, but found end of file
-   in test/compile_errors/unfinished_block.err.wd:1:11
+   in tests/compile_errors/unfinished_block.err.wd:1:11
        |
      1 | fn main() {
        |           ^

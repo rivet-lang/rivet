@@ -5,15 +5,18 @@
 build:
 	v -o bin/weldc src/weldc/cmd
 
+build-g:
+	v -g -o bin/weldc src/weldc/cmd
+
 build-prod:
 	v -prod -o bin/weldc src/weldc/cmd
 
 test: build
 	v test src/weldc
-	v run test/run_tests.vsh
+	v run tests/run_tests.vsh
 
 gen-out-files:
-	v run test/gen_out_files.vsh
+	v run tests/gen_out_files.vsh
 
 fmt:
 	v fmt -w .

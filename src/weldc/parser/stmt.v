@@ -88,6 +88,9 @@ fn (mut p Parser) parse_stmt() ?ast.Stmt {
 	is_pub := !p.inside_local_scope && p.accept(.kw_pub)
 	mut stmt := ?ast.Stmt(none)
 	match p.tok.kind {
+		.kw_const {
+			stmt = p.parse_const_stmt(is_pub)?
+		}
 		.kw_fn {
 			stmt = p.parse_fn_stmt(is_pub)?
 		}
@@ -142,6 +145,42 @@ fn (mut p Parser) parse_stmt() ?ast.Stmt {
 	return stmt
 }
 
+fn (mut p Parser) parse_const_stmt(is_pub bool) ?ast.ConstStmt {
+	mut left_pos := p.tok.pos
+	p.expect(.kw_const)
+	mut lefts := []ast.Const{}
+	for {
+		name_pos := p.tok.pos
+		name := p.parse_ident()
+		const_type := if p.accept(.colon) {
+			p.parse_type()?
+		} else {
+			p.ctx.untyped
+		}
+		lefts << ast.Const{
+			name:   name
+			is_pub: is_pub
+			type:   const_type
+			pos:    name_pos
+		}
+		left_pos += p.prev_tok.pos
+		if !p.accept(.comma) || p.should_abort() {
+			break
+		}
+	}
+	p.expect(.assign)
+	right := p.parse_expr()?
+	p.expect_semicolon = true
+	left_pos += p.prev_tok.pos
+	return ast.ConstStmt{
+		tags:   p.tags
+		lefts:  lefts
+		right:  right
+		is_pub: is_pub
+		pos:    left_pos
+	}
+}
+
 fn (mut p Parser) parse_fn_stmt(is_pub bool) ?ast.FnStmt {
 	p.expect(.kw_fn)
 	name_pos := p.tok.pos
@@ -162,10 +201,7 @@ fn (mut p Parser) parse_fn_stmt(is_pub bool) ?ast.FnStmt {
 
 			// : int
 			p.expect(.colon)
-			old_inside_type := p.inside_type
-			p.inside_type = true
 			arg_type := p.parse_type()?
-			p.inside_type = old_inside_type
 
 			// = 2004
 			mut arg_default_expr := ?ast.Expr(none)

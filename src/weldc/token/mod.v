@@ -87,6 +87,7 @@ pub enum Kind as u8 {
 
 	keyword_beg
 	kw_break
+	kw_const
 	kw_continue
 	kw_else
 	kw_enum
@@ -195,6 +196,7 @@ fn build_token_str() []string {
 	s[Kind.at] = '@'
 
 	s[Kind.kw_break] = 'break'
+	s[Kind.kw_const] = 'const'
 	s[Kind.kw_continue] = 'continue'
 	s[Kind.kw_else] = 'else'
 	s[Kind.kw_enum] = 'enum'

@@ -15,7 +15,7 @@ if !os.exists(weldc) {
 mut passed := 0
 mut failed := 0
 
-files := os.walk_ext('test/', '.wd')
+files := os.walk_ext('tests/', '.wd')
 if files.len == 0 {
 	return
 }

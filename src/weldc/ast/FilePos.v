@@ -19,7 +19,7 @@ pub fn (fl FileLoc) < (loc FileLoc) bool {
 @[minify]
 pub struct FilePos {
 pub mut:
-	file  &File = unsafe { nil }
+	file  &File = &File{}
 	begin FileLoc
 	end   FileLoc
 }

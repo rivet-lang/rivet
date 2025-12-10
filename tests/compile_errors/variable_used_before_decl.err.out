@@ -1,10 +1,10 @@
 error: variable `x` used before declaration
-   in test/compile_errors/variable_used_before_decl.err.wd:2:13
+   in tests/compile_errors/variable_used_before_decl.err.wd:2:13
        |
      2 |     let _ = x;
        |             ^
    = note: `x` is defined later here
-      in test/compile_errors/variable_used_before_decl.err.wd:3:9
+      in tests/compile_errors/variable_used_before_decl.err.wd:3:9
           |
         3 |     let x = 1;
           |         ^

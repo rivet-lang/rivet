@@ -5,8 +5,9 @@ module ast
 
 import weldc.ice
 
-pub type Symbol = Module | Function | Variable | TypeSym
+pub type Symbol = Module | Const | Function | Variable | TypeSym
 
+@[inline]
 pub fn (sym Symbol) as_type() Type {
 	return match sym {
 		TypeSym {
@@ -26,6 +27,9 @@ pub fn (sym Symbol) type_of() string {
 	return match sym {
 		Module {
 			sym.type_of()
+		}
+		Const {
+			'constant'
 		}
 		Function {
 			'function'
@@ -55,6 +59,15 @@ pub fn (m &Module) type_of() string {
 	} else {
 		'module'
 	}
+}
+
+pub struct Const {
+pub:
+	name   string
+	is_pub bool
+	type   Type
+	pos    FilePos
+	scope  &Scope = unsafe { nil }
 }
 
 pub struct TypeSym {

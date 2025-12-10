@@ -11,6 +11,9 @@ pub enum FileStage {
 	checked
 }
 
+// TODO: remove this
+const empty_file = &File{}
+
 @[heap]
 pub struct File {
 pub:

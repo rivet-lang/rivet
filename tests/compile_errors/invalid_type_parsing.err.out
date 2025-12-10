@@ -1,5 +1,5 @@
 error: invalid array type declaration: unexpected keyword `mut`
-   in test/compile_errors/invalid_type_parsing.err.wd:3:16
+   in tests/compile_errors/invalid_type_parsing.err.wd:3:16
        |
      3 |     let x2: [5]mut T; // FAIL
        |                ^~~
