@@ -7,23 +7,20 @@
 
 A general-purpose programming language, focused on simplicity, safety and stability.
 
-[Roadmap](ROADMAP.md)
-•
-[Contributing](CONTRIBUTING.md)
-
 ![issues](https://img.shields.io/github/issues/weld-lang/weld?style=flat-square)
 ![status](https://img.shields.io/badge/status-alpha-blue?style=flat-square)
 ![license](https://img.shields.io/github/license/weld-lang/weld?style=flat-square)
 
 </div>
 
-Weld's goal is to be a very powerful programming language and at the same time easy to use, 
-whose syntax is inspired by Go, Zig, C# and other programming languages.
+> [!WARNING]
+> This is just an *__experimental__ programming language*. I could continue developing it or
+> abandon it.
 
+Weld's goal is to be a very powerful programming language and at the same time easy to use, 
+whose syntax is inspired by V, Zig, C# and other programming languages.
 Weld uses C as the only backend and generates C99 code that is compiled using a C compiler 
-(by default, GCC or Clang). The idea is that in the long term there will be other backends 
-available for code generation, such as LLVM or WebAssembly, and also that there will be an 
-interpreter available.
+(by default, GCC or Clang).
 
 > [!NOTE]
 > Currently the language is in alpha state, and therefore its syntax and the language
